@@ -294,6 +294,11 @@ export class PythonTranspiler extends BaseTranspiler {
 
         const op = node.operatorToken.kind;
 
+        // Fix E712 comparison: if cond == True -> if cond:
+        if ((op === ts.SyntaxKind.EqualsEqualsToken || op === ts.SyntaxKind.EqualsEqualsEqualsToken) && node.right.kind === ts.SyntaxKind.TrueKeyword) {
+            return this.getIden(identation) + this.printNode(node.left, 0);
+        }
+
         if (left.kind === SyntaxKind.TypeOfExpression) {
             const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
             if (typeOfExpression) {

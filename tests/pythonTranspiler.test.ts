@@ -30,11 +30,11 @@ describe('python tests', () => {
         "    const x = 1;\n" +
         "    break;\n" +
         "}"
-        
+
         const python =
         "while True:\n" +
         "    x = 1\n" +
-        "    break" 
+        "    break"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -53,7 +53,7 @@ describe('python tests', () => {
         const ts =
         "function teste(){\n" +
         "    return 1;\n" +
-        "}" 
+        "}"
         const python =
         "def teste():\n" +
         "    return 1";
@@ -212,7 +212,7 @@ describe('python tests', () => {
         "    describe() {\n" +
         "        return \"foo\";\n" +
         "    }\n" +
-        "}\n" 
+        "}\n"
         const python =
         "class Teste:\n" +
         "    def describe(self):\n" +
@@ -221,7 +221,7 @@ describe('python tests', () => {
         expect(output).toBe(python);
     });
     test('basic class declaration with props', () => {
-        const ts = 
+        const ts =
         "class MyClass {\n" +
         "    public static x: number = 10;\n" +
         "    public static y: string = \"test\";\n" +
@@ -273,13 +273,13 @@ describe('python tests', () => {
         "    'limit': 'limit',\n" +
         "    'market': 'market',\n" +
         "    'margin': 'market',\n" +
-        "}\n" 
+        "}\n"
         const python =
         "types = {\n" +
         "    'limit': 'limit',\n" +
         "    'market': 'market',\n" +
         "    'margin': 'market',\n" +
-        "}" 
+        "}"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -297,7 +297,7 @@ describe('python tests', () => {
         "c = 3 / 3\n" +
         "d = 4 - 4\n" +
         "e = 5 % 5\n" +
-        "f = 'foo' + 'bar'" 
+        "f = 'foo' + 'bar'"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
@@ -306,7 +306,7 @@ describe('python tests', () => {
         "const a = true;\n" +
         "const b = false;\n" +
         "const c = true;\n" +
-        "const d = (a && b) || (c && !b);\n" 
+        "const d = (a && b) || (c && !b);\n"
         const python =
         "a = True\n" +
         "b = False\n" +
@@ -710,6 +710,17 @@ describe('python tests', () => {
         "    c,\n" +
         "}";
         const python = ""
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
+    test('should follow E712 comparison to True', () => {
+        const ts =
+        "if (x === true) {\n" +
+        "    console.log(1);\n" +
+        "}\n"
+        const python =
+        "if x:\n" +
+        "    print(1)"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
