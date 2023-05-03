@@ -27,7 +27,8 @@
     "test-ci": "jest --ci --coverage",
     "test": "jest --verbose",
     "testv": "jest --verbose --coverage",
-    "lint": "eslint src/ --ext .ts"
+    "lint": "eslint src/ --ext .ts",
+    "publish":"sh publish.sh && git push && git push --tags && npm publish"
   },
   "devDependencies": {
     "@types/jest": "^29.2.0",
