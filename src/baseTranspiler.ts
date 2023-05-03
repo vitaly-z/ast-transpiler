@@ -47,6 +47,7 @@ class BaseTranspiler {
     THROW_TOKEN = "throw";
     AWAIT_TOKEN = "await";
     STATIC_TOKEN = "static";
+    CONTINUE_TOKEN = "continue";
     EXTENDS_TOKEN = ":";
     NOT_TOKEN = "!";
     SUPER_TOKEN = "super";
@@ -1592,6 +1593,10 @@ class BaseTranspiler {
         return this.getIden(identation) + this.NULL_TOKEN;
     }
 
+    printContinueStatement(node, identation){
+        return this.getIden(identation) + this.CONTINUE_TOKEN + this.LINE_TERMINATOR;
+    }
+
     printNode(node, identation = 0): string {
 
         try {
@@ -1675,6 +1680,8 @@ class BaseTranspiler {
                 return this.printSpreadElement(node, identation);
             } else if (ts.SyntaxKind.NullKeyword === node.kind) {
                 return this.printNullKeyword(node, identation);
+            } else if (ts.isContinueStatement(node)) {
+                return this.printContinueStatement(node, identation);
             }
 
             if (node.statements) {

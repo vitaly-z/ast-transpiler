@@ -724,6 +724,17 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('should print continue statement', () => {
+        const ts =
+        "while(true){\n"+
+        "    continue;\n"+
+        "}";
+        const python =
+        "while True:\n"+
+        "    continue"
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('should transpile file from path', () => {
         transpiler.setPythonUncamelCaseIdentifiers(true);
         const python = readFileSync ('./tests/files/output/python/test1.py', "utf8");
