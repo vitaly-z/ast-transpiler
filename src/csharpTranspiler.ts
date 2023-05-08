@@ -768,11 +768,11 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printMathRoundCall(node, identation, parsedArg = undefined) {
-        return `Math.Round((double)${parsedArg})`;
+        return `Math.Round(Convert.ToDouble(${parsedArg}))`;
     }
 
     printMathCeilCall(node, identation, parsedArg = undefined) {
-        `Math.Ceiling((double)${parsedArg})`;
+        `Math.Ceiling(Convert.ToDouble(${parsedArg}))`;
     }
 
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
