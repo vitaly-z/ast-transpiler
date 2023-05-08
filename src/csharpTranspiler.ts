@@ -289,7 +289,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 // case "JSON.parse":
                 //     return `json_decode(${parsedArg}, $as_associative_array = true)`;
                 case "Math.abs":
-                    return `Math.Abs((double)${parsedArg})`;
+                    return `Math.Abs(Convert.ToDouble(${parsedArg}))`;
                 }
             } else if (args.length === 2)
             {
@@ -301,7 +301,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 case "Math.max":
                     return `mathMax(${parsedArg1}, ${parsedArg2})`;
                 case "Math.pow":
-                    return `Math.Pow((double)${parsedArg1}, (double)${parsedArg2})`;
+                    return `Math.Pow(Convert.ToDouble(${parsedArg1}, Convert.ToDouble(${parsedArg2}))`;
                 }
             }
             const leftSide = node.expression?.expression;
