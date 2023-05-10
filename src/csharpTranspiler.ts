@@ -301,7 +301,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 case "Math.max":
                     return `mathMax(${parsedArg1}, ${parsedArg2})`;
                 case "Math.pow":
-                    return `Math.Pow(Convert.ToDouble(${parsedArg1}, Convert.ToDouble(${parsedArg2}))`;
+                    return `Math.Pow(Convert.ToDouble(${parsedArg1}), Convert.ToDouble(${parsedArg2}))`;
                 }
             }
             const leftSide = node.expression?.expression;
@@ -792,7 +792,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).Split((string)${parsedArg}).ToList<object>()`;
+        return `((string)${name}).Split(((string)${parsedArg}).ToCharArray()).ToList<object>()`;
     }
 
     printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
