@@ -206,6 +206,18 @@ export class PhpTranspiler extends BaseTranspiler {
         }
     }
 
+    printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `str_starts_with(${name}, ${parsedArg})`;
+    }
+
+    printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `str_ends_with(${name}, ${parsedArg})`;
+    }
+
+    printTrimCall(node, identation, name = undefined) {
+        return `trim(${name})`;
+    }
+
     printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
         return `implode(${parsedArg}, ${name})`;
     }

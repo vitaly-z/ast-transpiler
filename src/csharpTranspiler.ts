@@ -268,13 +268,18 @@ export class CSharpTranspiler extends BaseTranspiler {
         const type = global.checker.getResolvedSignature(node);
         if (type?.declaration === undefined) {
             let parsedArguments = node.arguments?.map((a) => this.printNode(a, 0)).join(", ");
-            parsedArguments = parsedArguments ? ", " + parsedArguments : "";
+            parsedArguments = parsedArguments ? parsedArguments : "";
             const propName = node.expression?.name.escapedText;
-            const isAsyncDecl = true;
-            // const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
-            const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
-            const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
-            return `${open}"${propName}"${parsedArguments}${close}`;
+            // const isAsyncDecl = true;
+            const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+            // const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
+            // const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
+            // return `${open}"${propName}"${parsedArguments}${close}`;
+            const argsArray = `new object[] { ${parsedArguments} }`;
+            const open = this.DYNAMIC_CALL_OPEN;
+            let statement = `${open}this, "${propName}", ${argsArray})`;
+            statement = isAsyncDecl ? `((Task<object>)${statement})` : statement;
+            return statement;
         }
         return undefined;
     }
@@ -350,6 +355,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             return notOperator + `((${target}).GetType() == typeof(bool))`;
         case "object":
             return notOperator + `((${target}).GetType() == typeof(Dictionary<string, object>))`;
+        case "function":
+            return notOperator + `((${target}).GetType() == typeof(Delegate))`;
         }
 
         return undefined;
@@ -785,6 +792,18 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
         return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
+    }
+
+    printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).StartsWith(${parsedArg})`;
+    }
+
+    printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).EndsWith(${parsedArg})`;
+    }
+
+    printTrimCall(node, identation, name = undefined) {
+        return `((string)${name}).Trim()`;
     }
 
     printJoinCall(node, identation, name = undefined, parsedArg = undefined) {

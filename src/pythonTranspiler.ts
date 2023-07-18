@@ -156,6 +156,18 @@ export class PythonTranspiler extends BaseTranspiler {
         return `${name}.find(${parsedArg})`;
     }
 
+    printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${name}.startswith(${parsedArg})`;
+    }
+
+    printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${name}.endswith(${parsedArg})`;
+    }
+
+    printTrimCall(node, identation, name = undefined) {
+        return `${name}.strip()`;
+    }
+
     printToUpperCaseCall(node, identation, name = undefined) {
         return `${name}.upper()`;
     }

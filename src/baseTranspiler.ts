@@ -1020,6 +1020,18 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printTrimCall(node, identation, name = undefined) {
+        return undefined; // stub
+    }
+
     printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
         return undefined; // stub
     }
@@ -1123,6 +1135,8 @@ class BaseTranspiler {
                     return this.printPopCall(node, identation, parsedLeftSide);
                 case "reverse":
                     return this.printReverseCall(node, identation, parsedLeftSide);
+                case "trim":
+                    return this.printTrimCall(node, identation, parsedLeftSide);
                 }
             }
 
@@ -1146,6 +1160,10 @@ class BaseTranspiler {
                     return this.printSplitCall(node, identation, name, parsedArg);
                 case 'toFixed':
                     return this.printToFixedCall(node, identation, name, parsedArg);
+                case 'endsWith':
+                    return this.printEndsWithCall(node, identation, name, parsedArg);
+                case 'startsWith':
+                    return this.printStartsWithCall(node, identation, name, parsedArg);
                 }
 
                 if (args.length === 1 || args.length === 2) {
