@@ -5,9 +5,34 @@
 ! __Warning__
 ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
+
 $\mathscr{\color{red}{this} https://github.com/ccxt/ast-transpiler .}}$
 
 $\Large{Warning!}$$
+$\mathcal{\color{purple}{this \ is \ a \ paragraph} \ \color{cyan}{in \ another \ font}}$
+
+$\mathbb{\color{teal}{this \ is \ a } \ \color{magenta}{paragraph \ in \ another \ font}}$
+
+$\mathscr{\color{red}{this} \ \ \color{blue}{is \ \ a \ \ paragraph} \ \ \color{yellow}{in \ \ another \ \ font}}$
+
+$\mathfrak{\color{lime}{this \ is \ a \ paragraph \ in \ another \ font}}$
+
+$\mathscr{\color{red}{mon}\color{white}{day}}$
+
+$\textcolor{olive}{\TeX} \ \textcolor{darkgray}{workaround \ found \ by \ Dassalem \ Mohammed \ Yasser}$
+
+$\textit{hello}$  #italic
+
+$\text{hello}$    #normal
+
+$\Large{hello}$$   #Bigger text size
+
+$$\LaTeX$$
+$\colorbox{red}{text}$
+
+Text inside bordered Box 
+
+$\fbox{Hello there}$
 
 
 [![Build](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml)
