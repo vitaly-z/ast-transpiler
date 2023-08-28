@@ -8,7 +8,7 @@
 ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
 
-$\Large{\color{red}Warning!}$$
+$\Large{\color{red}W A R N I N G !}$$
 
 $\mathscr{\color{red}{this} https://github.com/ccxt/ast-transpiler .}}$
 
