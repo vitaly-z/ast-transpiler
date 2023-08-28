@@ -3,7 +3,7 @@
 ```diff
 ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
-$${\color{red}asd}$$
+$${\color{red} This repository was moved to https://github.com/ccxt/ast-transpiler}$$
 
 $${\color{red}[Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler}$$
 =
