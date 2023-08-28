@@ -3,9 +3,8 @@
 > __Warning__
 > [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 
-
-> __Warning__
 ```diff
+! Warning!
 ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
 
