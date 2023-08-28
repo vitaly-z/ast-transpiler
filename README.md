@@ -4,8 +4,8 @@
 > [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 
 ```diff
-! Warning!
-! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
+! 
+! Warning - This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
 
 $\Large{\color{red}W A R N I N G !}$
@@ -13,6 +13,7 @@ $\Large{\color{red}W A R N I N G !}$
 $\mathscr{\color{red}{this}asdasdasda}$
 
 $\mathbb{\color{teal}{this \ is \ a } \ \color{magenta}{paragraph \ in \ another \ font}}$
+
 $\textcolor{olive}{\T E X} \ \textcolor{darkgray}{workaround \ found \ by \ Dassalem \ Mohammed \ Yasser}$
 
 $\text{hello}$
