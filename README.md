@@ -29,7 +29,7 @@ $\text{hello}$    #normal
 
 $\Large{hello}$$   #Bigger text size
 
-$\color{red}{text}$
+$\textcolor{red}{text}$
 
 Text inside bordered Box 
 
