@@ -25,7 +25,7 @@ $\fbox{\color{red}Hello there}$
 ![](https://img.shields.io/static/v1?label=&message=Warning%20This%20repository%20and%20development%20has%20been%20moved%20into&color=red) https://github.com/ccxt/ast-transpiler
 
 
-![](https://img.shields.io/badge/Warning%20This%20repository%20and%20development%20has%20been%20moved%20into?style=for-the-badge) https://github.com/ccxt/ast-transpiler
+![asdx](https://img.shields.io/badge/Warning%20This%20repository%20and%20development%20has%20been%20moved%20into?style=for-the-badge) https://github.com/ccxt/ast-transpiler
 
 
 
