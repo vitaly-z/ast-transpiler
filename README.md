@@ -29,7 +29,6 @@ $\text{hello}$    #normal
 
 $\Large{hello}$$   #Bigger text size
 
-$$\LaTeX$$
 $\colorbox{red}{text}$
 
 Text inside bordered Box 
