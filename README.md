@@ -1,6 +1,8 @@
 # AST-Transpiler
-```diff
 > __Warning__
+> __Warning__ [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
+```diff
+! __Warning__
 ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
 
