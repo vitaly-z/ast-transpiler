@@ -10,7 +10,7 @@
 
 $\mathscr{\color{red}{this} https://github.com/ccxt/ast-transpiler .}}$
 
-$\Large{Warning!}$$
+$\Large\color{red}{Warning!}$$
 $\mathcal{\color{purple}{this \ is \ a \ paragraph} \ \color{cyan}{in \ another \ font}}$
 
 $\mathbb{\color{teal}{this \ is \ a } \ \color{magenta}{paragraph \ in \ another \ font}}$
