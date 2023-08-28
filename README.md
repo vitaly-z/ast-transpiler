@@ -14,26 +14,13 @@ $\mathscr{\color{red}{this} [a](https://github.com/ccxt/ast-transpiler)}}$
 
 
 $\mathbb{\color{teal}{this \ is \ a } \ \color{magenta}{paragraph \ in \ another \ font}}$
+$\textcolor{olive}{\T E X} \ \textcolor{darkgray}{workaround \ found \ by \ Dassalem \ Mohammed \ Yasser}$
 
-$\mathscr{\color{red}{this} \ \ \color{blue}{is \ \ a \ \ paragraph} \ \ \color{yellow}{in \ \ another \ \ font}}$
-
-$\mathfrak{\color{lime}{this \ is \ a \ paragraph \ in \ another \ font}}$
-
-$\mathscr{\color{red}{mon}\color{white}{day}}$
-
-$\textcolor{olive}{\TeX} \ \textcolor{darkgray}{workaround \ found \ by \ Dassalem \ Mohammed \ Yasser}$
-
-$\textit{hello}$  #italic
-
-$\text{hello}$    #normal
+$\text{hello}$
 
 $\Large{hello}$$   #Bigger text size
 
-$\textcolor{red}{text}$
-
-Text inside bordered Box 
-
-$\fbox{Hello there}$
+$\fbox{\color{red}Hello there}$
 
 
 [![Build](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml)
