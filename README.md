@@ -3,6 +3,10 @@
 ```diff
 ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
+$${\color{red}[Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler}$$
+
+$${\color{red}[Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler}$$
+=
 
 [![Build](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml)
 ![Jest coverage](./badges/coverage-jest%20coverage.svg)
