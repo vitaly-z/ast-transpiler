@@ -5,9 +5,9 @@
 ! __Warning__
 ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 ```
+$\mathscr{\color{red}{this} \ \ \color{blue}{is \ \ a \ \ paragraph} \ \ \color{yellow}{in \ \ another \ \ font}}$
 
-
-$\Large{[Inactive]Warning!}$$   #Bigger text size
+$\Large{Warning!}$$
 
 
 [![Build](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml)
