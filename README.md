@@ -10,7 +10,7 @@
 
 $\Large{\color{red}W A R N I N G !}$$
 
-$\mathscr{\color{red}{this} [a](https://github.com/ccxt/ast-transpiler)}}$
+$\mathscr{\color{red}{this}asdasdasda)}}$
 
 
 $\mathbb{\color{teal}{this \ is \ a } \ \color{magenta}{paragraph \ in \ another \ font}}$
