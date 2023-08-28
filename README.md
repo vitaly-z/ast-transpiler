@@ -22,7 +22,7 @@ $\Large{hello}$$   #Bigger text size
 
 $\fbox{\color{red}Hello there}$
 
-![](https://img.shields.io/static/v1?label=&message=Warning-This-repository-&amp;-development-has-been-moved-into-https://github.com/ccxt/ast-transpiler&color=red)
+![](https://img.shields.io/static/v1?label=&message=Warning-This-repository-and-development-has-been-moved-into-https://github.com/ccxt/ast-transpiler&color=red)
 
 $\color{lightblue}{\textrm{Red Nimetaga 3 kõige suuremat pilveteenuste pakkujat}}$ 
 
