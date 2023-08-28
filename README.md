@@ -7,7 +7,7 @@
 ```
 
 
-$\Large{[Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler}$$   #Bigger text size
+$\Large{[Inactive]Warning!}$$   #Bigger text size
 
 
 [![Build](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml)
