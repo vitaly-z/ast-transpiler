@@ -3,10 +3,11 @@
 > __Warning__
 > [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
 
-```diff
-! __Warning__
-! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
-```
+
+> __Warning__
+> ```diff
+> ! [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
+> ```
 
 $\Large{\color{red}W A R N I N G !}$
 
