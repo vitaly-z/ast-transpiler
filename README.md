@@ -10,7 +10,7 @@
 
 $\Large{\color{red}W A R N I N G !}$
 
-$\mathscr{\color{red}{this}asdasdasda}}$
+$\mathscr{\color{red}{this}asdasdasda}$
 
 $\mathbb{\color{teal}{this \ is \ a } \ \color{magenta}{paragraph \ in \ another \ font}}$
 $\textcolor{olive}{\T E X} \ \textcolor{darkgray}{workaround \ found \ by \ Dassalem \ Mohammed \ Yasser}$
