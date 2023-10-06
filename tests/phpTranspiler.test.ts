@@ -776,6 +776,18 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('should transpile continue statement', () => {
+        const ts =
+        "while(true){\n"+
+        "    continue;\n"+
+        "}"
+        const php =
+        "while (true) {\n" +
+        "    continue;\n" +
+        "}"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('should transpile assert', () => {
         const ts =
         "assert(1+1, 'failed assertion')"

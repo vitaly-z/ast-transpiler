@@ -268,13 +268,18 @@ export class CSharpTranspiler extends BaseTranspiler {
         const type = global.checker.getResolvedSignature(node);
         if (type?.declaration === undefined) {
             let parsedArguments = node.arguments?.map((a) => this.printNode(a, 0)).join(", ");
-            parsedArguments = parsedArguments ? ", " + parsedArguments : "";
+            parsedArguments = parsedArguments ? parsedArguments : "";
             const propName = node.expression?.name.escapedText;
-            const isAsyncDecl = true;
-            // const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
-            const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
-            const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
-            return `${open}"${propName}"${parsedArguments}${close}`;
+            // const isAsyncDecl = true;
+            const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+            // const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
+            // const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
+            // return `${open}"${propName}"${parsedArguments}${close}`;
+            const argsArray = `new object[] { ${parsedArguments} }`;
+            const open = this.DYNAMIC_CALL_OPEN;
+            let statement = `${open}this, "${propName}", ${argsArray})`;
+            statement = isAsyncDecl ? `((Task<object>)${statement})` : statement;
+            return statement;
         }
         return undefined;
     }
@@ -289,7 +294,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 // case "JSON.parse":
                 //     return `json_decode(${parsedArg}, $as_associative_array = true)`;
                 case "Math.abs":
-                    return `Math.Abs((double)${parsedArg})`;
+                    return `Math.Abs(Convert.ToDouble(${parsedArg}))`;
                 }
             } else if (args.length === 2)
             {
@@ -301,7 +306,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                 case "Math.max":
                     return `mathMax(${parsedArg1}, ${parsedArg2})`;
                 case "Math.pow":
-                    return `Math.Pow((double)${parsedArg1}, (double)${parsedArg2})`;
+                    return `Math.Pow(Convert.ToDouble(${parsedArg1}), Convert.ToDouble(${parsedArg2}))`;
                 }
             }
             const leftSide = node.expression?.expression;
@@ -350,6 +355,8 @@ export class CSharpTranspiler extends BaseTranspiler {
             return notOperator + `((${target}).GetType() == typeof(bool))`;
         case "object":
             return notOperator + `((${target}).GetType() == typeof(Dictionary<string, object>))`;
+        case "function":
+            return notOperator + `((${target}).GetType() == typeof(Delegate))`;
         }
 
         return undefined;
@@ -768,11 +775,11 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printMathRoundCall(node, identation, parsedArg = undefined) {
-        return `Math.Round((double)${parsedArg})`;
+        return `Math.Round(Convert.ToDouble(${parsedArg}))`;
     }
 
     printMathCeilCall(node, identation, parsedArg = undefined) {
-        `Math.Ceiling((double)${parsedArg})`;
+        `Math.Ceiling(Convert.ToDouble(${parsedArg}))`;
     }
 
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
@@ -787,12 +794,24 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
     }
 
+    printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).StartsWith(${parsedArg})`;
+    }
+
+    printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).EndsWith(${parsedArg})`;
+    }
+
+    printTrimCall(node, identation, name = undefined) {
+        return `((string)${name}).Trim()`;
+    }
+
     printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
         return `String.Join(${parsedArg}, ((List<object>)${name}).ToArray())`;
     }
 
     printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).Split((string)${parsedArg}).ToList<object>()`;
+        return `((string)${name}).Split(new [] {((string)${parsedArg})}, StringSplitOptions.None).ToList<object>()`;
     }
 
     printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
@@ -905,7 +924,7 @@ export class CSharpTranspiler extends BaseTranspiler {
                     if (isClassDeclaration){
                         return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${id.escapedText} ((string)${parsedArg}) ${this.LINE_TERMINATOR}`;
                     } else {
-                        return this.getIden(identation) + `throwDynamicException((string)${id.escapedText}, ${parsedArg});return null;`;
+                        return this.getIden(identation) + `throwDynamicException(${id.escapedText}, ${parsedArg});return null;`;
                     }
                 }
                 return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${newExpression} (${parsedArg}) ${this.LINE_TERMINATOR}`;

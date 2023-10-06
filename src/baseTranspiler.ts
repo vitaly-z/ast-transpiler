@@ -47,6 +47,7 @@ class BaseTranspiler {
     THROW_TOKEN = "throw";
     AWAIT_TOKEN = "await";
     STATIC_TOKEN = "static";
+    CONTINUE_TOKEN = "continue";
     EXTENDS_TOKEN = ":";
     NOT_TOKEN = "!";
     SUPER_TOKEN = "super";
@@ -1019,6 +1020,18 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
+    printTrimCall(node, identation, name = undefined) {
+        return undefined; // stub
+    }
+
     printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
         return undefined; // stub
     }
@@ -1122,6 +1135,8 @@ class BaseTranspiler {
                     return this.printPopCall(node, identation, parsedLeftSide);
                 case "reverse":
                     return this.printReverseCall(node, identation, parsedLeftSide);
+                case "trim":
+                    return this.printTrimCall(node, identation, parsedLeftSide);
                 }
             }
 
@@ -1145,6 +1160,10 @@ class BaseTranspiler {
                     return this.printSplitCall(node, identation, name, parsedArg);
                 case 'toFixed':
                     return this.printToFixedCall(node, identation, name, parsedArg);
+                case 'endsWith':
+                    return this.printEndsWithCall(node, identation, name, parsedArg);
+                case 'startsWith':
+                    return this.printStartsWithCall(node, identation, name, parsedArg);
                 }
 
                 if (args.length === 1 || args.length === 2) {
@@ -1592,6 +1611,10 @@ class BaseTranspiler {
         return this.getIden(identation) + this.NULL_TOKEN;
     }
 
+    printContinueStatement(node, identation){
+        return this.getIden(identation) + this.CONTINUE_TOKEN + this.LINE_TERMINATOR;
+    }
+
     printNode(node, identation = 0): string {
 
         try {
@@ -1675,6 +1698,8 @@ class BaseTranspiler {
                 return this.printSpreadElement(node, identation);
             } else if (ts.SyntaxKind.NullKeyword === node.kind) {
                 return this.printNullKeyword(node, identation);
+            } else if (ts.isContinueStatement(node)) {
+                return this.printContinueStatement(node, identation);
             }
 
             if (node.statements) {

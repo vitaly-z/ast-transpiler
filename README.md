@@ -1,5 +1,36 @@
 # AST-Transpiler
-## [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
+
+> __Warning__
+> [Inactive] This repository was moved to https://github.com/ccxt/ast-transpiler
+
+```diff
+! 
+! Warning - This repository was moved to https://github.com/ccxt/ast-transpiler
+```
+
+$\Large{\color{red}W A R N I N G !}$
+
+$\mathscr{\color{red}{this}asdasdasda}$
+
+$\mathbb{\color{teal}{this \ is \ a } \ \color{magenta}{paragraph \ in \ another \ font}}$
+
+$\textcolor{olive}{\T E X} \ \textcolor{darkgray}{workaround \ found \ by \ Dassalem \ Mohammed \ Yasser}$
+
+$\text{hello}$
+
+$\Large{hello}$$   #Bigger text size
+
+$\fbox{\color{red}Hello there}$
+
+![](https://img.shields.io/static/v1?label=&message=Warning%20This%20repository%20and%20development%20has%20been%20moved%20into&color=red) https://github.com/ccxt/ast-transpiler
+
+
+![asdx](https://img.shields.io/badge/Warning%20This%20repository%20and%20development%20has%20been%20moved%20into?style=for-the-badge) https://github.com/ccxt/ast-transpiler
+
+
+
+
+_____________ 
 [![Build](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/carlosmiei/ast-transpiler/actions/workflows/node.js.yml)
 ![Jest coverage](./badges/coverage-jest%20coverage.svg)
 ![Functions](./badges/coverage-functions.svg)

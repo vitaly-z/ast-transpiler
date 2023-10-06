@@ -119,6 +119,7 @@ var BaseTranspiler = class {
     this.DEFAULT_IDENTATION = "    ";
     this.STRING_QUOTE_TOKEN = '"';
     this.UNDEFINED_TOKEN = "null";
+    this.NULL_TOKEN = "null";
     this.IF_TOKEN = "if";
     this.ELSE_TOKEN = "else";
     this.ELSEIF_TOKEN = "else if";
@@ -149,6 +150,7 @@ var BaseTranspiler = class {
     this.THROW_TOKEN = "throw";
     this.AWAIT_TOKEN = "await";
     this.STATIC_TOKEN = "static";
+    this.CONTINUE_TOKEN = "continue";
     this.EXTENDS_TOKEN = ":";
     this.NOT_TOKEN = "!";
     this.SUPER_TOKEN = "super";
@@ -230,6 +232,7 @@ var BaseTranspiler = class {
     this.INDEXOF_WRAPPER_CLOSE = "";
     this.PARSEINT_WRAPPER_OPEN = "";
     this.PARSEINT_WRAPPER_CLOSE = "";
+    this.DYNAMIC_CALL_OPEN = "";
     this.SPREAD_TOKEN = "...";
     this.SupportedKindNames = {};
     this.PostFixOperators = {};
@@ -342,6 +345,9 @@ var BaseTranspiler = class {
     return modifiers.length > 0;
   }
   getMethodOverride(node) {
+    if (node === void 0) {
+      return void 0;
+    }
     if (!ts.isClassDeclaration(node.parent)) {
       return void 0;
     }
@@ -349,23 +355,26 @@ var BaseTranspiler = class {
     if (!classDeclaration.heritageClauses) {
       return void 0;
     }
-    const parentClass = ts.getAllSuperTypeNodes(node.parent)[0];
-    const parentClassType = global.checker.getTypeAtLocation(parentClass);
-    const parentClassDecl = parentClassType?.symbol?.valueDeclaration;
-    if (parentClassDecl === void 0) {
-      this.warn(node, "Parent class", "Parent class not found");
-      return void 0;
-    }
-    const parentClassMembers = parentClassDecl.members ?? [];
     let method = void 0;
-    parentClassMembers.forEach((elem) => {
-      if (ts.isMethodDeclaration(elem)) {
-        const name = elem.name.getText().trim();
-        if (node.name.escapedText === name) {
-          method = elem;
-        }
+    let parentClass = ts.getAllSuperTypeNodes(node.parent)[0];
+    while (parentClass !== void 0) {
+      const parentClassType = global.checker.getTypeAtLocation(parentClass);
+      const parentClassDecl = parentClassType?.symbol?.valueDeclaration;
+      if (parentClassDecl === void 0) {
+        this.warn(node, "Parent class", "Parent class not found");
+        return void 0;
       }
-    });
+      const parentClassMembers = parentClassDecl.members ?? [];
+      parentClassMembers.forEach((elem) => {
+        if (ts.isMethodDeclaration(elem)) {
+          const name = elem.name.getText().trim();
+          if (node.name.escapedText === name) {
+            method = elem;
+          }
+        }
+      });
+      parentClass = ts.getAllSuperTypeNodes(parentClassDecl)[0] ?? void 0;
+    }
     return method;
   }
   getIden(num) {
@@ -435,7 +444,7 @@ var BaseTranspiler = class {
       if (this.COMPARISON_WRAPPER_OPEN) {
         leftVar = this.printNode(left, 0);
         rightVar = this.printNode(right, identation);
-        return this.getIden(identation) + `${this.COMPARISON_WRAPPER_OPEN}${leftVar}, ${rightVar}${this.COMPARISON_WRAPPER_CLOSE}`;
+        return `${this.COMPARISON_WRAPPER_OPEN}${leftVar}, ${rightVar}${this.COMPARISON_WRAPPER_CLOSE}`;
       }
     }
     if (operatorToken.kind === ts.SyntaxKind.BarBarToken || operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
@@ -447,7 +456,7 @@ var BaseTranspiler = class {
     }
     const customOperator = this.getCustomOperatorIfAny(left, right, operatorToken);
     operator = customOperator ? customOperator : operator;
-    return this.getIden(identation) + leftVar + " " + operator + " " + rightVar.trim();
+    return leftVar + " " + operator + " " + rightVar.trim();
   }
   transformPropertyAcessExpressionIfNeeded(node) {
     return void 0;
@@ -473,15 +482,15 @@ var BaseTranspiler = class {
       case "length":
         return this.printLengthProperty(node, identation, leftSide);
     }
-    let rawExpression = node.getFullText().trim();
+    let rawExpression = node.getText().trim();
     if (this.FullPropertyAccessReplacements.hasOwnProperty(rawExpression)) {
-      return this.getIden(identation) + this.FullPropertyAccessReplacements[rawExpression];
+      return this.FullPropertyAccessReplacements[rawExpression];
     }
     leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : this.printNode(expression, 0);
     rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : this.transformPropertyAcessRightIdentifierIfNeeded(rightSide) ?? rightSide;
     const accessToken = this.getExceptionalAccessTokenIfAny(node) ?? this.PROPERTY_ACCESS_TOKEN;
     rawExpression = leftSide + accessToken + rightSide;
-    return this.getIden(identation) + rawExpression;
+    return rawExpression;
   }
   printCustomDefaultValueIfNeeded(node) {
     return void 0;
@@ -598,6 +607,9 @@ var BaseTranspiler = class {
       if (ts.isArrayLiteralExpression(initializer)) {
         return this.ARRAY_KEYWORD;
       }
+      if (ts.isBooleanLiteral(initializer)) {
+        return this.BOOLEAN_KEYWORD;
+      }
       if (ts.isObjectLiteralExpression(initializer)) {
         return this.OBJECT_KEYWORD;
       }
@@ -606,9 +618,6 @@ var BaseTranspiler = class {
       }
       if (ts.isStringLiteralLike(initializer)) {
         return this.STRING_KEYWORD;
-      }
-      if (ts.isBooleanLiteral(initializer)) {
-        return this.BOOLEAN_KEYWORD;
       }
     }
     return void 0;
@@ -676,7 +685,8 @@ var BaseTranspiler = class {
       return "";
     }
     const typeText = this.getType(node);
-    if (typeText === void 0) {
+    return this.DEFAULT_PARAMETER_TYPE;
+    if (typeText === void 0 || typeText === this.STRING_KEYWORD) {
       this.warn(node, node.getText(), "Parameter type not found, will default to: " + this.DEFAULT_PARAMETER_TYPE);
       return this.DEFAULT_PARAMETER_TYPE;
     }
@@ -687,7 +697,7 @@ var BaseTranspiler = class {
       return "";
     }
     const typeText = this.getFunctionType(node);
-    if (typeText === void 0) {
+    if (typeText === void 0 || typeText !== this.VOID_KEYWORD && typeText !== this.PROMISE_TYPE_KEYWORD) {
       let res = "";
       if (this.isAsyncFunction(node)) {
         res = `${this.PROMISE_TYPE_KEYWORD}<${this.DEFAULT_RETURN_TYPE}>`;
@@ -707,7 +717,11 @@ var BaseTranspiler = class {
     modifiers = modifiers ? modifiers + " " : modifiers;
     let returnType = this.printFunctionType(node);
     returnType = returnType ? returnType + " " : returnType;
-    const functionDef = this.getIden(identation) + modifiers + returnType + this.FUNCTION_TOKEN + " " + name + "(" + parsedArgs + ")";
+    const fnKeyword = this.FUNCTION_TOKEN ? this.FUNCTION_TOKEN + " " : "";
+    if (!fnKeyword) {
+      modifiers = modifiers + "public ";
+    }
+    const functionDef = this.getIden(identation) + modifiers + returnType + fnKeyword + name + "(" + parsedArgs + ")";
     return functionDef;
   }
   transformFunctionNameIfNeeded(name) {
@@ -758,7 +772,7 @@ var BaseTranspiler = class {
   printNumericLiteral(node) {
     return node.text;
   }
-  printArrayLiteralExpression(node) {
+  printArrayLiteralExpression(node, identation) {
     const elements = node.elements.map((e) => {
       return this.printNode(e);
     }).join(", ");
@@ -786,7 +800,7 @@ var BaseTranspiler = class {
     const parsedArgs = args.map((a) => {
       return this.printNode(a, identation).trim();
     }).join(",");
-    return this.getIden(identation) + this.SUPER_CALL_TOKEN + "(" + parsedArgs + ")";
+    return this.SUPER_CALL_TOKEN + "(" + parsedArgs + ")";
   }
   isBuiltInFunctionCall(node) {
     const symbol = global.checker.getSymbolAtLocation(node);
@@ -847,10 +861,28 @@ var BaseTranspiler = class {
   printIndexOfCall(node, identation, name = void 0, parsedArg = void 0) {
     return void 0;
   }
+  printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return void 0;
+  }
+  printEndsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return void 0;
+  }
+  printTrimCall(node, identation, name = void 0) {
+    return void 0;
+  }
   printJoinCall(node, identation, name = void 0, parsedArg = void 0) {
     return void 0;
   }
   printSplitCall(node, identation, name = void 0, parsedArg = void 0) {
+    return void 0;
+  }
+  printToFixedCall(node, identation, name = void 0, parsedArg = void 0) {
+    return void 0;
+  }
+  printSliceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    return void 0;
+  }
+  printReplaceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
     return void 0;
   }
   printToStringCall(node, identation, name = void 0) {
@@ -865,6 +897,9 @@ var BaseTranspiler = class {
   printShiftCall(node, identation, name = void 0) {
     return void 0;
   }
+  printReverseCall(node, identation, name = void 0) {
+    return void 0;
+  }
   printPopCall(node, identation, name = void 0) {
     return void 0;
   }
@@ -877,7 +912,7 @@ var BaseTranspiler = class {
     const removeParenthesis = this.shouldRemoveParenthesisFromCallExpression(node);
     const finalExpression = this.printOutOfOrderCallExpressionIfAny(node, identation);
     if (finalExpression) {
-      return this.getIden(identation) + finalExpression;
+      return finalExpression;
     }
     if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
       const expressionText = node.expression.getText().trim();
@@ -918,6 +953,10 @@ var BaseTranspiler = class {
             return this.printShiftCall(node, identation, parsedLeftSide);
           case "pop":
             return this.printPopCall(node, identation, parsedLeftSide);
+          case "reverse":
+            return this.printReverseCall(node, identation, parsedLeftSide);
+          case "trim":
+            return this.printTrimCall(node, identation, parsedLeftSide);
         }
       }
       const arg = args && args.length > 0 ? args[0] : void 0;
@@ -935,20 +974,35 @@ var BaseTranspiler = class {
             return this.printJoinCall(node, identation, name, parsedArg);
           case "split":
             return this.printSplitCall(node, identation, name, parsedArg);
+          case "toFixed":
+            return this.printToFixedCall(node, identation, name, parsedArg);
+          case "endsWith":
+            return this.printEndsWithCall(node, identation, name, parsedArg);
+          case "startsWith":
+            return this.printStartsWithCall(node, identation, name, parsedArg);
+        }
+        if (args.length === 1 || args.length === 2) {
+          const parsedArg2 = args[1] ? this.printNode(args[1], identation).trimStart() : void 0;
+          switch (rightSide) {
+            case "slice":
+              return this.printSliceCall(node, identation, name, parsedArg, parsedArg2);
+            case "replace":
+              return this.printReplaceCall(node, identation, name, parsedArg, parsedArg2);
+          }
         }
       }
     } else {
       const args = node.arguments ?? [];
       if (args.length === 2 && expression.escapedText === "assert") {
-        return this.getIden(identation) + this.printAssertCall(node, identation, parsedArgs);
+        return this.printAssertCall(node, identation, parsedArgs);
       }
     }
     if (expression.kind === ts.SyntaxKind.SuperKeyword) {
       return this.printSuperCallInsideConstructor(node, identation);
     }
     let parsedExpression = void 0;
-    if (this.CallExpressionReplacements.hasOwnProperty(expression.escapedText)) {
-      parsedExpression = this.CallExpressionReplacements[expression.escapedText];
+    if (this.CallExpressionReplacements.hasOwnProperty(expression.getText())) {
+      parsedExpression = this.CallExpressionReplacements[expression.getText()];
     } else {
       if (expression.kind === ts.SyntaxKind.Identifier) {
         const idValue = expression.text ?? expression.escapedText;
@@ -957,7 +1011,7 @@ var BaseTranspiler = class {
         parsedExpression = this.printNode(expression, 0);
       }
     }
-    let parsedCall = this.getIden(identation) + parsedExpression;
+    let parsedCall = parsedExpression;
     if (!removeParenthesis) {
       parsedCall += "(" + parsedArgs + ")";
     }
@@ -1060,7 +1114,7 @@ var BaseTranspiler = class {
     if (exception) {
       return exception;
     }
-    const isLeftSideOfAssignment = node.parent?.kind === ts.SyntaxKind.BinaryExpression && node.parent.operatorToken.kind === ts.SyntaxKind.EqualsToken && node.parent?.left === node;
+    const isLeftSideOfAssignment = node.parent?.kind === ts.SyntaxKind.BinaryExpression && (node.parent.operatorToken.kind === ts.SyntaxKind.EqualsToken || node.parent.operatorToken.kind === ts.SyntaxKind.PlusEqualsToken) && node.parent?.left === node;
     const expressionAsString = this.printNode(expression, 0);
     const argumentAsString = this.printNode(argumentExpression, 0);
     if (!isLeftSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
@@ -1089,11 +1143,10 @@ var BaseTranspiler = class {
       return this.printPrefixUnaryExpression(node, identation);
     }
     let expression = this.printNode(node, 0);
-    if (node.kind !== ts.SyntaxKind.BinaryExpression && node.kind !== ts.SyntaxKind.ParenthesizedExpression) {
+    if (1 + 1 || node.kind !== ts.SyntaxKind.BinaryExpression && node.kind !== ts.SyntaxKind.ParenthesizedExpression) {
       const typeFlags = global.checker.getTypeAtLocation(node).flags;
-      if (typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags !== ts.TypeFlags.Boolean) {
+      if (1 + 1 || typeFlags !== ts.TypeFlags.BooleanLiteral && typeFlags !== ts.TypeFlags.Boolean) {
         expression = this.printNode(node, 0);
-        this.warn(node, node.getText(), "Falsy/Truthy expressions are not supported by this language, so adding the defined wrapper!");
         expression = `${this.FALSY_WRAPPER_OPEN}${expression}${this.FALSY_WRAPPER_CLOSE}`;
       }
     }
@@ -1143,8 +1196,8 @@ var BaseTranspiler = class {
   }
   printNewExpression(node, identation) {
     let expression = node.expression?.escapedText;
-    expression = expression ? expression : this.printNode(node.expression, 0);
-    const args = node.arguments.map((n) => this.printNode(n, 0)).join(",");
+    expression = expression ? expression : this.printNode(node.expression);
+    const args = node.arguments.map((n) => this.printNode(n, identation)).join(",");
     const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
     return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
   }
@@ -1153,15 +1206,15 @@ var BaseTranspiler = class {
     return this.getIden(identation) + this.THROW_TOKEN + " " + expression + this.LINE_TERMINATOR;
   }
   printAwaitExpression(node, identation) {
-    const expression = this.printNode(node.expression, 0);
+    const expression = this.printNode(node.expression, identation);
     const awaitToken = this.asyncTranspiling ? this.AWAIT_TOKEN + " " : "";
-    return this.getIden(identation) + awaitToken + expression;
+    return awaitToken + expression;
   }
   printConditionalExpression(node, identation) {
     const condition = this.printCondition(node.condition, identation);
     const whenTrue = this.printNode(node.whenTrue, 0);
     const whenFalse = this.printNode(node.whenFalse, 0);
-    return this.getIden(identation) + condition + " ? " + whenTrue + " : " + whenFalse;
+    return condition + " ? " + whenTrue + " : " + whenFalse;
   }
   printAsExpression(node, identation) {
     return this.printNode(node.expression, identation);
@@ -1183,20 +1236,6 @@ var BaseTranspiler = class {
     const exp = node.expression;
     let rightPart = exp ? " " + this.printNode(exp, identation) : "";
     rightPart = rightPart.trim();
-    if (this.requiresCallExpressionCast) {
-      const functionNode = this.getFunctionNodeFromReturn(node);
-      let functionType = this.getFunctionType(functionNode, false);
-      if (functionType === void 0) {
-        const overrideMethod = this.getMethodOverride(functionNode);
-        if (overrideMethod !== void 0) {
-          functionType = this.getFunctionType(overrideMethod, false);
-        }
-      }
-      if (functionType && exp?.kind !== ts.SyntaxKind.UndefinedKeyword) {
-        rightPart = rightPart ? ` ((${functionType}) (${rightPart}))` + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
-        return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
-      }
-    }
     rightPart = rightPart ? " " + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
     return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
   }
@@ -1218,7 +1257,7 @@ var BaseTranspiler = class {
     if (exprStm.length === 0) {
       return "";
     }
-    const expStatement = this.printNode(node.expression, identation) + this.LINE_TERMINATOR;
+    const expStatement = this.getIden(identation) + exprStm + this.LINE_TERMINATOR;
     return this.printNodeCommentsIfAny(node, identation, expStatement);
   }
   printPropertyDeclaration(node, identation) {
@@ -1234,6 +1273,12 @@ var BaseTranspiler = class {
   printSpreadElement(node, identation) {
     const expression = this.printNode(node.expression, 0);
     return this.getIden(identation) + this.SPREAD_TOKEN + expression;
+  }
+  printNullKeyword(node, identation) {
+    return this.getIden(identation) + this.NULL_TOKEN;
+  }
+  printContinueStatement(node, identation) {
+    return this.getIden(identation) + this.CONTINUE_TOKEN + this.LINE_TERMINATOR;
   }
   printNode(node, identation = 0) {
     try {
@@ -1256,7 +1301,7 @@ var BaseTranspiler = class {
       } else if (ts.isPropertyAccessExpression(node)) {
         return this.printPropertyAccessExpression(node, identation);
       } else if (ts.isArrayLiteralExpression(node)) {
-        return this.printArrayLiteralExpression(node);
+        return this.printArrayLiteralExpression(node, identation);
       } else if (ts.isCallExpression(node)) {
         return this.printCallExpression(node, identation);
       } else if (ts.isWhileStatement(node)) {
@@ -1311,12 +1356,14 @@ var BaseTranspiler = class {
         return this.printParameter(node);
       } else if (ts.isConstructorDeclaration(node)) {
         return this.printConstructorDeclaration(node, identation);
-      }
-      if (ts.isPropertyDeclaration(node)) {
+      } else if (ts.isPropertyDeclaration(node)) {
         return this.printPropertyDeclaration(node, identation);
-      }
-      if (ts.isSpreadElement(node)) {
+      } else if (ts.isSpreadElement(node)) {
         return this.printSpreadElement(node, identation);
+      } else if (ts.SyntaxKind.NullKeyword === node.kind) {
+        return this.printNullKeyword(node, identation);
+      } else if (ts.isContinueStatement(node)) {
+        return this.printContinueStatement(node, identation);
       }
       if (node.statements) {
         const transformedStatements = node.statements.map((m) => {
@@ -1508,6 +1555,82 @@ var BaseTranspiler = class {
     }
     return this.getCJSExports(node);
   }
+  getReturnTypeFromMethod(node) {
+    const bType = global.checker.getTypeAtLocation(node);
+    const func2Type = global.checker.getTypeOfSymbolAtLocation(bType.symbol, bType.symbol.valueDeclaration);
+    const func2Signature = global.checker.getSignaturesOfType(func2Type, ts.SignatureKind.Call)[0];
+    const rawType = func2Signature.getReturnType();
+    const res = global.checker.typeToString(rawType);
+    if (res === void 0) {
+      const name = node.type?.typeName?.escapedText;
+      if (name) {
+        return name;
+      }
+    }
+    return res;
+  }
+  getParameterType(node) {
+    const isOptional = node.questionToken !== void 0;
+    const result = {
+      name: node.name.getText(),
+      isOptional,
+      type: void 0
+    };
+    if (node.initializer !== void 0) {
+      result.initializer = node.initializer.getText();
+    }
+    if (node.type === void 0) {
+      if (node.initializer !== void 0) {
+        const type = global.checker.getTypeAtLocation(node.initializer);
+        const res = global.checker.typeToString(type);
+        result.type = ts.TypeFlags[type.flags];
+        return result;
+      }
+    }
+    const name = node.type?.typeName?.escapedText;
+    if (name) {
+      result.type = name;
+      if (node.initializer !== void 0) {
+        result.initializer = node.initializer.text;
+      }
+      return result;
+    }
+    if (node.type != void 0) {
+      const type = global.checker.getTypeAtLocation(node.type);
+      const res = global.checker.typeToString(type);
+      result.type = res;
+      return result;
+    }
+    return result;
+  }
+  getMethodTypes(file) {
+    const result = [];
+    if (!file.statements) {
+      return result;
+    }
+    const classDeclarations = file.statements.filter((s) => ts.isClassDeclaration(s));
+    classDeclarations.forEach((node) => {
+      const methods = node.members.filter((m) => ts.isMethodDeclaration(m));
+      methods.forEach((m) => {
+        const isAsync = this.isAsyncFunction(m);
+        const name = m.name.getText();
+        const returnType = this.getReturnTypeFromMethod(m);
+        const parameters = m.parameters;
+        const paramTypes = [];
+        parameters.forEach((p) => {
+          const res = this.getParameterType(p);
+          paramTypes.push(res);
+        });
+        result.push({
+          name,
+          async: isAsync,
+          returnType,
+          parameters: paramTypes
+        });
+      });
+    });
+    return result;
+  }
 };
 
 // src/pythonTranspiler.ts
@@ -1637,6 +1760,15 @@ var PythonTranspiler = class extends BaseTranspiler {
   printIndexOfCall(node, identation, name = void 0, parsedArg = void 0) {
     return `${name}.find(${parsedArg})`;
   }
+  printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `${name}.startswith(${parsedArg})`;
+  }
+  printEndsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `${name}.endswith(${parsedArg})`;
+  }
+  printTrimCall(node, identation, name = void 0) {
+    return `${name}.strip()`;
+  }
   printToUpperCaseCall(node, identation, name = void 0) {
     return `${name}.upper()`;
   }
@@ -1749,6 +1881,9 @@ var PythonTranspiler = class extends BaseTranspiler {
     const left = node.left;
     const right = node.right.text;
     const op = node.operatorToken.kind;
+    if ((op === ts2.SyntaxKind.EqualsEqualsToken || op === ts2.SyntaxKind.EqualsEqualsEqualsToken) && node.right.kind === ts2.SyntaxKind.TrueKeyword) {
+      return this.getIden(identation) + this.printNode(node.left, 0);
+    }
     if (left.kind === SyntaxKind.TypeOfExpression) {
       const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
       if (typeOfExpression) {
@@ -1846,11 +1981,11 @@ var PhpTranspiler = class extends BaseTranspiler {
     this.AWAIT_WRAPPER_CLOSE = config["AWAIT_WRAPPER_CLOSE"] ?? ")";
   }
   printAwaitExpression(node, identation) {
-    const expression = this.printNode(node.expression, 0);
+    const expression = this.printNode(node.expression, identation);
     if (!this.asyncTranspiling) {
-      return this.getIden(identation) + expression;
+      return expression;
     }
-    return this.getIden(identation) + this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
+    return this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
   }
   transformIdentifier(identifier) {
     if (this.uncamelcaseIdentifiers) {
@@ -1953,6 +2088,15 @@ var PhpTranspiler = class extends BaseTranspiler {
     } else {
       return `array_search(${parsedArg}, ${name})`;
     }
+  }
+  printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `str_starts_with(${name}, ${parsedArg})`;
+  }
+  printEndsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `str_ends_with(${name}, ${parsedArg})`;
+  }
+  printTrimCall(node, identation, name = void 0) {
+    return `trim(${name})`;
   }
   printJoinCall(node, identation, name = void 0, parsedArg = void 0) {
     return `implode(${parsedArg}, ${name})`;
@@ -2104,7 +2248,7 @@ var parserConfig3 = {
   "ARRAY_OPENING_TOKEN": "new List<object>() {",
   "ARRAY_CLOSING_TOKEN": "}",
   "PROPERTY_ASSIGNMENT_TOKEN": ",",
-  "VAR_TOKEN": "var",
+  "VAR_TOKEN": "object",
   "METHOD_TOKEN": "",
   "PROPERTY_ASSIGNMENT_OPEN": "{",
   "PROPERTY_ASSIGNMENT_CLOSE": "}",
@@ -2118,6 +2262,7 @@ var parserConfig3 = {
   "UNKOWN_PROP_WRAPPER_CLOSE": ")",
   "UKNOWN_PROP_ASYNC_WRAPPER_OPEN": "this.callAsync(",
   "UNKOWN_PROP_ASYNC_WRAPPER_CLOSE": ")",
+  "DYNAMIC_CALL_OPEN": "callDynamically(",
   "EQUALS_EQUALS_WRAPPER_OPEN": "isEqual(",
   "EQUALS_EQUALS_WRAPPER_CLOSE": ")",
   "DIFFERENT_WRAPPER_OPEN": "!isEqual(",
@@ -2143,7 +2288,8 @@ var parserConfig3 = {
   "INDEXOF_WRAPPER_OPEN": "getIndexOf(",
   "INDEXOF_WRAPPER_CLOSE": ")",
   "MOD_WRAPPER_OPEN": "mod(",
-  "MOD_WRAPPER_CLOSE": ")"
+  "MOD_WRAPPER_CLOSE": ")",
+  "FUNCTION_TOKEN": ""
 };
 var CSharpTranspiler = class extends BaseTranspiler {
   constructor(config = {}) {
@@ -2176,8 +2322,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
       "Math.log": "Math.Log",
       "Math.abs": "Math.Abs",
       "Math.floor": "Math.Floor",
-      "Math.pow": "Math.Pow",
-      "Promise.all": "Task.WhenAll"
+      "Math.pow": "Math.Pow"
     };
     this.CallExpressionReplacements = {};
     this.ReservedKeywordsReplacements = {
@@ -2186,7 +2331,8 @@ var CSharpTranspiler = class extends BaseTranspiler {
       "params": "parameters",
       "base": "bs",
       "internal": "intern",
-      "event": "eventVar"
+      "event": "eventVar",
+      "fixed": "fixedVar"
     };
     this.binaryExpressionsWrappers = {
       [ts4.SyntaxKind.EqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
@@ -2209,6 +2355,38 @@ var CSharpTranspiler = class extends BaseTranspiler {
   }
   printSuperCallInsideConstructor(node, identation) {
     return "";
+  }
+  printIdentifier(node) {
+    let idValue = node.text ?? node.escapedText;
+    if (this.ReservedKeywordsReplacements[idValue]) {
+      idValue = this.ReservedKeywordsReplacements[idValue];
+    }
+    if (idValue === "undefined") {
+      return this.UNDEFINED_TOKEN;
+    }
+    const type = global.checker.getTypeAtLocation(node);
+    const symbol = type?.symbol;
+    if (symbol !== void 0) {
+      const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
+      const decl = symbol?.declarations ?? [];
+      let isBuiltIn = void 0;
+      if (decl.length > 0) {
+        isBuiltIn = decl[0].getSourceFile().fileName.indexOf("typescript") > -1;
+      }
+      if (isBuiltIn !== void 0 && !isBuiltIn) {
+        const isClassDeclaration = declarations.find((l) => l.kind === ts4.SyntaxKind.ClassDeclaration);
+        if (isClassDeclaration) {
+          const isInsideNewExpression = node?.parent?.kind === ts4.SyntaxKind.NewExpression;
+          const isInsideCatch = node?.parent?.kind === ts4.SyntaxKind.ThrowStatement;
+          const isLeftSide = node?.parent?.name === node || node?.parent?.left === node;
+          const isCallOrPropertyAccess = node?.parent?.kind === ts4.SyntaxKind.PropertyAccessExpression || node?.parent?.kind === ts4.SyntaxKind.ElementAccessExpression;
+          if (!isLeftSide && !isCallOrPropertyAccess && !isInsideCatch && !isInsideNewExpression) {
+            return `typeof(${idValue})`;
+          }
+        }
+      }
+    }
+    return this.transformIdentifier(idValue);
   }
   printConstructorDeclaration(node, identation) {
     const classNode = node.parent;
@@ -2251,18 +2429,35 @@ var CSharpTranspiler = class extends BaseTranspiler {
     }
     return;
   }
+  printDynamicCall(node, identation) {
+    const isAsync = true;
+    const elementAccess = node.expression;
+    if (elementAccess?.kind === ts4.SyntaxKind.ElementAccessExpression) {
+      const parsedArg = node.arguments?.length > 0 ? node.arguments.map((n) => this.printNode(n, identation).trimStart()).join(", ") : "";
+      const target = this.printNode(elementAccess.expression, 0);
+      const propName = this.printNode(elementAccess.argumentExpression, 0);
+      const argsArray = `new object[] { ${parsedArg} }`;
+      const open = this.DYNAMIC_CALL_OPEN;
+      let statement = `${open}${target}, ${propName}, ${argsArray})`;
+      statement = isAsync ? `((Task<object>)${statement})` : statement;
+      return statement;
+    }
+    return void 0;
+  }
   printElementAccessExpressionExceptionIfAny(node) {
   }
   printWrappedUnknownThisProperty(node) {
     const type = global.checker.getResolvedSignature(node);
     if (type?.declaration === void 0) {
       let parsedArguments = node.arguments?.map((a) => this.printNode(a, 0)).join(", ");
-      parsedArguments = parsedArguments ? ", " + parsedArguments : "";
+      parsedArguments = parsedArguments ? parsedArguments : "";
       const propName = node.expression?.name.escapedText;
-      const isAsyncDecl = true;
-      const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
-      const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
-      return `${open}"${propName}"${parsedArguments}${close}`;
+      const isAsyncDecl = node?.parent?.kind === ts4.SyntaxKind.AwaitExpression;
+      const argsArray = `new object[] { ${parsedArguments} }`;
+      const open = this.DYNAMIC_CALL_OPEN;
+      let statement = `${open}this, "${propName}", ${argsArray})`;
+      statement = isAsyncDecl ? `((Task<object>)${statement})` : statement;
+      return statement;
     }
     return void 0;
   }
@@ -2273,20 +2468,8 @@ var CSharpTranspiler = class extends BaseTranspiler {
       if (args.length === 1) {
         const parsedArg = this.printNode(args[0], 0);
         switch (expressionText) {
-          case "Array.isArray":
-            return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
-          case "Object.keys":
-            return `new List<string>(((Dictionary<string,object>)${parsedArg}).Keys)`;
-          case "Object.values":
-            return `new List<object>(((Dictionary<string,object>)${parsedArg}).Values)`;
-          case "Math.round":
-            return `Math.Round((double)${parsedArg})`;
-          case "Math.ceil":
-            return `Math.Ceiling((double)${parsedArg})`;
-          case "Math.floor":
-            return `Math.Floor((double)${parsedArg})`;
           case "Math.abs":
-            return `Math.Abs((double)${parsedArg})`;
+            return `Math.Abs(Convert.ToDouble(${parsedArg}))`;
         }
       } else if (args.length === 2) {
         const parsedArg1 = this.printNode(args[0], 0);
@@ -2297,7 +2480,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
           case "Math.max":
             return `mathMax(${parsedArg1}, ${parsedArg2})`;
           case "Math.pow":
-            return `Math.Pow((double)${parsedArg1}, (double)${parsedArg2})`;
+            return `Math.Pow(Convert.ToDouble(${parsedArg1}), Convert.ToDouble(${parsedArg2}))`;
         }
       }
       const leftSide = node.expression?.expression;
@@ -2308,37 +2491,9 @@ var CSharpTranspiler = class extends BaseTranspiler {
           return res;
         }
       }
-      const rightSide = node.expression.name?.escapedText;
-      const arg = args && args.length > 0 ? args[0] : void 0;
-      if (arg) {
-        const argText = this.printNode(arg, identation).trimStart();
-        const type = global.checker.getTypeAtLocation(leftSide);
-        switch (rightSide) {
-          case "includes":
-            return `${leftSideText}.Contains(${argText})`;
-          case "join":
-            return `String.Join(${argText}, ${leftSideText})`;
-          case "split":
-            return `((string)${leftSideText}).Split(${argText}).ToList<string>()`;
-          case "slice":
-            return `((string)${leftSideText}).Substring(${argText})`;
-          case "replace":
-            return `((string)${leftSideText}).Replace(${argText}, ${this.printNode(args[1], identation)})`;
-          case "indexOf":
-            return `${this.INDEXOF_WRAPPER_OPEN}${leftSideText}, ${argText}${this.INDEXOF_WRAPPER_CLOSE}`;
-        }
-      } else {
-        switch (rightSide) {
-          case "toUpperCase":
-            return `((string)${this.printNode(leftSide, 0)}).ToUpper()`;
-          case "toLowerCase":
-            return `((string)${this.printNode(leftSide, 0)}).ToLower()`;
-        }
-      }
     }
-    const thisElementAccess = this.printThisElementAccesssIfNeeded(node, identation);
-    if (thisElementAccess) {
-      return thisElementAccess;
+    if (node.expression.kind === ts4.SyntaxKind.ElementAccessExpression) {
+      return this.printDynamicCall(node, identation);
     }
     return void 0;
   }
@@ -2352,13 +2507,15 @@ var CSharpTranspiler = class extends BaseTranspiler {
     const target = this.printNode(expression, 0);
     switch (right) {
       case "string":
-        return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(string)`;
+        return notOperator + `((${target}).GetType() == typeof(string))`;
       case "number":
-        return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double)`;
+        return notOperator + `((${target}).GetType() == typeof(Int64)) || ((${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double))`;
       case "boolean":
-        return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(bool)`;
+        return notOperator + `((${target}).GetType() == typeof(bool))`;
       case "object":
-        return this.getIden(identation) + notOperator + `(${target}).GetType() == typeof(Dictionary<string, object>)`;
+        return notOperator + `((${target}).GetType() == typeof(Dictionary<string, object>))`;
+      case "function":
+        return notOperator + `((${target}).GetType() == typeof(Delegate))`;
     }
     return void 0;
   }
@@ -2376,14 +2533,14 @@ var CSharpTranspiler = class extends BaseTranspiler {
       const arrayBindingPatternElements = left.elements;
       const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e, 0));
       const syntheticName = parsedArrayBindingElements.join("") + "Variable";
-      let arrayBindingStatement = this.getIden(identation) + `var ${syntheticName} = ${this.printNode(right, 0)};
+      let arrayBindingStatement = `var ${syntheticName} = ${this.printNode(right, 0)};
 `;
       parsedArrayBindingElements.forEach((e, index) => {
         const leftElement = arrayBindingPatternElements[index];
         const leftType = global.checker.getTypeAtLocation(leftElement);
         const parsedType = this.getTypeFromRawType(leftType);
         const castExp = parsedType ? `(${parsedType})` : "";
-        const statement = this.getIden(identation) + `${e} = ${castExp}${syntheticName}[${index}]`;
+        const statement = this.getIden(identation) + `${e} = ((List<object>)${syntheticName})[${index}]`;
         if (index < parsedArrayBindingElements.length - 1) {
           arrayBindingStatement += statement + ";\n";
         } else {
@@ -2393,23 +2550,21 @@ var CSharpTranspiler = class extends BaseTranspiler {
       return arrayBindingStatement;
     }
     if (op === ts4.SyntaxKind.InKeyword) {
-      return `${this.getIden(identation)}((Dictionary<string,object>)${this.printNode(right, 0)}).ContainsKey((string)${this.printNode(left, 0)})`;
+      return `inOp(${this.printNode(right, 0)}, ${this.printNode(left, 0)})`;
     }
     const leftText = this.printNode(left, 0);
     const rightText = this.printNode(right, 0);
+    if (op === ts4.SyntaxKind.PlusEqualsToken) {
+      return `${leftText} = add(${leftText}, ${rightText})`;
+    }
+    if (op === ts4.SyntaxKind.MinusEqualsToken) {
+      return `${leftText} = subtract(${leftText}, ${rightText})`;
+    }
     if (op in this.binaryExpressionsWrappers) {
       const wrapper = this.binaryExpressionsWrappers[op];
       const open = wrapper[0];
       const close = wrapper[1];
-      return `${this.getIden(identation)}${open}${leftText}, ${rightText}${close}`;
-    }
-    if (op === ts4.SyntaxKind.EqualsToken) {
-      const leftType = global.checker.getTypeAtLocation(left);
-      const rightType = global.checker.getTypeAtLocation(right);
-      if (this.isAnyType(rightType.flags) && !this.isAnyType(leftType.flags)) {
-        const parsedType = this.getTypeFromRawType(leftType);
-        return `${this.getIden(identation)}${leftText} = (${parsedType})(${rightText})`;
-      }
+      return `${open}${leftText}, ${rightText}${close}`;
     }
     return void 0;
   }
@@ -2420,10 +2575,10 @@ var CSharpTranspiler = class extends BaseTranspiler {
       const arrayBindingPatternElements = arrayBindingPattern.elements;
       const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e.name, 0));
       const syntheticName = parsedArrayBindingElements.join("") + "Variable";
-      let arrayBindingStatement = this.getIden(identation) + `var ${syntheticName} = ${this.printNode(declaration.initializer, 0)};
+      let arrayBindingStatement = `${this.getIden(identation)}var ${syntheticName} = ${this.printNode(declaration.initializer, 0)};
 `;
       parsedArrayBindingElements.forEach((e, index) => {
-        const statement = this.getIden(identation) + `var ${e} = ${syntheticName}[${index}]`;
+        const statement = this.getIden(identation) + `var ${e} = ((List<object>) ${syntheticName})[${index}]`;
         if (index < parsedArrayBindingElements.length - 1) {
           arrayBindingStatement += statement + ";\n";
         } else {
@@ -2432,8 +2587,9 @@ var CSharpTranspiler = class extends BaseTranspiler {
       });
       return arrayBindingStatement;
     }
+    const isNew = declaration.initializer.kind === ts4.SyntaxKind.NewExpression;
+    const varToken = isNew ? "var " : "object ";
     const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
-    const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " " : "";
     if (parsedValue === this.UNDEFINED_TOKEN) {
       return this.getIden(identation) + "object " + this.printNode(declaration.name) + " = " + parsedValue;
     }
@@ -2457,7 +2613,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
     return rawExpression;
   }
   printCustomDefaultValueIfNeeded(node) {
-    if (ts4.isArrayLiteralExpression(node) || ts4.isObjectLiteralExpression(node)) {
+    if (ts4.isArrayLiteralExpression(node) || ts4.isObjectLiteralExpression(node) || ts4.isStringLiteral(node) || ts4.isBooleanLiteral(node)) {
       return this.UNDEFINED_TOKEN;
     }
     if (ts4.isNumericLiteral(node)) {
@@ -2487,6 +2643,12 @@ var CSharpTranspiler = class extends BaseTranspiler {
             initParams.push(`${this.printNode(param.name, 0)} ??= new Dictionary<string, object>();`);
           }
           if (ts4.isNumericLiteral(initializer)) {
+            initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
+          }
+          if (ts4.isStringLiteral(initializer)) {
+            initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
+          }
+          if (ts4.isBooleanLiteral(initializer)) {
             initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
           }
         }
@@ -2543,10 +2705,11 @@ var CSharpTranspiler = class extends BaseTranspiler {
     if (elems.length > 0) {
       const first = elems[0];
       if (first.kind === ts4.SyntaxKind.CallExpression) {
-        const type = this.getFunctionType(first);
+        let type = this.getFunctionType(first);
         if (type === void 0 || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
-          arrayOpen = "new List<Task<object>> {";
+          arrayOpen = "new List<object> {";
         } else {
+          type = "object";
           arrayOpen = `new List<${type}> {`;
         }
       }
@@ -2594,7 +2757,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
   printArgsForCallExpression(node, identation) {
     const args = node.arguments;
     let parsedArgs = "";
-    if (this.requiresCallExpressionCast && !this.isBuiltInFunctionCall(node?.expression)) {
+    if (false) {
       const parsedTypes = this.getTypesFromCallExpressionParameters(node);
       const tmpArgs = [];
       args.forEach((arg, index) => {
@@ -2609,6 +2772,154 @@ var CSharpTranspiler = class extends BaseTranspiler {
       return parsedArgs;
     }
     return super.printArgsForCallExpression(node, identation);
+  }
+  printArrayIsArrayCall(node, identation, parsedArg = void 0) {
+    return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
+  }
+  printObjectKeysCall(node, identation, parsedArg = void 0) {
+    return `new List<object>(((Dictionary<string,object>)${parsedArg}).Keys)`;
+  }
+  printObjectValuesCall(node, identation, parsedArg = void 0) {
+    return `new List<object>(((Dictionary<string,object>)${parsedArg}).Values)`;
+  }
+  printJsonParseCall(node, identation, parsedArg = void 0) {
+    return `parseJson(${parsedArg})`;
+  }
+  printJsonStringifyCall(node, identation, parsedArg = void 0) {
+    return `json(${parsedArg})`;
+  }
+  printPromiseAllCall(node, identation, parsedArg = void 0) {
+    return `promiseAll(${parsedArg})`;
+  }
+  printMathFloorCall(node, identation, parsedArg = void 0) {
+    return `(Math.Floor(Double.Parse((${parsedArg}).ToString())))`;
+  }
+  printMathRoundCall(node, identation, parsedArg = void 0) {
+    return `Math.Round(Convert.ToDouble(${parsedArg}))`;
+  }
+  printMathCeilCall(node, identation, parsedArg = void 0) {
+    `Math.Ceiling(Convert.ToDouble(${parsedArg}))`;
+  }
+  printArrayPushCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `((List<object>)${name}).Add(${parsedArg})`;
+  }
+  printIncludesCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `${name}.Contains(${parsedArg})`;
+  }
+  printIndexOfCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
+  }
+  printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `((string)${name}).StartsWith(${parsedArg})`;
+  }
+  printEndsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `((string)${name}).EndsWith(${parsedArg})`;
+  }
+  printTrimCall(node, identation, name = void 0) {
+    return `((string)${name}).Trim()`;
+  }
+  printJoinCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `String.Join(${parsedArg}, ((List<object>)${name}).ToArray())`;
+  }
+  printSplitCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `((string)${name}).Split(new [] {((string)${parsedArg})}, StringSplitOptions.None).ToList<object>()`;
+  }
+  printToFixedCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `toFixed(${name}, ${parsedArg})`;
+  }
+  printToStringCall(node, identation, name = void 0) {
+    return `((object)${name}).ToString()`;
+  }
+  printToUpperCaseCall(node, identation, name = void 0) {
+    return `((string)${name}).ToUpper()`;
+  }
+  printToLowerCaseCall(node, identation, name = void 0) {
+    return `((string)${name}).ToLower()`;
+  }
+  printShiftCall(node, identation, name = void 0) {
+    return `((List<object>)${name}).First()`;
+  }
+  printReverseCall(node, identation, name = void 0) {
+    return `((List<object>)${name}).Reverse()`;
+  }
+  printPopCall(node, identation, name = void 0) {
+    return `((List<object>)${name}).Last()`;
+  }
+  printAssertCall(node, identation, parsedArgs) {
+    return `assert(${parsedArgs})`;
+  }
+  printSliceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    if (parsedArg2 === void 0) {
+      parsedArg2 = "null";
+    }
+    return `slice(${name}, ${parsedArg}, ${parsedArg2})`;
+  }
+  printReplaceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    return `((string)${name}).Replace((string)${parsedArg}, (string)${parsedArg2})`;
+  }
+  printLengthProperty(node, identation, name = void 0) {
+    const leftSide = this.printNode(node.expression, 0);
+    const type = global.checker.getTypeAtLocation(node.expression);
+    this.warnIfAnyType(node, type.flags, leftSide, "length");
+    return this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`;
+  }
+  printPostFixUnaryExpression(node, identation) {
+    const { operand, operator } = node;
+    if (operand.kind === ts4.SyntaxKind.NumericLiteral) {
+      return super.printPostFixUnaryExpression(node, identation);
+    }
+    const leftSide = this.printNode(operand, 0);
+    const op = this.PostFixOperators[operator];
+    return `postFixIncrement(ref ${leftSide})`;
+  }
+  printPrefixUnaryExpression(node, identation) {
+    const { operand, operator } = node;
+    if (operand.kind === ts4.SyntaxKind.NumericLiteral) {
+      return super.printPrefixUnaryExpression(node, identation);
+    }
+    if (operator === ts4.SyntaxKind.ExclamationToken) {
+      return this.PrefixFixOperators[operator] + this.printCondition(node.operand, 0);
+    }
+    const leftSide = this.printNode(operand, 0);
+    if (operator === ts4.SyntaxKind.PlusToken) {
+      return `prefixUnaryPlus(ref ${leftSide})`;
+    } else {
+      return `prefixUnaryNeg(ref ${leftSide})`;
+    }
+  }
+  printConditionalExpression(node, identation) {
+    const condition = this.printCondition(node.condition, 0);
+    const whenTrue = this.printNode(node.whenTrue, 0);
+    const whenFalse = this.printNode(node.whenFalse, 0);
+    return `((bool) ${condition}) ? ` + whenTrue + " : " + whenFalse;
+  }
+  printThrowStatement(node, identation) {
+    if (node.expression.kind === ts4.SyntaxKind.Identifier) {
+      return this.getIden(identation) + this.THROW_TOKEN + " " + this.printNode(node.expression, 0) + this.LINE_TERMINATOR;
+    }
+    if (node.expression.kind === ts4.SyntaxKind.NewExpression) {
+      const expression = node.expression;
+      const argumentsExp = expression?.arguments ?? [];
+      const parsedArg = argumentsExp.map((n) => this.printNode(n, 0)).join(",") ?? "";
+      const newExpression = this.printNode(expression.expression, 0);
+      if (expression.expression.kind === ts4.SyntaxKind.Identifier) {
+        const id = expression.expression;
+        const symbol = global.checker.getSymbolAtLocation(expression.expression);
+        if (symbol) {
+          const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
+          const isClassDeclaration = declarations.find((l) => l.kind === ts4.SyntaxKind.InterfaceDeclaration || l.kind === ts4.SyntaxKind.ClassDeclaration);
+          if (isClassDeclaration) {
+            return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${id.escapedText} ((string)${parsedArg}) ${this.LINE_TERMINATOR}`;
+          } else {
+            return this.getIden(identation) + `throwDynamicException(${id.escapedText}, ${parsedArg});return null;`;
+          }
+        }
+        return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${newExpression} (${parsedArg}) ${this.LINE_TERMINATOR}`;
+      } else if (expression.expression.kind === ts4.SyntaxKind.ElementAccessExpression) {
+        return this.getIden(identation) + `throwDynamicException(${newExpression}, ${parsedArg});`;
+      }
+      return super.printThrowStatement(node, identation);
+    }
   }
 };
 
@@ -2711,11 +3022,13 @@ var Transpiler = class {
       imports = this.pythonTranspiler.getFileImports(global.src);
       exports = this.pythonTranspiler.getFileExports(global.src);
     }
+    const methodsTypes = this.pythonTranspiler.getMethodTypes(global.src);
     Logger.success("transpilation finished successfully");
     return {
       content: transpiledContent,
       imports,
-      exports
+      exports,
+      methodsTypes
     };
   }
   transpileDifferentLanguagesGeneric(mode, input, content) {
@@ -2732,13 +3045,15 @@ var Transpiler = class {
         content: this.transpile(inp.language, mode, content, !async, false, false).content
       });
     });
+    const methodsTypes = this.pythonTranspiler.getMethodTypes(global.src);
     const imports = this.pythonTranspiler.getFileImports(global.src);
     const exports = this.pythonTranspiler.getFileExports(global.src);
     const output = files.map((file) => {
       return {
         content: file.content,
         imports,
-        exports
+        exports,
+        methodsTypes
       };
     });
     return output;

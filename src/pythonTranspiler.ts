@@ -156,6 +156,18 @@ export class PythonTranspiler extends BaseTranspiler {
         return `${name}.find(${parsedArg})`;
     }
 
+    printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${name}.startswith(${parsedArg})`;
+    }
+
+    printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${name}.endswith(${parsedArg})`;
+    }
+
+    printTrimCall(node, identation, name = undefined) {
+        return `${name}.strip()`;
+    }
+
     printToUpperCaseCall(node, identation, name = undefined) {
         return `${name}.upper()`;
     }
@@ -293,6 +305,11 @@ export class PythonTranspiler extends BaseTranspiler {
         const right = node.right.text;
 
         const op = node.operatorToken.kind;
+
+        // Fix E712 comparison: if cond == True -> if cond:
+        if ((op === ts.SyntaxKind.EqualsEqualsToken || op === ts.SyntaxKind.EqualsEqualsEqualsToken) && node.right.kind === ts.SyntaxKind.TrueKeyword) {
+            return this.getIden(identation) + this.printNode(node.left, 0);
+        }
 
         if (left.kind === SyntaxKind.TypeOfExpression) {
             const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
