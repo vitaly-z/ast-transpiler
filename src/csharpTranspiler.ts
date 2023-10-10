@@ -779,7 +779,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printMathCeilCall(node, identation, parsedArg = undefined) {
-        `Math.Ceiling(Convert.ToDouble(${parsedArg}))`;
+        return `Math.Ceiling(Convert.ToDouble(${parsedArg}))`;
     }
 
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
