@@ -1115,6 +1115,8 @@ class BaseTranspiler {
                     return this.printMathRoundCall(node, identation, parsedArg);
                 case "Math.floor":
                     return this.printMathFloorCall(node, identation, parsedArg);
+                case "Math.ceil":
+                    return this.printMathCeilCall(node, identation, parsedArg);
                 }
             }
             const rightSide = node.expression.name?.escapedText;
