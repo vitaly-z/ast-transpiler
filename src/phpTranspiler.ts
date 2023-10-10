@@ -172,6 +172,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return `((int) ceil(${parsedArg}))`;
     }
 
+    printNumberIsIntegerCall(node, identation, parsedArg?) {
+        return `is_int(${parsedArg})`;
+    }
+
     printMathRoundCall(node, identation, parsedArg = undefined) {
         return `((int) round(${parsedArg}))`;
     }

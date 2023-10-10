@@ -1008,6 +1008,10 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printNumberIsIntegerCall(node, identation, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
         return undefined; // stub
     }
@@ -1117,6 +1121,8 @@ class BaseTranspiler {
                     return this.printMathFloorCall(node, identation, parsedArg);
                 case "Math.ceil":
                     return this.printMathCeilCall(node, identation, parsedArg);
+                case "Number.isInteger":
+                    return this.printNumberIsIntegerCall(node, identation, parsedArg);
                 }
             }
             const rightSide = node.expression.name?.escapedText;

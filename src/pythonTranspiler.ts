@@ -120,6 +120,10 @@ export class PythonTranspiler extends BaseTranspiler {
         return `int(math.ceil(${parsedArg}))`;
     }
 
+    printNumberIsIntegerCall(node, identation , parsedArg = undefined) {
+        return `isinstance(${parsedArg}, numbers.Integral)`;
+    }
+
     printMathRoundCall(node, identation, parsedArg = undefined) {
         return `int(round(${parsedArg}))`;
     }

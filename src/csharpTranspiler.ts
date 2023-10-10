@@ -782,6 +782,10 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `Math.Ceiling(Convert.ToDouble(${parsedArg}))`;
     }
 
+    printNumberIsIntegerCall(node: any, identation: any, parsedArg?: any) {
+        return `((${parsedArg} is int) || (${parsedArg} is long) || (${parsedArg} is Int32) || (${parsedArg} is double) || (${parsedArg} is Int64))`;
+    }
+
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
         return  `((List<object>)${name}).Add(${parsedArg})`;
     }
