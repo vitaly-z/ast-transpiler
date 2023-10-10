@@ -121,7 +121,7 @@ export class PythonTranspiler extends BaseTranspiler {
     }
 
     printNumberIsIntegerCall(node, identation , parsedArg = undefined) {
-        return `isinstance(${parsedArg}, numbers.Integral)`;
+        return `isinstance(${parsedArg}, int)`;
     }
 
     printMathRoundCall(node, identation, parsedArg = undefined) {
