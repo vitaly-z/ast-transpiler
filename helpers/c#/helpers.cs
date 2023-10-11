@@ -2,14 +2,13 @@ namespace Main;
 
 using System.Globalization;
 using System.Reflection;
-using System.Text.Json;
+using Newtonsoft.Json;
+
 using dict = Dictionary<string, object>;
 
 
 public partial class Exchange
 {
-
-    // tmp most of these methods are going to be re-implemented in the future to be more generic and efficient
 
     public static object normalizeIntIfNeeded(object a)
     {
@@ -130,7 +129,7 @@ public partial class Exchange
 
     public dict parseJson(object json)
     {
-        return JsonSerializer.Deserialize<Dictionary<string, object>>((string)json);
+        return JsonConvert.DeserializeObject<dict>((string)json);
     }
 
     public static bool isTrue(object value)
@@ -189,54 +188,71 @@ public partial class Exchange
         }
     }
 
+    public static bool isNumber(object number)
+    {
+        return Double.TryParse(number.ToString(), out _);
+    }
+
     public static bool isEqual(object a, object b)
     {
 
-        a = normalizeIntIfNeeded(a);
-        b = normalizeIntIfNeeded(b);
-
-        if (a == null && b == null)
+        try
         {
-            return true;
+
+            if (a == null && b == null)
+            {
+                return true;
+            }
+            else if (a == null || b == null)
+            {
+                return false;
+            }
+
+            if (a.GetType() != b.GetType() && (!isNumber(a) || !isNumber(b)))
+            {
+                return false;
+            }
+
+            // if (a.GetType() != b.GetType())
+            // {
+            //     return false;
+            // }
+
+            if (a.GetType() == typeof(Int64) || b.GetType() == typeof(Int64))
+            {
+                return Convert.ToInt64(a) == Convert.ToInt64(b);
+            }
+            else if (a.GetType() == typeof(int))
+            {
+                return (int)a == (int)b;
+            }
+            else if (a.GetType() == typeof(double) || b.GetType() == typeof(double))
+            {
+                return Convert.ToDouble(a) == Convert.ToDouble(b);
+            }
+            // else if (a.GetType() == typeof(double))
+            // {
+            //     return (double)a == (double)b;
+            // }
+            else if (a.GetType() == typeof(string))
+            {
+                return ((string)a) == ((string)b);
+            }
+            else if (a.GetType() == typeof(bool))
+            {
+                return ((bool)a) == ((bool)b);
+            }
+            else
+            {
+                return false;
+            }
         }
-        else if (a == null || b == null)
+        catch (Exception e)
         {
             return false;
         }
 
-        if (a.GetType() != b.GetType())
-        {
-            return false;
-        }
 
-        if (a.GetType() == typeof(Int64))
-        {
-            return (Int64)a == (Int64)b;
-        }
-        else if (a.GetType() == typeof(int))
-        {
-            return (int)a == (int)b;
-        }
-        else if (a.GetType() == typeof(double))
-        {
-            return (double)a == (double)b;
-        }
-        else if (a.GetType() == typeof(double))
-        {
-            return (double)a == (double)b;
-        }
-        else if (a.GetType() == typeof(string))
-        {
-            return ((string)a) == ((string)b);
-        }
-        else if (a.GetType() == typeof(bool))
-        {
-            return ((bool)a) == ((bool)b);
-        }
-        else
-        {
-            return false;
-        }
     }
 
     public static bool isGreaterThan(object a, object b)
@@ -253,17 +269,17 @@ public partial class Exchange
         a = normalizeIntIfNeeded(a);
         b = normalizeIntIfNeeded(b);
 
-        if (a.GetType() == typeof(Int64))
+        if (a.GetType() == typeof(Int64) && b.GetType() == typeof(Int64))
         {
-            return (Int64)a > (Int64)b;
+            return Convert.ToInt64(a) > Convert.ToInt64(b);
         }
-        else if (a.GetType() == typeof(int))
+        else if (a.GetType() == typeof(int) && b.GetType() == typeof(int))
         {
             return (int)a > (int)b;
         }
-        else if (a.GetType() == typeof(double))
+        else if (a.GetType() == typeof(double) || b.GetType() == typeof(double))
         {
-            return (double)a > (double)b;
+            return Convert.ToDouble(a) > Convert.ToDouble(b);
         }
         else if (a.GetType() == typeof(string))
         {
@@ -297,14 +313,12 @@ public partial class Exchange
         {
             return null;
         }
-        if (a.GetType() != b.GetType())
-            return null;
 
         a = normalizeIntIfNeeded(a);
         b = normalizeIntIfNeeded(b);
 
-        if (a.GetType() == typeof(string) || a.GetType() == typeof(Int64) || a.GetType() == typeof(int))
-            return ((int)a) % ((int)b);
+        if (a.GetType() == typeof(string) || a.GetType() == typeof(Int64) || a.GetType() == typeof(int) || a.GetType() == typeof(double))
+            return (Convert.ToDouble(a)) % (Convert.ToDouble(b));
 
         return null;
 
@@ -410,17 +424,22 @@ public partial class Exchange
         a = normalizeIntIfNeeded(a);
         b = normalizeIntIfNeeded(b);
 
-        if (a.GetType() == typeof(Int64))
+        if (a == null || b == null)
+        {
+            return null;
+        }
+
+        if (a.GetType() == typeof(Int64) && b.GetType() == typeof(Int64))
         {
             return (Int64)a / (Int64)b;
         }
-        else if (a.GetType() == typeof(double))
+        else if (a.GetType() == typeof(double) && b.GetType() == typeof(double))
         {
             return (double)a / (double)b;
         }
         else
         {
-            return null;
+            return Convert.ToDouble(a) / Convert.ToDouble(b);
         }
     }
 
@@ -428,17 +447,22 @@ public partial class Exchange
     {
         a = normalizeIntIfNeeded(a);
         b = normalizeIntIfNeeded(b);
-        if (a.GetType() == typeof(Int64))
+        if (a == null || b == null)
         {
-            return (Int64)a * (Int64)b;
+            return null;
         }
-        else if (a.GetType() == typeof(double))
+        var first = Convert.ToDouble(a);
+        var second = Convert.ToDouble(b);
+
+        var res = first * second;
+
+        if (IsInteger(res))
         {
-            return (double)a * (double)b;
+            return Convert.ToInt64(res);
         }
         else
         {
-            return null;
+            return res;
         }
     }
 
@@ -457,45 +481,79 @@ public partial class Exchange
         {
             return ((List<string>)value).Count;
         }
+        else if (value.GetType() == typeof(string))
+        {
+            return ((string)value).Length; // fallback that should not be used
+        }
         else
         {
             return 0;
         }
     }
 
+    public static bool IsInteger(double number)
+    {
+        return number == Math.Truncate(number);
+    }
+
     public static object mathMin(object a, object b)
     {
-        a = normalizeIntIfNeeded(a);
-        b = normalizeIntIfNeeded(b);
-        if (a.GetType() == typeof(Int64))
-        {
-            return Math.Min((Int64)a, (Int64)b);
-        }
-        else if (a.GetType() == typeof(double))
-        {
-            return Math.Min((double)a, (double)b);
-        }
-        else
+        if (a == null || b == null)
         {
             return null;
         }
+        var first = Convert.ToDouble(a);
+        var second = Convert.ToDouble(b);
+
+        if (first < second)
+        {
+            return a;
+        }
+        else
+        {
+            return b;
+        }
+
+        // a = normalizeIntIfNeeded(a);
+        // b = normalizeIntIfNeeded(b);
+        // if (a.GetType() == typeof(Int64))
+        // {
+        //     return Math.Min((Int64)a, (Int64)b);
+        // }
+        // else if (a.GetType() == typeof(double))
+        // {
+        //     return Math.Min((double)a, (double)b);
+        // }
+        // else if (a.GetType() == typeof(float))
+        // {
+        //     return Math.Min((float)a, (float)b);
+        // }
+        // else if (a.GetType() == typeof(int))
+        // {
+        //     return Math.Min((int)a, (int)b);
+        // }
+        // else
+        // {
+        //     return null;
+        // }
     }
 
     public static object mathMax(object a, object b)
     {
-        a = normalizeIntIfNeeded(a);
-        b = normalizeIntIfNeeded(b);
-        if (a.GetType() == typeof(Int64))
+        if (a == null || b == null)
         {
-            return Math.Max((Int64)a, (Int64)b);
+            return null;
         }
-        else if (a.GetType() == typeof(double))
+        var first = Convert.ToDouble(a);
+        var second = Convert.ToDouble(b);
+
+        if (first > second)
         {
-            return Math.Max((double)a, (double)b);
+            return a;
         }
         else
         {
-            return null;
+            return b;
         }
     }
 
@@ -554,6 +612,12 @@ public partial class Exchange
             return null;
         }
 
+        if (value2.GetType() == typeof(string))
+        {
+            var str = (string)value2;
+            return (str[Convert.ToInt32(key)]).ToString();
+        }
+
         // check if array
         object value = value2;
         if (value2.GetType().IsArray == true)
@@ -577,7 +641,7 @@ public partial class Exchange
         else if (value.GetType() == typeof(List<object>))
         {
             // check here if index is out of bounds
-            var parsed = (int)key;
+            int parsed = Convert.ToInt32(key);
             var listLength = getArrayLength(value);
             if (parsed >= listLength)
             {
@@ -587,7 +651,7 @@ public partial class Exchange
         }
         else if (value.GetType() == typeof(List<string>))
         {
-            var parsed = (int)key;
+            int parsed = Convert.ToInt32(key);
             var listLength = getArrayLength(value);
             if (parsed >= listLength)
             {
@@ -597,7 +661,7 @@ public partial class Exchange
         }
         else if (value.GetType() == typeof(List<Int64>))
         {
-            var parsed = (int)key;
+            int parsed = Convert.ToInt32(key);
             return ((List<Int64>)value)[parsed];
         }
         // check this last, avoid reflection
@@ -619,7 +683,9 @@ public partial class Exchange
         }
     }
 
-    public async Task<List<object>> promiseAll(object promisesObj)
+    public async Task<List<object>> promiseAll(object promisesObj) => await PromiseAll(promisesObj);
+
+    public static async Task<List<object>> PromiseAll(object promisesObj)
     {
         var promises = (List<object>)promisesObj;
         var tasks = new List<Task<object>>();
@@ -663,6 +729,88 @@ public partial class Exchange
     public static object callDynamically(object obj, object methodName, object[] args = null)
     {
         args ??= new object[] { };
-        return obj.GetType().GetMethod("YourMethodName", BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Invoke(obj, args);
+        if (args.Length == 0)
+        {
+            args = new object[] { null };
+        }
+        return obj.GetType().GetMethod((string)methodName, BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Invoke(obj, args);
+    }
+
+    public static async Task<object> callDynamicallyAsync(object obj, object methodName, object[] args = null)
+    {
+        args ??= new object[] { };
+        var res = obj.GetType().GetMethod((string)methodName, BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Invoke(obj, args);
+        return await ((Task<object>)res);
+    }
+
+    public bool inOp(object obj, object key) => InOp(obj, key);
+
+    public static bool InOp(object obj, object key)
+    {
+        if (obj == null || key == null)
+        {
+            return false;
+        }
+        if (obj.GetType() == typeof(List<object>))
+        {
+            return ((List<object>)obj).Contains(key);
+        }
+        else if (obj.GetType() == typeof(List<string>))
+        {
+            return ((List<string>)obj).Contains((string)key);
+        }
+        else if (obj.GetType() == typeof(List<Int64>))
+        {
+            return ((List<Int64>)obj).Contains((Int64)key);
+        }
+        else if (obj.GetType() == typeof(dict))
+        {
+            if (key.GetType() == typeof(string))
+                return ((dict)obj).ContainsKey((string)key);
+            else
+                return false;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public string slice(object str2, object idx1, object idx2) => Slice(str2, idx1, idx2);
+
+    public static string Slice(object str2, object idx1, object idx2)
+    {
+        if (str2 == null)
+        {
+            return null;
+        }
+        var str = (string)str2;
+        var start = idx1 != null ? Convert.ToInt32(idx1) : -1;
+        if (idx2 == null)
+        {
+            if (start < 0)
+            {
+                var innerStart = str.Length + start;
+                innerStart = innerStart < 0 ? 0 : innerStart;
+                return str[(innerStart)..];
+            }
+            else
+            {
+                return str[start..];
+            }
+        }
+        else
+        {
+            var end = Convert.ToInt32(idx2);
+            if (start < 0)
+            {
+                start = str.Length + start;
+            }
+            if (end < 0)
+            {
+                end = str.Length + end;
+            }
+            return str[start..end];
+        }
     }
 }
