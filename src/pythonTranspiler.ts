@@ -39,6 +39,7 @@ const parserConfig = {
     'CATCH_DECLARATION': 'Exception as',
     'METHOD_DEFAULT_ACCESS': '',
     'SPREAD_TOKEN': '*',
+    'NULL_TOKEN': 'None',
 };
 export class PythonTranspiler extends BaseTranspiler {
     constructor(config = {}) {
