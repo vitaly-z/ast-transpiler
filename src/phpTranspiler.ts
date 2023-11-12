@@ -234,6 +234,15 @@ export class PhpTranspiler extends BaseTranspiler {
         return `explode(${parsedArg}, ${name})`;
     }
 
+    printInstanceOfExpression(node, identation) {
+        // const left = this.printNode(node.left, 0);
+        // const right = this.printNode(node.right, 0);
+        const left = node.left.escapedText;
+        const right = node.right.escapedText;
+        return this.getIden(identation) + "$"+left+" instanceof "+right+"";
+    }
+
+
     getExceptionalAccessTokenIfAny(node) {
         const leftSide = node.expression.escapedText ?? node.expression.getFullText().trim();
 
