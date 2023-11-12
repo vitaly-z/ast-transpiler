@@ -188,6 +188,10 @@ export class PythonTranspiler extends BaseTranspiler {
         return `json.dumps(${parsedArg})`;
     }
 
+    printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any) {
+        return `${name}.replace(${parsedArg}, ${parsedArg2})`;
+    }
+
     printElementAccessExpressionExceptionIfAny(node) {
         if (node.expression.kind === SyntaxKind.ThisKeyword) {
             return "getattr(self, " + this.printNode(node.argumentExpression, 0) + ")";
