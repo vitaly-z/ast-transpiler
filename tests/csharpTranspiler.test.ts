@@ -882,6 +882,12 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    test('should transpile Number.isInteger', () => {
+        const ts = "Number.isInteger(1)";
+        const csharp = "((1 is int) || (1 is long) || (1 is Int32) || (1 is Int64));";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     // test('should transpile file from path', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(true);
     //     const csharp = readFileSync ('./tests/files/output/php/test1.php', "utf8");
