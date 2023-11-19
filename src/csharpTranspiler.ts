@@ -487,10 +487,14 @@ export class CSharpTranspiler extends BaseTranspiler {
             return arrayBindingStatement;
         }
 
-        const isNew = (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
+        const isNew = declaration.initializer && (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
         const varToken = isNew ? 'var ' : 'object ' ;
 
         // handle default undefined initialization
+        if (declaration.initializer === undefined) {
+            // handle the let id: Str; case
+            return this.getIden(identation) + varToken + this.printNode(declaration.name);
+        }
         const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
         if (parsedValue === this.UNDEFINED_TOKEN) {
             return this.getIden(identation) + "object " + this.printNode(declaration.name) + " = " + parsedValue;

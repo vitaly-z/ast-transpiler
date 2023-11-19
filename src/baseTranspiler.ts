@@ -909,9 +909,12 @@ class BaseTranspiler {
 
     printVariableDeclarationList(node,identation) {
         const declaration = node.declarations[0];
+        const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
+        if (declaration.initializer === undefined) {
+            return this.getIden(identation) + varToken + this.printNode(declaration.name);
+        }
         // const name = declaration.name.escapedText;
         const parsedValue = this.printNode(declaration.initializer, identation);
-        const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
         return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + parsedValue.trim();
     }
 
@@ -1770,7 +1773,7 @@ class BaseTranspiler {
 
     isCJSRequireStatement(node): boolean {
         const dec = node.declarationList.declarations[0];
-        return ts.isCallExpression(dec.initializer) && dec.initializer.expression.getText() === "require";
+        return dec.initializer && ts.isCallExpression(dec.initializer) && dec.initializer.expression.getText() === "require";
     }
 
     isCJSModuleExportsExpressionStatement(node): boolean {
