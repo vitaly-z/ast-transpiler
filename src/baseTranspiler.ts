@@ -910,11 +910,8 @@ class BaseTranspiler {
     printVariableDeclarationList(node,identation) {
         const declaration = node.declarations[0];
         const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
-        if (declaration.initializer === undefined) {
-            return this.getIden(identation) + varToken + this.printNode(declaration.name);
-        }
         // const name = declaration.name.escapedText;
-        const parsedValue = this.printNode(declaration.initializer, identation);
+        const parsedValue = (declaration.initializer) ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
         return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + parsedValue.trim();
     }
 
@@ -1793,7 +1790,7 @@ class BaseTranspiler {
         const dec = decList.map(d => d.declarations[0]);
 
         dec.forEach(decNode => {
-            if (decNode.initializer.kind === ts.SyntaxKind.CallExpression) {
+            if (decNode.initializer && decNode.initializer.kind === ts.SyntaxKind.CallExpression) {
                 const callExpression = decNode.initializer.expression.getText();
                 if (callExpression === "require") {
                     const isDefault = decNode.name.kind === ts.SyntaxKind.Identifier;

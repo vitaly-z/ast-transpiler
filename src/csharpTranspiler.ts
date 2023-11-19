@@ -493,7 +493,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         // handle default undefined initialization
         if (declaration.initializer === undefined) {
             // handle the let id: Str; case
-            return this.getIden(identation) + varToken + this.printNode(declaration.name);
+            return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + this.UNDEFINED_TOKEN;
         }
         const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
         if (parsedValue === this.UNDEFINED_TOKEN) {
