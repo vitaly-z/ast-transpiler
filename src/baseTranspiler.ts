@@ -1406,7 +1406,7 @@ class BaseTranspiler {
                 const cast = ts.isStringLiteralLike(argumentExpression) ? "" : '(string)';
                 return `((${this.OBJECT_KEYWORD})${expressionAsString})[${cast}${argumentAsString}]`;
             }
-            return `((${this.ARRAY_KEYWORD})${expressionAsString})[(int)${argumentAsString}]`;
+            return `((${this.ARRAY_KEYWORD})${expressionAsString})[Convert.ToInt32(${argumentAsString})]`;
         }
 
         return expressionAsString + "[" + argumentAsString + "]";
