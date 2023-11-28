@@ -158,7 +158,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         const type = global.checker.getTypeAtLocation(node);
         const symbol = type?.symbol;
         if (symbol !== undefined) {
-            const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
+            // const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
             const decl = symbol?.declarations ?? [];
             let isBuiltIn = undefined;
             if (decl.length > 0) {
@@ -166,14 +166,39 @@ export class CSharpTranspiler extends BaseTranspiler {
             }
 
             if (isBuiltIn !== undefined && !isBuiltIn) {
-                const isClassDeclaration = declarations.find(l => l.kind === ts.SyntaxKind.ClassDeclaration);
-                if (isClassDeclaration) {
-                    const isInsideNewExpression =  node?.parent?.kind === ts.SyntaxKind.NewExpression;
-                    const isInsideCatch = node?.parent?.kind === ts.SyntaxKind.ThrowStatement;
-                    const isLeftSide = node?.parent?.name === node || (node?.parent?.left === node);
-                    const isCallOrPropertyAccess = node?.parent?.kind === ts.SyntaxKind.PropertyAccessExpression || node?.parent?.kind === ts.SyntaxKind.ElementAccessExpression;
-                    if (!isLeftSide && !isCallOrPropertyAccess && !isInsideCatch && !isInsideNewExpression) {
+                // const isClassDeclaration = declarations.find(l => l.kind === ts.SyntaxKind.ClassDeclaration);
+                const isInsideNewExpression =  node?.parent?.kind === ts.SyntaxKind.NewExpression;
+                const isInsideCatch = node?.parent?.kind === ts.SyntaxKind.ThrowStatement;
+                const isLeftSide = node?.parent?.name === node || (node?.parent?.left === node);
+                const isCallOrPropertyAccess = node?.parent?.kind === ts.SyntaxKind.PropertyAccessExpression || node?.parent?.kind === ts.SyntaxKind.ElementAccessExpression;
+                if (!isLeftSide && !isCallOrPropertyAccess && !isInsideCatch && !isInsideNewExpression) {
+                    // return `typeof(${idValue})`; // this is not working as expected
+                    // for instance
+                    // const instance = new x();
+                    // const b = instance;
+                    // gets transpiled to
+                    // var instance = typeof(x);
+                    const symbol = global.checker.getSymbolAtLocation(node);
+                    let isClassDeclaration = false;
+                    if (symbol) {
+                        const first = symbol.declarations[0];
+                        if (first.kind === ts.SyntaxKind.ClassDeclaration) {
+                            isClassDeclaration = true;
+                        }
+                        if (first.kind === ts.SyntaxKind.ImportSpecifier) {
+                            const importedSymbol = global.checker.getAliasedSymbol(symbol);
+                            if (importedSymbol?.declarations[0]?.kind === ts.SyntaxKind.ClassDeclaration) {
+                                isClassDeclaration = true;
+                            }
+                        }
+                    }
+                    // console.log(node.getText(), 'isClass declaration', isClass);
+                    if (isClassDeclaration) {
                         return `typeof(${idValue})`;
+                        // this does not work then the class is imported from another file because
+                        // the type is not resolved correctly and the symbol declaration is simply a importSpecifier
+                        // we would need to find a way to get the type from the importSpecifier
+                        // by loading the entire code upon transpiling the ts file
                     }
                 }
             }
