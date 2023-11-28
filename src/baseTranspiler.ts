@@ -1032,6 +1032,14 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
+        return undefined; // stub
+    }
+
+    printPadStartCall(node, identation, name, parsedArg, parsedArg2) {
+        return undefined; // stub
+    }
+
     printTrimCall(node, identation, name = undefined) {
         return undefined; // stub
     }
@@ -1154,6 +1162,7 @@ class BaseTranspiler {
 
             if (leftSide && rightSide && arg) {
                 const parsedArg = this.printNode(arg, identation).trimStart();
+                const secondParsedArg = args[1] ? this.printNode(args[1], identation).trimStart() : undefined;
                 const name = this.printNode(leftSide, 0);
                 switch(rightSide) {
                 case 'push':
@@ -1172,6 +1181,10 @@ class BaseTranspiler {
                     return this.printEndsWithCall(node, identation, name, parsedArg);
                 case 'startsWith':
                     return this.printStartsWithCall(node, identation, name, parsedArg);
+                case 'padEnd':
+                    return this.printPadEndCall(node, identation, name, parsedArg, secondParsedArg);
+                case 'padStart':
+                    return this.printPadStartCall(node, identation, name, parsedArg, secondParsedArg);
                 }
 
                 if (args.length === 1 || args.length === 2) {
@@ -1187,8 +1200,13 @@ class BaseTranspiler {
         }  else {
             // handle functions like assert
             const args = node.arguments ?? [];
-            if (args.length === 2 && expression.escapedText === "assert") {
-                return this.printAssertCall(node, identation, parsedArgs);
+            if (args.length === 2) {
+                if ( expression.escapedText === "assert") {
+                    return this.printAssertCall(node, identation, parsedArgs);
+                }
+                if (expression.escapedText === "padEnd") {
+                    // check this
+                }
             }
         }
 

@@ -234,6 +234,14 @@ export class PhpTranspiler extends BaseTranspiler {
         return `explode(${parsedArg}, ${name})`;
     }
 
+    printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
+        return `str_pad(${name}, ${parsedArg}, ${parsedArg2}, STR_PAD_RIGHT)`;
+    }
+
+    printPadStartCall(node, identation, name, parsedArg, parsedArg2) {
+        return `str_pad(${name}, ${parsedArg}, ${parsedArg2}, STR_PAD_LEFT)`;
+    }
+
     printInstanceOfExpression(node, identation) {
         // const left = this.printNode(node.left, 0);
         // const right = this.printNode(node.right, 0);

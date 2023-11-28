@@ -169,6 +169,14 @@ export class PythonTranspiler extends BaseTranspiler {
         return `${name}.endswith(${parsedArg})`;
     }
 
+    printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
+        return `${name}.ljust(${parsedArg}, ${parsedArg2})`;
+    }
+
+    printPadStartCall(node, identation, name, parsedArg, parsedArg2) {
+        return `${name}.rjust(${parsedArg}, ${parsedArg2})`;
+    }
+
     printTrimCall(node, identation, name = undefined) {
         return `${name}.strip()`;
     }

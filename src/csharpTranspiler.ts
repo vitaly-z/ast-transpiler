@@ -892,6 +892,14 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `((string)${name}).Replace((string)${parsedArg}, (string)${parsedArg2})`;
     }
 
+    printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
+        return `(${name} as String).PadRight(Convert.ToInt32(${parsedArg}), Convert.ToChar(${parsedArg2}))`;
+    }
+
+    printPadStartCall(node, identation, name, parsedArg, parsedArg2) {
+        return `(${name} as String).PadLeft(Convert.ToInt32(${parsedArg}), Convert.ToChar(${parsedArg2}))`;
+    }
+
     printLengthProperty(node, identation, name = undefined) {
         const leftSide = this.printNode(node.expression, 0);
         const type = (global.checker as TypeChecker).getTypeAtLocation(node.expression); // eslint-disable-line
