@@ -415,7 +415,7 @@ describe('php transpiling tests', () => {
         "const h = Math.round (5);\n" +
         "const i = Math.floor (5.5);\n";
         const php =
-        "$ceil = (int) ceil($num);\n" +
+        "$ceil = ((int) ceil($num));\n" +
         "$a = min(0, 5);\n" +
         "$b = max(0, 5);\n" +
         "$c = floatval('1.3');\n" +
@@ -555,7 +555,7 @@ describe('php transpiling tests', () => {
         "    return [];\n" +
         "}"
         const php =
-        "if (e instanceof NullResponse) {\n" +
+        "if ($e instanceof NullResponse) {\n" +
         "    return [];\n" +
         "}"
         const output = transpiler.transpilePhp(ts).content;
@@ -799,6 +799,12 @@ describe('php transpiling tests', () => {
     test('should transpile Number.isInteger', () => {
         const ts = "Number.isInteger(1)";
         const php = "is_int(1);";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('should convert date.now()', () => {
+        const ts = "Date.now();";
+        const php = "round(microtime(true) * 1000);";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });

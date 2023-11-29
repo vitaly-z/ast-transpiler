@@ -741,6 +741,12 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('should convert date.now()', () => {
+        const ts = "Date.now();";
+        const python = "int(time.time() * 1000)";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('should transpile file from path', () => {
         transpiler.setPythonUncamelCaseIdentifiers(true);
         const python = readFileSync ('./tests/files/output/python/test1.py', "utf8");
