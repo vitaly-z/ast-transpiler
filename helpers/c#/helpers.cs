@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 using dict = Dictionary<string, object>;
 
-
+// make these methods available in your transpiled code
 public partial class Exchange
 {
 
@@ -127,9 +127,15 @@ public partial class Exchange
         return a;
     }
 
-    public dict parseJson(object json)
+    public object parseJson(object json)
     {
-        return JsonConvert.DeserializeObject<dict>((string)json);
+        // var jsonString = json.ToString();
+        // if (jsonString.StartsWith("[".ToString()))
+        // {
+        //     return JsonConvert.DeserializeObject<List<dict>>(jsonString);
+        // }
+        // return JsonConvert.DeserializeObject<dict>((string)json);
+        return JsonHelper.Deserialize((string)json);
     }
 
     public static bool isTrue(object value)
@@ -217,10 +223,17 @@ public partial class Exchange
             // {
             //     return false;
             // }
-
-            if (a.GetType() == typeof(Int64) || b.GetType() == typeof(Int64))
+            if (IsInteger(a) && IsInteger(b))
             {
                 return Convert.ToInt64(a) == Convert.ToInt64(b);
+            }
+            if (a.GetType() == typeof(Int64) && b.GetType() == typeof(Int64))
+            {
+                return Convert.ToInt64(a) == Convert.ToInt64(b);
+            }
+            if (a.GetType() == typeof(decimal) || b.GetType() == typeof(decimal))
+            {
+                return Convert.ToDecimal(a) == Convert.ToDecimal(b);
             }
             else if (a.GetType() == typeof(int))
             {
@@ -229,6 +242,14 @@ public partial class Exchange
             else if (a.GetType() == typeof(double) || b.GetType() == typeof(double))
             {
                 return Convert.ToDouble(a) == Convert.ToDouble(b);
+            }
+            else if (a.GetType() == typeof(decimal) || b.GetType() == typeof(decimal))
+            {
+                return Convert.ToDecimal(a) == Convert.ToDecimal(b);
+            }
+            else if (a.GetType() == typeof(Single) || b.GetType() == typeof(Single))
+            {
+                return Convert.ToSingle(a) == Convert.ToSingle(b);
             }
             // else if (a.GetType() == typeof(double))
             // {
@@ -358,32 +379,32 @@ public partial class Exchange
         return add(a, b.ToString());
     }
 
-    public static string add(object a, string b)
-    {
-        if (a == null || b == null)
-        {
-            return null;
-        }
-        if (a.GetType() != b.GetType())
-            return null;
+    // public static string add(object a, string b)
+    // {
+    //     if (a == null || b == null)
+    //     {
+    //         return null;
+    //     }
+    //     if (a.GetType() != b.GetType())
+    //         return null;
 
-        if (a.GetType() == typeof(string) || a.GetType() == typeof(Int64) || a.GetType() == typeof(int))
-            return a + b;
+    //     if (a.GetType() == typeof(string) || a.GetType() == typeof(Int64) || a.GetType() == typeof(int))
+    //         return a + b;
 
-        return null;
+    //     return null;
 
-        // return add(a, b);
-    }
+    //     // return add(a, b);
+    // }
 
-    public static int add(int a, int b)
-    {
-        return a + b;
-    }
+    // public static int add(int a, int b)
+    // {
+    //     return a + b;
+    // }
 
-    public float add(float a, float b)
-    {
-        return a + b;
-    }
+    // public float add(float a, float b)
+    // {
+    //     return a + b;
+    // }
 
     public static object subtract(object a, object b)
     {
@@ -451,6 +472,11 @@ public partial class Exchange
         {
             return null;
         }
+
+        if (a is Int64 && b is Int64)
+        {
+            return (Int64)a * (Int64)b;
+        }
         var first = Convert.ToDouble(a);
         var second = Convert.ToDouble(b);
 
@@ -481,6 +507,10 @@ public partial class Exchange
         {
             return ((List<string>)value).Count;
         }
+        else if (value.GetType() == typeof(List<dict>))
+        {
+            return ((List<dict>)value).Count;
+        }
         else if (value.GetType() == typeof(string))
         {
             return ((string)value).Length; // fallback that should not be used
@@ -491,9 +521,31 @@ public partial class Exchange
         }
     }
 
-    public static bool IsInteger(double number)
+    public static bool IsInteger(object value)
     {
-        return number == Math.Truncate(number);
+        if (value == null)
+        {
+            return false;
+        }
+
+        Type type = value.GetType();
+
+        // Check for integral types
+        if (type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(byte) || type == typeof(sbyte) || type == typeof(uint) || type == typeof(ulong) || type == typeof(ushort))
+        {
+            return true;
+        }
+
+        // Check for floating-point types and verify if they can be converted to an integer without losing precision
+        if (type == typeof(float) || type == typeof(double) || type == typeof(decimal))
+        {
+            decimal decimalValue = Convert.ToDecimal(value);
+            return decimalValue == Math.Floor(decimalValue);
+        }
+
+        // Add any additional type checks if necessary
+
+        return false;
     }
 
     public static object mathMin(object a, object b)
@@ -595,7 +647,8 @@ public partial class Exchange
         object parsedValue = null;
         try
         {
-            parsedValue = float.Parse((string)a, CultureInfo.InvariantCulture.NumberFormat);
+            // parsedValue = float.Parse((string)a, CultureInfo.InvariantCulture.NumberFormat);
+            parsedValue = (Convert.ToDouble(a, CultureInfo.InvariantCulture.NumberFormat));
         }
         catch (Exception e)
         {
@@ -626,7 +679,7 @@ public partial class Exchange
         }
 
 
-        if (value.GetType() == typeof(dict))
+        if (value is dict)
         {
             var dictValue = (dict)value;
             if (dictValue.ContainsKey((string)key))
@@ -638,7 +691,7 @@ public partial class Exchange
                 return null;
             }
         }
-        else if (value.GetType() == typeof(List<object>))
+        else if (value is List<object>)
         {
             // check here if index is out of bounds
             int parsed = Convert.ToInt32(key);
@@ -648,6 +701,17 @@ public partial class Exchange
                 return null;
             }
             return ((List<object>)value)[parsed];
+        }
+        else if (value is List<dict>)
+        {
+            // check here if index is out of bounds
+            int parsed = Convert.ToInt32(key);
+            var listLength = getArrayLength(value);
+            if (parsed >= listLength)
+            {
+                return null;
+            }
+            return ((List<dict>)value)[parsed];
         }
         else if (value.GetType() == typeof(List<string>))
         {
@@ -659,7 +723,7 @@ public partial class Exchange
             }
             return ((List<string>)value)[parsed];
         }
-        else if (value.GetType() == typeof(List<Int64>))
+        else if (value is List<Int64>)
         {
             int parsed = Convert.ToInt32(key);
             return ((List<Int64>)value)[parsed];
@@ -691,7 +755,10 @@ public partial class Exchange
         var tasks = new List<Task<object>>();
         foreach (var promise in promises)
         {
-            tasks.Add((Task<object>)promise);
+            if (promise is Task<object>)
+            {
+                tasks.Add((Task<object>)promise);
+            }
         }
         var results = await Task.WhenAll(tasks);
         return results.ToList();
@@ -716,7 +783,12 @@ public partial class Exchange
     }
 
     // This function is the salient bit here
-    public Exception NewException(Type exception, String message)
+    public object newException(object exception, object message)
+    {
+        return Activator.CreateInstance(exception as Type, message as String) as Exception;
+    }
+
+    public static Exception NewException(Type exception, String message)
     {
         return Activator.CreateInstance(exception, message) as Exception;
     }
