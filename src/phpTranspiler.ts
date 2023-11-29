@@ -242,6 +242,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return `str_pad(${name}, ${parsedArg}, ${parsedArg2}, STR_PAD_LEFT)`;
     }
 
+    printDateNowCall(node, identation) {
+        return "round(microtime(true) * 1000)";
+    }
+
     printInstanceOfExpression(node, identation) {
         // const left = this.printNode(node.left, 0);
         // const right = this.printNode(node.right, 0);

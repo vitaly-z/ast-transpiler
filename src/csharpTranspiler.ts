@@ -900,6 +900,10 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `(${name} as String).PadLeft(Convert.ToInt32(${parsedArg}), Convert.ToChar(${parsedArg2}))`;
     }
 
+    printDateNowCall(node, identation) {
+        return "(new DateTimeOffset(DateTime.UtcNow)).ToUnixTimeMilliseconds()";
+    }
+
     printLengthProperty(node, identation, name = undefined) {
         const leftSide = this.printNode(node.expression, 0);
         const type = (global.checker as TypeChecker).getTypeAtLocation(node.expression); // eslint-disable-line

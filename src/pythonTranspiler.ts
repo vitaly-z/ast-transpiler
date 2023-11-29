@@ -211,6 +211,11 @@ export class PythonTranspiler extends BaseTranspiler {
         return `assert ${parsedArgs}`;
     }
 
+    printDateNowCall(node, identation) {
+        return "int(time.time() * 1000)";
+    }
+
+
     printForStatement(node, identation) {
         const varName = node.initializer.declarations[0].name.escapedText;
         const initValue = this.printNode(node.initializer.declarations[0].initializer, 0);

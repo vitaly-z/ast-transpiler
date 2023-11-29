@@ -1092,6 +1092,10 @@ class BaseTranspiler {
         return `assert(${parsedArgs})`;
     }
 
+    printDateNowCall(node, identation) {
+        return undefined; // stub
+    }
+
     printCallExpression(node, identation) {
         const expression = node.expression;
 
@@ -1108,6 +1112,14 @@ class BaseTranspiler {
         if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
             const expressionText = node.expression.getText().trim();
             const args = node.arguments ?? [];
+
+            if (args.length === 0) {
+                switch(expressionText) {
+                case "Date.now":
+                    return this.printDateNowCall(node, identation);
+                }
+            }
+
             if (args.length === 1) {
                 const parsedArg = this.printNode(args[0], 0);
                 switch (expressionText) {
