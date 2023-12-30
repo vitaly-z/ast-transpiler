@@ -1222,7 +1222,7 @@ var BaseTranspiler = class {
   printNewExpression(node, identation) {
     let expression = _optionalChain([node, 'access', _31 => _31.expression, 'optionalAccess', _32 => _32.escapedText]);
     expression = expression ? expression : this.printNode(node.expression);
-    const args = node.arguments.map((n) => this.printNode(n, identation)).join(",");
+    const args = node.arguments.map((n) => this.printNode(n, identation)).join(", ");
     const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
     return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
   }
