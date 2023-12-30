@@ -776,7 +776,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     // check this out later
 
     printArrayIsArrayCall(node, identation, parsedArg = undefined) {
-        return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
+        return `((${parsedArg} is List<object>) || (${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))))`;
     }
 
     printObjectKeysCall(node, identation, parsedArg = undefined) {
@@ -985,6 +985,26 @@ export class CSharpTranspiler extends BaseTranspiler {
         // // const throwExpression = ` ${newToken}${newExpression}${this.LEFT_PARENTHESIS}((string)${args})${this.RIGHT_PARENTHESIS}`;
         // return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
     }
+
+    // printLeadingComments(node, identation) {
+    //     const fullText = global.src.getFullText();
+    //     const commentsRangeList = ts.getLeadingCommentRanges(fullText, node.pos);
+    //     const commentsRange = commentsRangeList ? commentsRangeList : undefined;
+    //     let res = "";
+    //     if (commentsRange) {
+    //         for (const commentRange of commentsRange) {
+    //             const commentText = fullText.slice(commentRange.pos, commentRange.end);
+    //             if (commentText !== undefined) {
+    //                 const formatted = commentText
+    //                     .split("\n")
+    //                     .map(line=>line.trim())
+    //                     .map(line => !(line.trim().startsWith("*")) ? this.getIden(identation) + line : this.getIden(identation) + " " + line) .join("\n");
+    //                 // res+= this.transformLeadingComment(formatted) + "\n";
+    //             }
+    //         }
+    //     }
+    //     return res;
+    // }
 }
 
 // if (this.requiresCallExpressionCast) {
