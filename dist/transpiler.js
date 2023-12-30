@@ -2856,7 +2856,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
     return super.printArgsForCallExpression(node, identation);
   }
   printArrayIsArrayCall(node, identation, parsedArg = void 0) {
-    return `(${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>)))`;
+    return `((${parsedArg} is List<object>) || (${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))))`;
   }
   printObjectKeysCall(node, identation, parsedArg = void 0) {
     return `new List<object>(((Dictionary<string,object>)${parsedArg}).Keys)`;
