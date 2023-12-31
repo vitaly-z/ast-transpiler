@@ -2580,15 +2580,15 @@ var CSharpTranspiler = class extends BaseTranspiler {
     const target = this.printNode(expression, 0);
     switch (right) {
       case "string":
-        return notOperator + `((${target}).GetType() == typeof(string))`;
+        return notOperator + `(${target} is string)`;
       case "number":
-        return notOperator + `((${target}).GetType() == typeof(Int64)) || ((${target}).GetType() == typeof(int) || (${target}).GetType() == typeof(float) || (${target}).GetType() == typeof(double))`;
+        return notOperator + `(${target} is Int64 || ${target} is int || ${target} is float || ${target} is double)`;
       case "boolean":
-        return notOperator + `((${target}).GetType() == typeof(bool))`;
+        return notOperator + `(${target} is bool)`;
       case "object":
-        return notOperator + `((${target}).GetType() == typeof(Dictionary<string, object>))`;
+        return notOperator + `(${target} is IDictionary<string, object>)`;
       case "function":
-        return notOperator + `((${target}).GetType() == typeof(Delegate))`;
+        return notOperator + `(${target} is Delegate)`;
     }
     return void 0;
   }
