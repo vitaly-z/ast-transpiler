@@ -1434,7 +1434,7 @@ class BaseTranspiler {
 
             if (isString || isUnionString || type.flags === ts.TypeFlags.Any) { // default to string when unknown
                 const cast = ts.isStringLiteralLike(argumentExpression) ? "" : '(string)';
-                return `((${this.OBJECT_KEYWORD})${expressionAsString})[${cast}${argumentAsString}]`;
+                return `((IDictionary<string,object>)${expressionAsString})[${cast}${argumentAsString}]`;
             }
             return `((${this.ARRAY_KEYWORD})${expressionAsString})[Convert.ToInt32(${argumentAsString})]`;
         }
