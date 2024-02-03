@@ -828,11 +828,11 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).StartsWith(${parsedArg})`;
+        return `((string)${name}).StartsWith(((string)${parsedArg}))`;
     }
 
     printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).EndsWith(${parsedArg})`;
+        return `((string)${name}).EndsWith(((string)${parsedArg}))`;
     }
 
     printTrimCall(node, identation, name = undefined) {
