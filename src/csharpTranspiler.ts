@@ -918,6 +918,9 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
         const leftSide = this.printNode(operand, 0);
         const op = this.PostFixOperators[operator]; // todo: handle --
+        if (op === '--') {
+            return `postFixDecrement(ref ${leftSide})`;
+        }
         return `postFixIncrement(ref ${leftSide})`;
     }
 
