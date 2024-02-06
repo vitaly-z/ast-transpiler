@@ -1,21 +1,22 @@
-namespace Main;
+namespace ccxt;
 
 using System.Globalization;
 using System.Reflection;
-using Newtonsoft.Json;
 
 using dict = Dictionary<string, object>;
 
-// make these methods available in your transpiled code
+
 public partial class Exchange
 {
+
+    // tmp most of these methods are going to be re-implemented in the future to be more generic and efficient
 
     public static object normalizeIntIfNeeded(object a)
     {
         if (a == null)
             return null;
 
-        if (a.GetType() == typeof(int))
+        if (a is int)
         {
             return System.Convert.ToInt64(a);
         }
@@ -23,19 +24,19 @@ public partial class Exchange
     }
     public static object postFixIncrement(ref object a)
     {
-        if (a.GetType() == typeof(Int64))
+        if (a is Int64)
         {
             a = (Int64)a + 1;
         }
-        else if (a.GetType() == typeof(int))
+        else if (a is int)
         {
             a = (int)a + 1;
         }
-        else if (a.GetType() == typeof(double))
+        else if (a is double)
         {
             a = (double)a + 1;
         }
-        else if (a.GetType() == typeof(string))
+        else if (a is string)
         {
             a = (string)a + 1;
         }
@@ -44,6 +45,29 @@ public partial class Exchange
             return null;
         }
         return a;
+    }
+
+    public static object postFixDecrement(ref object a)
+    {
+
+        if (a is Int64)
+        {
+            a = (Int64)a - 1;
+        }
+        else if (a is int)
+        {
+            a = (int)a - 1;
+        }
+        else if (a is double)
+        {
+            a = (double)a - 1;
+        }
+        else
+        {
+            return null;
+        }
+        return a;
+
     }
 
     public static object prefixUnaryNeg(ref object a)
@@ -148,43 +172,43 @@ public partial class Exchange
         value = normalizeIntIfNeeded(value);
 
         // return value != null && value != false && value != 0 && value != "" && value != "0" && value != "false" && value != "False" && value != "FALSE";
-        if (value.GetType() == typeof(bool))
+        if (value is (bool))
         {
             return (bool)value;
         }
-        else if (value.GetType() == typeof(Int64))
+        else if (value is (Int64))
         {
             return (Int64)value != 0;
         }
-        else if (value.GetType() == typeof(double))
+        else if (value is (double))
         {
             return (double)value != 0;
         }
-        else if (value.GetType() == typeof(string))
+        else if (value is (string))
         {
             return (string)value != "";
         }
-        else if (value.GetType() == typeof(List<object>))
+        else if (value is (IList<object>))
         {
-            return ((List<object>)value).Count > 0;
+            return ((IList<object>)value).Count > 0;
         }
-        else if (value.GetType() == typeof(List<string>))
+        else if (value is (IList<string>))
         {
-            return ((List<string>)value).Count > 0;
+            return ((IList<string>)value).Count > 0;
         }
-        else if (value.GetType() == typeof(List<int>))
+        else if (value is (IList<int>))
         {
-            return ((List<string>)value).Count > 0;
+            return ((IList<string>)value).Count > 0;
         }
-        else if (value.GetType() == typeof(List<Int64>))
+        else if (value is (IList<Int64>))
         {
-            return ((List<string>)value).Count > 0;
+            return ((IList<string>)value).Count > 0;
         }
-        else if (value.GetType() == typeof(List<double>))
+        else if (value is (IList<double>))
         {
-            return ((List<double>)value).Count > 0;
+            return ((IList<double>)value).Count > 0;
         }
-        else if (value.GetType() == typeof(Dictionary<string, object>))
+        else if (value is (IDictionary<string, object>))
         {
             return true;
         }
@@ -351,15 +375,15 @@ public partial class Exchange
         a = normalizeIntIfNeeded(a);
         b = normalizeIntIfNeeded(b);
 
-        if (a.GetType() == typeof(Int64))
+        if (a is (Int64))
         {
             return (Int64)a + (Int64)b;
         }
-        else if (a.GetType() == typeof(double))
+        else if (a is (double))
         {
-            return (double)a + (double)b;
+            return (double)a + Convert.ToDouble(b);
         }
-        else if (a.GetType() == typeof(string))
+        else if (a is (string))
         {
             return (string)a + (string)b;
         }
@@ -499,19 +523,19 @@ public partial class Exchange
             return 0;
         }
 
-        if (value.GetType() == typeof(List<object>))
+        if (value is (IList<object>))
         {
-            return ((List<object>)value).Count;
+            return ((IList<object>)value).Count;
         }
-        else if (value.GetType() == typeof(List<string>))
+        else if (value is (IList<string>))
         {
-            return ((List<string>)value).Count;
+            return ((IList<string>)value).Count;
         }
-        else if (value.GetType() == typeof(List<dict>))
+        else if (value is (List<dict>))
         {
             return ((List<dict>)value).Count;
         }
-        else if (value.GetType() == typeof(string))
+        else if (value is (string))
         {
             return ((string)value).Length; // fallback that should not be used
         }
@@ -611,15 +635,15 @@ public partial class Exchange
 
     public static int getIndexOf(object str, object target)
     {
-        if (str.GetType() == typeof(List<object>))
+        if (str is IList<object>)
         {
-            return ((List<object>)str).IndexOf(target);
+            return ((IList<object>)str).IndexOf(target);
         }
-        else if (str.GetType() == typeof(List<string>))
+        else if (str is IList<string>)
         {
-            return ((List<string>)str).IndexOf((string)target);
+            return ((IList<string>)str).IndexOf((string)target);
         }
-        else if (str.GetType() == typeof(string))
+        else if (str is (string))
         {
             return ((string)str).IndexOf((string)target);
         }
@@ -679,9 +703,9 @@ public partial class Exchange
         }
 
 
-        if (value is dict)
+        if (value is IDictionary<string, object>)
         {
-            var dictValue = (dict)value;
+            var dictValue = (IDictionary<string, object>)value;
             if (dictValue.ContainsKey((string)key))
             {
                 return dictValue[(string)key];
@@ -691,7 +715,7 @@ public partial class Exchange
                 return null;
             }
         }
-        else if (value is List<object>)
+        else if (value is IList<object>)
         {
             // check here if index is out of bounds
             int parsed = Convert.ToInt32(key);
@@ -700,7 +724,7 @@ public partial class Exchange
             {
                 return null;
             }
-            return ((List<object>)value)[parsed];
+            return ((IList<object>)value)[parsed];
         }
         else if (value is List<dict>)
         {
@@ -751,7 +775,7 @@ public partial class Exchange
 
     public static async Task<List<object>> PromiseAll(object promisesObj)
     {
-        var promises = (List<object>)promisesObj;
+        var promises = (IList<object>)promisesObj;
         var tasks = new List<Task<object>>();
         foreach (var promise in promises)
         {
@@ -779,7 +803,6 @@ public partial class Exchange
     public void throwDynamicException(object exception, object message)
     {
         var Exception = NewException((Type)exception, (string)message);
-        throw Exception;
     }
 
     // This function is the salient bit here
@@ -823,22 +846,22 @@ public partial class Exchange
         {
             return false;
         }
-        if (obj.GetType() == typeof(List<object>))
+        if (obj is (IList<object>))
         {
-            return ((List<object>)obj).Contains(key);
+            return ((IList<object>)obj).Contains(key);
         }
-        else if (obj.GetType() == typeof(List<string>))
+        else if (obj is (IList<string>))
         {
-            return ((List<string>)obj).Contains((string)key);
+            return ((IList<string>)obj).Contains((string)key);
         }
-        else if (obj.GetType() == typeof(List<Int64>))
+        else if (obj is (List<Int64>))
         {
             return ((List<Int64>)obj).Contains((Int64)key);
         }
-        else if (obj.GetType() == typeof(dict))
+        else if (obj is (IDictionary<string, object>))
         {
-            if (key.GetType() == typeof(string))
-                return ((dict)obj).ContainsKey((string)key);
+            if (key is (string))
+                return ((IDictionary<string, object>)obj).ContainsKey((string)key);
             else
                 return false;
         }
@@ -881,6 +904,10 @@ public partial class Exchange
             if (end < 0)
             {
                 end = str.Length + end;
+            }
+            if (end > str.Length)
+            {
+                end = str.Length;
             }
             return str[start..end];
         }
