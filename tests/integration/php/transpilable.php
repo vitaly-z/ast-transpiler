@@ -1,4 +1,6 @@
 <?php
+function custom_echo($x){ echo (string)$x . "
+";}
 class Second {
     public function stringifyNumber($arg) {
         return ((string) $arg);
@@ -9,26 +11,26 @@ class Test {
         $a = 1;
         $b = 2;
         $c = $a + $b;
-        var_dump($c); // should print 3
+        custom_echo($c); // should print 3
         $s1 = 'a';
         $s2 = 'b';
         $s3 = $s1 . $s2;
-        var_dump($s3); // should print "ab"
+        custom_echo($s3); // should print "ab"
         $x = false;
         if ($x) {
-            var_dump('x is true');
+            custom_echo('x is true');
         } else {
-            var_dump('x is false'); // should print "x is false"
+            custom_echo('x is false'); // should print "x is false"
         }
         $instance = new Second();
-        var_dump($instance->stringifyNumber(4)); // should print 4
+        custom_echo($instance->stringifyNumber(4)); // should print 4
         $arr = [1, 2, 3, 4];
         $first = $arr[0];
-        var_dump($first); // should print 1
+        custom_echo($first); // should print 1
         $dict = array(
             'a' => 'b',
         );
-        var_dump($dict['a']); // should print "b"
+        custom_echo($dict['a']); // should print "b"
     }
 }
 

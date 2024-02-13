@@ -1,6 +1,7 @@
 import { Transpiler } from '../../src/transpiler.js';
 import * as fs from 'fs';
 import { exec } from "node:child_process";
+import { green, yellow, red } from "colorette";
 const { readFileSync, writeFileSync } = fs;
 
 const TS_TRANSPILABLE_FILE = "./tests/integration/source/transpilable.ts";
@@ -42,12 +43,13 @@ function transpileTests() {
     const transpiler = new Transpiler(parseConfig);
     const result = transpiler.transpileDifferentLanguagesByPath(langConfig as any, TS_TRANSPILABLE_FILE);
 
-    const phpRes = `<?php\n${result[2].content}\n?>`;
+    let phpRes = `<?php\nfunction custom_echo($x){ echo (string)$x . "\n";}\n${result[2].content}\n?>` as string;
+    phpRes = (phpRes as any).replaceAll('var_dump', 'custom_echo');
     const pythonAsync = result[1].content;
     let csharp = 'namespace tests;\n' + result[0].content;
     csharp = csharp.replace('class Test', 'partial class Test');
 
-    writeFileSync(PHP_TRANSPILABLE_FILE, phpRes);
+    writeFileSync(PHP_TRANSPILABLE_FILE, phpRes.toString());
     writeFileSync(PY_TRANSPILABLE_FILE, pythonAsync);
     writeFileSync(CS_TRANSPILABLE_FILE, csharp);
 }
@@ -108,10 +110,25 @@ async function main() {
     ];
     const results = await Promise.all(promises);
     const [ts, php, py, cs] = results;
-    console.log(results);
-    // const sourceOfComparison = await runTS();
-    // const phpOutput = await runPHP();
-    // console.log(sourceOfComparison);
+
+    let success = true;
+    if (php !== ts) {
+        success = false;
+        console.log(red("PHP and TS outputs are not equal"));
+    }
+    if (py !== ts) {
+        success = false;
+        console.log(red("Python and TS outputs are not equal"));
+    }
+    if (cs !== ts) {
+        success = false;
+        console.log(red("C# and TS outputs are not equal"));
+    }
+
+    if (success) {
+        console.log(green("Integration test passed!"));
+    }
+
 }
 
 main()
