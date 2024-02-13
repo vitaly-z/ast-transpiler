@@ -27,6 +27,7 @@
     "test-ci": "jest --ci --coverage",
     "test": "jest --verbose",
     "testv": "jest --verbose --coverage",
+    "integration": "node --loader ts-node/esm tests/integration/test.ts",
     "lint": "eslint src/ --ext .ts",
     "publishPackage": "sh publish.sh && git push && git push --tags && npm publish"
   },
