@@ -27,11 +27,21 @@ class Test {
         console.log(instance.stringifyNumber(4)); // should print 4
 
         const arr = [1,2,3,4];
+
+        console.log(arr.length); // should print 4
+
         const first = arr[0];
         console.log(first); // should print 1
 
         const dict = {"a": "b"};
         console.log(dict["a"]); // should print "b"
+
+        let i = 0;
+        for (let w = 0; w < 10; w++) {
+            i++;
+        }
+        console.log(i.toString()); // should print 10
+
     }
 }
 
