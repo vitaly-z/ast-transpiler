@@ -23,7 +23,8 @@ class Test {
         $instance = new Second();
         var_dump($instance->stringifyNumber(4)); // should print 4
         $arr = [1, 2, 3, 4];
-        var_dump($arr[0]); // should print 1
+        $first = $arr[0];
+        var_dump($first); // should print 1
         $dict = array(
             'a' => 'b',
         );

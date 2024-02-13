@@ -7,7 +7,7 @@ const PY_FILE = "./tests/integration/py/transpilable.py";
 const PHP_FILE = "./tests/integration/php/transpilable.php";
 const CS_FILE = "./tests/integration/cs/transpilable.cs";
 
-const config = [
+const langConfig = [
     {
         language: "csharp",
         async: true
@@ -24,7 +24,7 @@ const config = [
 ]
 
 function transpileTests() {
-    const config = {
+    const parseConfig = {
         "verbose": false,
         "csharp": {
             "parser": {
@@ -33,8 +33,8 @@ function transpileTests() {
             }
         },
     }
-    const transpiler = new Transpiler(config);
-    const result = transpiler.transpileDifferentLanguagesByPath(config as any, TS_FILE);
+    const transpiler = new Transpiler(parseConfig);
+    const result = transpiler.transpileDifferentLanguagesByPath(langConfig as any, TS_FILE);
 
     const phpRes = `<?php\n${result[2].content}\n?>`;
     const pythonAsync = result[1].content;

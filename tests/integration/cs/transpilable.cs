@@ -22,18 +22,18 @@ partial class Test
         if (isTrue(x))
         {
             Console.WriteLine("x is true");
-        }
-        else
+        } else
         {
             Console.WriteLine("x is false"); // should print "x is false"
         }
         var instance = new Second();
         Console.WriteLine(instance.stringifyNumber(4)); // should print 4
-        object arr = new List<object>() { 1, 2, 3, 4 };
-        Console.WriteLine(arr[0]); // should print 1
+        object arr = new List<object>() {1, 2, 3, 4};
+        object first = getValue(arr, 0);
+        Console.WriteLine(first); // should print 1
         object dict = new Dictionary<string, object>() {
             { "a", "b" },
         };
-        Console.WriteLine(dict["a"]); // should print "b"
+        Console.WriteLine(getValue(dict, "a")); // should print "b"
     }
 }

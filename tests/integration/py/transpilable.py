@@ -19,7 +19,8 @@ class Test:
         instance = Second()
         print(instance.stringify_number(4))  # should print 4
         arr = [1, 2, 3, 4]
-        print(arr[0])  # should print 1
+        first = arr[0]
+        print(first)  # should print 1
         dict = {
             'a': 'b',
         }
