@@ -124,6 +124,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return `array_pop(${name})`;
     }
 
+    printReverseCall(node, identation, name = undefined) {
+        return `array_reverse(${name})`;
+    }
+
     printShiftCall(node, identation, name = undefined) {
         return `array_shift(${name})`;
     }
@@ -429,6 +433,7 @@ export class PhpTranspiler extends BaseTranspiler {
             // 'toUpperCase',
             // 'toLowerCase',
             // 'pop',
+            // 'reverse',
             // 'shift',
         ];
     }
