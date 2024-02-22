@@ -868,7 +868,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printReverseCall(node, identation, name = undefined) {
-        return `((IList<object>)${name}).Reverse()`;
+        return `${name} = (${name} as IList<object>).Reverse()`;
     }
 
     printPopCall(node, identation, name = undefined) {
