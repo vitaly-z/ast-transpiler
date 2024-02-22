@@ -125,7 +125,7 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     printReverseCall(node, identation, name = undefined) {
-        return `array_reverse(${name})`;
+        return `${name} = array_reverse(${name})`;
     }
 
     printShiftCall(node, identation, name = undefined) {
