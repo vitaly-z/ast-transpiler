@@ -128,7 +128,7 @@ Warning: Under active development so can change at any time!
 - Basic string manipulation 
   - `concat`, `length`, `includes`, `indexOf`
 - Basic arrays manipulation
-  - `includes`, `length`, `push`, `pop`, `shift`
+  - `includes`, `length`, `push`, `pop`, `reverse`, `shift`
 - Basic object manipulation
   - `Object.keys`, `Object.values`
 - Binary expressions
