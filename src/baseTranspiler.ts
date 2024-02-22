@@ -1159,8 +1159,6 @@ class BaseTranspiler {
                     return this.printToLowerCaseCall(node, identation, parsedLeftSide);
                 case "shift":
                     return this.printShiftCall(node, identation, parsedLeftSide);
-                case "reverse":
-                    return this.printReverseCall(node, identation, parsedLeftSide);
                 case "pop":
                     return this.printPopCall(node, identation, parsedLeftSide);
                 case "reverse":
