@@ -513,6 +513,7 @@ describe('php transpiling tests', () => {
         "const listFirst = myList[0];\n" +
         "myList.push (4);\n" +
         "myList.pop ();\n" +
+        "myList.reverse ();\n" +
         "myList.shift ();"
         const php =
         "$myList = [1, 2, 3];\n" +
@@ -523,6 +524,7 @@ describe('php transpiling tests', () => {
         "$listFirst = $myList[0];\n" +
         "$myList[] = 4;\n" +
         "array_pop($myList);\n" +
+        "array_reverse($myList);\n" +
         "array_shift($myList);"
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
