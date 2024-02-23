@@ -583,6 +583,7 @@ describe('csharp transpiling tests', () => {
     //     "const listFirst = myList[0];\n" +
     //     "myList.push (4);\n" +
     //     "myList.pop ();\n" +
+    //     "myList.reverse ();\n" +
     //     "myList.shift ();"
     //     const csharp =
     //     "$myList = [1, 2, 3];\n" +
@@ -592,6 +593,7 @@ describe('csharp transpiling tests', () => {
     //     "$listFirst = $myList[0];\n" +
     //     "$myList[] = 4;\n" +
     //     "array_pop($myList);\n" +
+    //     "array_reverse($myList);\n" +
     //     "array_shift($myList);"
     //     const output = transpiler.transpileCSharp(ts).content;
     //     expect(output).toBe(csharp);

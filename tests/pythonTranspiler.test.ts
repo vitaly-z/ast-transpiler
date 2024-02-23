@@ -438,6 +438,7 @@ describe('python tests', () => {
         "const listFirst = myList[0];\n" +
         "myList.push (4);\n" +
         "myList.pop ();\n" +
+        "myList.reverse ();\n" +
         "myList.shift ();"
         const python =
         "myList = [1, 2, 3]\n" +
@@ -448,6 +449,7 @@ describe('python tests', () => {
         "listFirst = myList[0]\n" +
         "myList.append(4)\n" +
         "myList.pop()\n" +
+        "myList.reverse()\n" +
         "myList.pop(0)"
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);

@@ -149,6 +149,10 @@ export class PythonTranspiler extends BaseTranspiler {
         return `${name}.pop(0)`;
     }
 
+    printReverseCall(node, identation, name = undefined) {
+        return `${name}.reverse()`;
+    }
+
     printArrayPushCall(node, identation, name, parsedArg) {
         return `${name}.append(${parsedArg})`;
     }
