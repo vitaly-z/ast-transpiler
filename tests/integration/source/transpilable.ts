@@ -42,6 +42,9 @@ class Test {
         }
         console.log(i.toString()); // should print 10
 
+        const list = [1,2,3,4,5];
+        list.reverse();
+        console.log(list[0]); // should print 5
     }
 }
 
