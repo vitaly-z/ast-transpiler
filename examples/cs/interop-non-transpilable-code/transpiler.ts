@@ -9,7 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const __dirname = fileURLToPath (new URL ('.', import.meta.url));
 
 const FILE_INPUT = __dirname + "/input/index.ts";
-const FILE_OUTPUT = __dirname + "/output/index.php";
+const FILE_OUTPUT = __dirname + "/output/index.cs";
 
 const transpiler = new Transpiler({
     csharp: {
