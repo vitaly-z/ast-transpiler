@@ -817,4 +817,10 @@ describe('php transpiling tests', () => {
         transpiler.setPhpUncamelCaseIdentifiers(false);
         expect(output).toBe(php);
     });
+    test('should convert delete', () => {
+        const ts = "delete someObject[key];";
+        const php = "unset($someObject[$key]);";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    })
   });

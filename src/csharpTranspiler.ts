@@ -949,6 +949,12 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `((bool) ${condition})` + " ? " + whenTrue + " : " + whenFalse;
     }
 
+    printDeleteExpression(node, identation) {
+        const object = this.printNode (node.expression.expression, 0);
+        const key = this.printNode (node.expression.argumentExpression, 0);
+        return `${object}.Remove(${key})`;
+    }
+
     printThrowStatement(node, identation) {
         // const expression = this.printNode(node.expression, 0);
         // return this.getIden(node) + this.THROW_TOKEN + " " + expression + this.LINE_TERMINATOR;
