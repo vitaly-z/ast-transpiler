@@ -756,4 +756,10 @@ describe('python tests', () => {
         transpiler.setPythonUncamelCaseIdentifiers(false);
         expect(output).toBe(python);
     })
+    test('should convert delete', () => {
+        const ts = "delete someObject[key];";
+        const php = "del someObject[key]";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(php);
+    })
 });

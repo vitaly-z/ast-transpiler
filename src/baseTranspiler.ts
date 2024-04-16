@@ -1653,6 +1653,10 @@ class BaseTranspiler {
         return this.getIden(identation) + this.CONTINUE_TOKEN + this.LINE_TERMINATOR;
     }
 
+    printDeleteExpression (node, identation) {
+        return undefined;
+    }
+
     printNode(node, identation = 0): string {
 
         try {
@@ -1738,6 +1742,8 @@ class BaseTranspiler {
                 return this.printNullKeyword(node, identation);
             } else if (ts.isContinueStatement(node)) {
                 return this.printContinueStatement(node, identation);
+            } else if (ts.isDeleteExpression(node)) {
+                return this.printDeleteExpression(node, identation);
             }
 
             if (node.statements) {

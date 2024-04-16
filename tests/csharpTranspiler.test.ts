@@ -896,6 +896,12 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    test('should convert delete', () => {
+        const ts = "delete someObject[key];";
+        const csharp = "someObject.Remove(key);";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     // test('should transpile file from path', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(true);
     //     const csharp = readFileSync ('./tests/files/output/php/test1.php', "utf8");
