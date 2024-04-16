@@ -373,7 +373,7 @@ export class PythonTranspiler extends BaseTranspiler {
 
     printDeleteExpression(node, identation) {
         const expression = this.printNode (node.expression);
-        return this.getIden(identation) + `del ${expression}`;
+        return `del ${expression}`;
     }
 
     getCustomOperatorIfAny(left, right, operator) {

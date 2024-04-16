@@ -952,7 +952,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     printDeleteExpression(node, identation) {
         const object = this.printNode (node.expression.expression, 0);
         const key = this.printNode (node.expression.argumentExpression, 0);
-        return `${object}.Remove(${key})`;
+        return `((IDictionary<string,object>)${object}).Remove(${key})`;
     }
 
     printThrowStatement(node, identation) {

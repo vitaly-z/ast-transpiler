@@ -260,7 +260,7 @@ export class PhpTranspiler extends BaseTranspiler {
 
     printDeleteExpression(node, identation) {
         const expression = this.printNode (node.expression, 0);
-        return this.getIden(identation) + `unset(${expression})`;
+        return `unset(${expression})`;
     }
 
     getExceptionalAccessTokenIfAny(node) {
