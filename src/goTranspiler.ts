@@ -290,7 +290,7 @@ export class GoTranspiler extends BaseTranspiler {
             // throw new FunctionReturnTypeError("Function return type is not supported");
             let res = "";
             if (this.isAsyncFunction(node)) {
-                res = `${this.PROMISE_TYPE_KEYWORD}<${this.DEFAULT_RETURN_TYPE}>`;
+                res = `${this.DEFAULT_RETURN_TYPE}`;
             } else {
                 res = this.DEFAULT_RETURN_TYPE;
             }
@@ -630,57 +630,6 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printFunctionBody(node, identation) {
-
-        // check if there is any default parameter to initialize
-        const funcParams = node.parameters;
-        const initParams = [];
-        if (funcParams.length > 0) {
-            const body = node.body.statements;
-            const first = body.length > 0 ? body[0] : [];
-            const remaining = body.length > 0 ? body.slice(1): [];
-            let firstStatement = this.printNode(first, identation + 1);
-
-            const remainingString = remaining.map((statement) => this.printNode(statement, identation + 1)).join("\n");
-            funcParams.forEach((param) => {
-                const initializer = param.initializer;
-                if (initializer) {
-                    if (ts.isArrayLiteralExpression(initializer)) {
-                        initParams.push(`${this.printNode(param.name, 0)} ??= new List<object>();`);
-                    }
-                    if (ts.isObjectLiteralExpression(initializer)) {
-                        initParams.push(`${this.printNode(param.name, 0)} ??= new Dictionary<string, object>();`);
-                    }
-                    if (ts.isNumericLiteral(initializer)) {
-                        initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
-                    }
-                    if (ts.isStringLiteral(initializer)) {
-                        initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
-                    }
-                    if ((ts as any).isBooleanLiteral(initializer)) {
-                        initParams.push(`${this.printNode(param.name, 0)} ??= ${this.printNode(initializer, 0)};`);
-                    }
-                }
-            });
-
-            if (initParams.length > 0) {
-                const defaultInitializers = initParams.map( l => this.getIden(identation+1) + l ).join("\n") + "\n";
-                const bodyParts = firstStatement.split("\n");
-                const commentPart = bodyParts.filter(line => this.isComment(line));
-                const isComment = commentPart.length > 0;
-                if (isComment) {
-                    const commentPartString = commentPart.map((c) => this.getIden(identation+1) + c.trim()).join("\n");
-                    const firstStmNoComment = bodyParts.filter(line => !this.isComment(line)).join("\n");
-                    firstStatement = commentPartString + "\n" + defaultInitializers + firstStmNoComment;
-                } else {
-                    firstStatement = defaultInitializers + firstStatement;
-                }
-            }
-            const blockOpen = this.getBlockOpen(identation);
-            const blockClose = this.getBlockClose(identation);
-            firstStatement = remainingString.length > 0 ? firstStatement + "\n" : firstStatement;
-            return blockOpen + firstStatement + remainingString + blockClose;
-        }
-
         return super.printFunctionBody(node, identation);
     }
 
