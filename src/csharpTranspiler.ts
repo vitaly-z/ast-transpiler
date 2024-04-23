@@ -513,7 +513,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
 
         const isNew = declaration.initializer && (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
-        const varToken = isNew ? 'var ' : 'object ' ;
+        const varToken = isNew ? 'var ' : this.VAR_TOKEN + ' ' ;
 
         // handle default undefined initialization
         if (declaration.initializer === undefined) {
