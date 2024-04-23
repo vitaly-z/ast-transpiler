@@ -95,7 +95,7 @@ export class GoTranspiler extends BaseTranspiler {
 
         this.FullPropertyAccessReplacements = {
             'JSON.parse': 'parseJson', // custom helper method
-            'console.log': 'Console.WriteLine',
+            'console.log': 'fmt.Println',
             'Number.MAX_SAFE_INTEGER': 'Int32.MaxValue',
             'Math.min': 'Math.Min',
             'Math.max': 'Math.Max',
@@ -172,8 +172,17 @@ export class GoTranspiler extends BaseTranspiler {
 
     printStruct(node, indentation) {
         const className = node.name.escapedText;
+
+        // check if we have heritage
+        let heritageName = '';
+        if (node?.heritageClauses?.length > 0) {
+            const heritage = node.heritageClauses[0];
+            const heritageType = heritage.types[0];
+            heritageName = this.getIden(indentation+1) + heritageType.expression.escapedText + '\n';
+        }
+
         const propDeclarations = node.members.filter(member => member.kind === SyntaxKind.PropertyDeclaration);
-        return `type ${className} struct {\n${propDeclarations.map(member => this.printNode(member, indentation+1)).join("\n")}\n}`;
+        return `type ${className} struct {\n${heritageName}${propDeclarations.map(member => this.printNode(member, indentation+1)).join("\n")}\n}`;
     }
 
     printClass(node, identation) {
@@ -810,7 +819,7 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
-        return  `((IList<object>)${name}).Add(${parsedArg})`;
+        return  `append(${name},${parsedArg})`;
     }
 
     printIncludesCall(node, identation, name = undefined, parsedArg = undefined) {
@@ -905,35 +914,35 @@ export class GoTranspiler extends BaseTranspiler {
         return this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`;
     }
 
-    printPostFixUnaryExpression(node, identation) {
-        const {operand, operator} = node;
-        if (operand.kind === ts.SyntaxKind.NumericLiteral) {
-            return super.printPostFixUnaryExpression(node, identation);
-        }
-        const leftSide = this.printNode(operand, 0);
-        const op = this.PostFixOperators[operator]; // todo: handle --
-        if (op === '--') {
-            return `postFixDecrement(ref ${leftSide})`;
-        }
-        return `postFixIncrement(ref ${leftSide})`;
-    }
+    // printPostFixUnaryExpression(node, identation) {
+    //     const {operand, operator} = node;
+    //     if (operand.kind === ts.SyntaxKind.NumericLiteral) {
+    //         return super.printPostFixUnaryExpression(node, identation);
+    //     }
+    //     const leftSide = this.printNode(operand, 0);
+    //     const op = this.PostFixOperators[operator]; // todo: handle --
+    //     if (op === '--') {
+    //         return `postFixDecrement(ref ${leftSide})`;
+    //     }
+    //     return `postFixIncrement(ref ${leftSide})`;
+    // }
 
-    printPrefixUnaryExpression(node, identation) {
-        const {operand, operator} = node;
-        if (operand.kind === ts.SyntaxKind.NumericLiteral) {
-            return super.printPrefixUnaryExpression(node, identation);
-        }
-        if (operator === ts.SyntaxKind.ExclamationToken) {
-            // not branch check falsy/turthy values if needed;
-            return  this.PrefixFixOperators[operator] + this.printCondition(node.operand, 0);
-        }
-        const leftSide = this.printNode(operand, 0);
-        if (operator === ts.SyntaxKind.PlusToken) {
-            return `prefixUnaryPlus(ref ${leftSide})`;
-        } else {
-            return `prefixUnaryNeg(ref ${leftSide})`;
-        }
-    }
+    // printPrefixUnaryExpression(node, identation) {
+    //     const {operand, operator} = node;
+    //     if (operand.kind === ts.SyntaxKind.NumericLiteral) {
+    //         return super.printPrefixUnaryExpression(node, identation);
+    //     }
+    //     if (operator === ts.SyntaxKind.ExclamationToken) {
+    //         // not branch check falsy/turthy values if needed;
+    //         return  this.PrefixFixOperators[operator] + this.printCondition(node.operand, 0);
+    //     }
+    //     const leftSide = this.printNode(operand, 0);
+    //     if (operator === ts.SyntaxKind.PlusToken) {
+    //         return `prefixUnaryPlus(ref ${leftSide})`;
+    //     } else {
+    //         return `prefixUnaryNeg(ref ${leftSide})`;
+    //     }
+    // }
 
     printConditionalExpression(node, identation) {
         const condition = this.printCondition(node.condition, 0);
