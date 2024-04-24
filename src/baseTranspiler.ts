@@ -161,6 +161,9 @@ class BaseTranspiler {
 
     SPREAD_TOKEN = "...";
 
+    INFER_VAR_TYPE = false;
+    INFER_ARG_TYPE = false;
+
     SupportedKindNames = {};
     PostFixOperators = {};
     PrefixFixOperators = {};
@@ -174,6 +177,8 @@ class BaseTranspiler {
     CallExpressionReplacements = {};
     ReservedKeywordsReplacements = {};
     PropertyAccessRequiresParenthesisRemoval = [];
+    VariableTypeReplacements = {};
+    ArgTypeReplacements = {};
 
     FuncModifiers = {};
 
@@ -550,15 +555,16 @@ class BaseTranspiler {
         const initializer = node.initializer;
 
         let type = this.printParameterType(node);
-        type = type ? type + " " : "";
+        type = type ? type : "";
 
         if (defaultValue) {
             if (initializer) {
                 const customDefaultValue = this.printCustomDefaultValueIfNeeded(initializer);
                 const defaultValue = customDefaultValue ? customDefaultValue : this.printNode(initializer, 0);
+                type = (defaultValue === "null" && type !== "object") ? type + "? ": type + " ";
                 return type + name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + defaultValue;
             }
-            return type + name;
+            return type + " " + name;
         }
         return name;
     }
@@ -773,20 +779,17 @@ class BaseTranspiler {
             return "";
         }
 
-        const typeText = this.getType(node);
-        // if (typeText === this.BOOLEAN_KEYWORD) {
-        //     return typeText;
-        // }
-
-        return this.DEFAULT_PARAMETER_TYPE;
-
-        if (typeText === undefined || typeText === this.STRING_KEYWORD) {
-            // throw new FunctionReturnTypeError("Parameter type is not supported or undefined");
-            this.warn(node, node.getText(), "Parameter type not found, will default to: " + this.DEFAULT_PARAMETER_TYPE);
+        if (!this.INFER_ARG_TYPE) {
             return this.DEFAULT_PARAMETER_TYPE;
         }
-        return typeText;
 
+        const type = global.checker.typeToString(global.checker.getTypeAtLocation(node));
+
+        if (this.ArgTypeReplacements[type]) {
+            return this.ArgTypeReplacements[type];
+        }
+
+        return this.DEFAULT_PARAMETER_TYPE;
     }
 
     printFunctionType(node){
