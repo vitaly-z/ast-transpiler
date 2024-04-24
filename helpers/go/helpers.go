@@ -173,3 +173,218 @@ func Subtract(a, b interface{}) interface{} {
 		return nil
 	}
 }
+
+type Dict map[string]interface{}
+
+// GetArrayLength returns the length of various array or slice types or string length.
+func GetArrayLength(value interface{}) int {
+	if value == nil {
+		return 0
+	}
+
+	val := reflect.ValueOf(value)
+
+	switch val.Kind() {
+	case reflect.Slice, reflect.Array:
+		return val.Len()
+	case reflect.String:
+		return val.Len()
+	case reflect.Map:
+		// Specific check for a map type similar to List<dict> in C#
+		if _, ok := value.(Dict); ok {
+			return len(value.(Dict))
+		}
+	}
+
+	return 0
+}
+
+func isGreaterThan(a, b interface{}) bool {
+	if a != nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+
+	aVal, bVal, ok := normalizeAndConvert(a, b)
+	if !ok {
+		return false
+	}
+
+	switch aVal.Kind() {
+	case reflect.Int, reflect.Int64:
+		return aVal.Int() > bVal.Int()
+	case reflect.Float64:
+		return aVal.Float() > bVal.Float()
+	case reflect.String:
+		return aVal.String() > bVal.String()
+	default:
+		return false
+	}
+}
+
+// isLessThan checks if a is less than b
+func isLessThan(a, b interface{}) bool {
+	return !isGreaterThan(a, b) && !isEqual(a, b)
+}
+
+// isGreaterThanOrEqual checks if a is greater than or equal to b
+func isGreaterThanOrEqual(a, b interface{}) bool {
+	return isGreaterThan(a, b) || isEqual(a, b)
+}
+
+// isLessThanOrEqual checks if a is less than or equal to b
+func isLessThanOrEqual(a, b interface{}) bool {
+	return isLessThan(a, b) || isEqual(a, b)
+}
+
+// mod performs a modulus operation on a and b
+func mod(a, b interface{}) interface{} {
+	if a == nil || b == nil {
+		return nil
+	}
+
+	aVal, bVal, ok := normalizeAndConvert(a, b)
+	if !ok || bVal.Float() == 0 {
+		return nil
+	}
+
+	return float64(int(aVal.Float()) % int(bVal.Float()))
+}
+
+// isEqual checks for equality of a and b with dynamic type support
+func isEqual(a, b interface{}) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+
+	aVal, bVal, ok := normalizeAndConvert(a, b)
+	if !ok {
+		return false
+	}
+
+	switch aVal.Kind() {
+	case reflect.Int, reflect.Int64:
+		return aVal.Int() == bVal.Int()
+	case reflect.Float64:
+		return aVal.Float() == bVal.Float()
+	case reflect.String:
+		return aVal.String() == bVal.String()
+	default:
+		return false
+	}
+}
+
+// normalizeAndConvert normalizes and attempts to convert a and b to a common type
+func normalizeAndConvert(a, b interface{}) (reflect.Value, reflect.Value, bool) {
+	aVal := reflect.ValueOf(a)
+	bVal := reflect.ValueOf(b)
+
+	if aVal.Kind() != bVal.Kind() {
+		if aVal.Kind() < bVal.Kind() {
+			aVal = reflect.ValueOf(toFloat64(a))
+			bVal = reflect.ValueOf(toFloat64(b))
+		} else {
+			bVal = reflect.ValueOf(toFloat64(b))
+			aVal = reflect.ValueOf(toFloat64(a))
+		}
+	}
+
+	return aVal, bVal, true
+}
+
+func toFloat64(v interface{}) float64 {
+	var result float64
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.Int, reflect.Int64:
+		result = float64(val.Int())
+	case reflect.Float64:
+		result = val.Float()
+	case reflect.String:
+		result = 0 // Convert string to float64, example implementation
+	}
+	return result
+}
+
+func Increment(a interface{}) interface{} {
+	switch v := a.(type) {
+	case int:
+		return v + 1
+	case int64:
+		return v + 1
+	case float64:
+		return v + 1.0
+	case string:
+		return v + "1"
+	default:
+		return nil
+	}
+}
+
+// Decrement decreases the numeric value by 1.
+func Decrement(a interface{}) interface{} {
+	switch v := a.(type) {
+	case int:
+		return v - 1
+	case int64:
+		return v - 1
+	case float64:
+		return v - 1.0
+	default:
+		return nil
+	}
+}
+
+// Negate negates the numeric value.
+func Negate(a interface{}) interface{} {
+	switch v := a.(type) {
+	case int:
+		return -v
+	case int64:
+		return -v
+	case float64:
+		return -v
+	default:
+		return nil
+	}
+}
+
+// UnaryPlus returns the numeric value unchanged.
+func UnaryPlus(a interface{}) interface{} {
+	switch v := a.(type) {
+	case int:
+		return +v
+	case int64:
+		return +v
+	case float64:
+		return +v
+	default:
+		return nil
+	}
+}
+
+// PlusEqual adds the value of `value` to `a`, handling some basic types.
+func PlusEqual(a, value interface{}) interface{} {
+	aVal := reflect.ValueOf(a)
+	valueVal := reflect.ValueOf(value)
+
+	if aVal.Kind() != valueVal.Kind() {
+		return nil // type mismatch
+	}
+
+	switch aVal.Kind() {
+	case reflect.Int, reflect.Int64:
+		return aVal.Int() + valueVal.Int()
+	case reflect.Float64:
+		return aVal.Float() + valueVal.Float()
+	case reflect.String:
+		return aVal.String() + valueVal.String()
+	default:
+		return nil
+	}
+}
