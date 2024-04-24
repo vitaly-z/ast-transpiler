@@ -555,16 +555,15 @@ class BaseTranspiler {
         const initializer = node.initializer;
 
         let type = this.printParameterType(node);
-        type = type ? type : "";
+        type = type ? type + " " : "";
 
         if (defaultValue) {
             if (initializer) {
                 const customDefaultValue = this.printCustomDefaultValueIfNeeded(initializer);
                 const defaultValue = customDefaultValue ? customDefaultValue : this.printNode(initializer, 0);
-                type = (defaultValue === "null" && type !== "object") ? type + "? ": type + " ";
                 return type + name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + defaultValue;
             }
-            return type + " " + name;
+            return type + name;
         }
         return name;
     }
