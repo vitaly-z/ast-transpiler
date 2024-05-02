@@ -388,3 +388,49 @@ func PlusEqual(a, value interface{}) interface{} {
 		return nil
 	}
 }
+
+func appendToArray(array interface{}, value interface{}) interface{} {
+	// Use reflection to work with the array dynamically
+	arrVal := reflect.ValueOf(array)
+
+	// Check if the input is actually a slice
+	if arrVal.Kind() != reflect.Slice {
+		return nil
+	}
+
+	// Use reflection to append the value to the slice
+	valueVal := reflect.ValueOf(value)
+	resultVal := reflect.Append(arrVal, valueVal)
+
+	// Return the new slice as interface{}
+	return resultVal.Interface()
+}
+
+func addElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value interface{}) {
+	val := reflect.ValueOf(arrayOrDict)
+	key := reflect.ValueOf(stringOrInt)
+	valueVal := reflect.ValueOf(value)
+
+	switch val.Kind() {
+	case reflect.Slice:
+		if key.Kind() != reflect.Int {
+			// return fmt.Errorf("index must be an integer for slices")
+		}
+		index := int(key.Int())
+		if index < 0 || index >= val.Len() {
+			// return fmt.Errorf("index out of range")
+		}
+		val.Index(index).Set(valueVal)
+	case reflect.Map:
+		if !key.Type().AssignableTo(val.Type().Key()) {
+			// return fmt.Errorf("key type %s does not match map key type %s", key.Type(), val.Type().Key())
+		}
+		if !valueVal.Type().AssignableTo(val.Type().Elem()) {
+			// return fmt.Errorf("value type %s does not match map value type %s", valueVal.Type(), val.Type().Elem())
+		}
+		val.SetMapIndex(key, valueVal)
+	default:
+		// return fmt.Errorf("unsupported type: %s", val.Kind())
+	}
+	// return nil
+}
