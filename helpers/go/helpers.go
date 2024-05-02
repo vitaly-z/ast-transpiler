@@ -434,3 +434,20 @@ func addElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value 
 	}
 	// return nil
 }
+
+func inOp(dict interface{}, key interface{}) bool {
+	dictVal := reflect.ValueOf(dict)
+
+	// Ensure that the provided dict is a map
+	if dictVal.Kind() != reflect.Map {
+		return false
+	}
+
+	keyVal := reflect.ValueOf(key)
+
+	// Check if the map has the provided key
+	if dictVal.MapIndex(keyVal).IsValid() {
+		return true
+	}
+	return false
+}
