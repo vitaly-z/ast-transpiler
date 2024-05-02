@@ -55,6 +55,8 @@ const parserConfig = {
     'BLOCK_OPENING_TOKEN': '{',
     'DEFAULT_PARAMETER_TYPE': 'interface{}',
     'LINE_TERMINATOR': '',
+    'CONDITION_OPENING':'',
+    'CONDITION_CLOSE':''
 };
 
 export class GoTranspiler extends BaseTranspiler {
@@ -768,7 +770,7 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
-        return  `append(${name},${parsedArg})`;
+        return  `${name} = appendToArray(${name},${parsedArg}).([]interface{})`;
     }
 
     printIncludesCall(node, identation, name = undefined, parsedArg = undefined) {
@@ -947,54 +949,61 @@ export class GoTranspiler extends BaseTranspiler {
         // return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
     }
 
-    // printLeadingComments(node, identation) {
-    //     const fullText = global.src.getFullText();
-    //     const commentsRangeList = ts.getLeadingCommentRanges(fullText, node.pos);
-    //     const commentsRange = commentsRangeList ? commentsRangeList : undefined;
-    //     let res = "";
-    //     if (commentsRange) {
-    //         for (const commentRange of commentsRange) {
-    //             const commentText = fullText.slice(commentRange.pos, commentRange.end);
-    //             if (commentText !== undefined) {
-    //                 const formatted = commentText
-    //                     .split("\n")
-    //                     .map(line=>line.trim())
-    //                     .map(line => !(line.trim().startsWith("*")) ? this.getIden(identation) + line : this.getIden(identation) + " " + line) .join("\n");
-    //                 // res+= this.transformLeadingComment(formatted) + "\n";
-    //             }
-    //         }
-    //     }
-    //     return res;
-    // }
+    printBinaryExpression(node, identation) {
+
+        const {left, right, operatorToken} = node;
+
+        const customBinaryExp = this.printCustomBinaryExpressionIfAny(node, identation);
+        if (customBinaryExp) {
+            return customBinaryExp;
+        }
+
+        if (operatorToken.kind == ts.SyntaxKind.InstanceOfKeyword) {
+            return this.printInstanceOfExpression(node, identation);
+        }
+
+        if (operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+            // handle test['a'] = 1;
+            if (left.kind === ts.SyntaxKind.ElementAccessExpression) {
+                const elementAccess = left;
+                const leftSide = this.printNode(elementAccess.expression, 0);
+                const rightSide = this.printNode(right, 0);
+                const propName = this.printNode(elementAccess.argumentExpression, 0);
+                return `addElementToObject(${leftSide}, ${propName}, ${rightSide})`;
+            }
+        }
+
+        let operator = this.SupportedKindNames[operatorToken.kind];
+
+
+        let leftVar = undefined;
+        let rightVar = undefined;
+
+        // c# wrapper
+        if (operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken || operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken) {
+            if (this.COMPARISON_WRAPPER_OPEN) {
+                leftVar = this.printNode(left, 0);
+                rightVar = this.printNode(right, identation);
+                return `${this.COMPARISON_WRAPPER_OPEN}${leftVar}, ${rightVar}${this.COMPARISON_WRAPPER_CLOSE}`;
+            }
+        }
+
+        // check if boolean operators || and && because of the falsy values
+        if (operatorToken.kind === ts.SyntaxKind.BarBarToken || operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
+            leftVar = this.printCondition(left, 0);
+            rightVar = this.printCondition(right, identation);
+        }  else {
+            leftVar = this.printNode(left, 0);
+            rightVar = this.printNode(right, identation);
+        }
+
+        const customOperator = this.getCustomOperatorIfAny(left, right, operatorToken);
+
+        operator = customOperator ? customOperator : operator;
+
+        return leftVar +" "+ operator + " " + rightVar.trim();
+    }
 }
-
-// if (this.requiresCallExpressionCast) {
-//     const parsedTypes = this.getTypesFromCallExpressionParameters(node);
-//     const tmpArgs = [];
-//     args.forEach((arg, index) => {
-//         const parsedType = parsedTypes[index];
-//         const cast = parsedType ? `(${parsedType})` : '';
-//         tmpArgs.push(cast + this.printNode(arg, identation).trim());
-//     });
-//     parsedArgs = tmpArgs.join(",");
-// } else {
-//     parsedArgs = args.map((a) => {
-//         return  this.printNode(a, identation).trim();
-//     }).join(", ");
-// }
-
-// getTypesFromCallExpressionParameters(node) {
-//     const resolvedParams = global.checker.getResolvedSignature(node).parameters;
-//     const parsedTypes = [];
-//     resolvedParams.forEach((p) => {
-//         const decl = p.declarations[0];
-//         const type = global.checker.getTypeAtLocation(decl);
-//         const parsedType = this.getTypeFromRawType(type);
-//         parsedTypes.push(parsedType);
-//     });
-
-//     return parsedTypes;
-// }
 
 
 // get class decl node
