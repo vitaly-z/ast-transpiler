@@ -10,11 +10,12 @@ const transpiler = new Transpiler({
     },
     php:  {
         uncamelcaseIdentifiers: true,
-    },
+},
     csharp: {
         parser: {
             "ELEMENT_ACCESS_WRAPPER_OPEN": "getValue(",
-            "ELEMENT_ACCESS_WRAPPER_CLOSE": ")"
+            "ELEMENT_ACCESS_WRAPPER_CLOSE": ")",
+            'VAR_TOKEN': 'var',
         }
     }
 });
@@ -76,6 +77,10 @@ const config = [
         language: "php",
         async: true
     },
+    {
+        language: "go",
+        async: true
+    },
 ]
 
 const result = transpiler.transpileDifferentLanguagesByPath(config as any, file);
@@ -92,6 +97,9 @@ const PYTHON_OUTPUT = "./out/output.py";
 const PYTHON_SYNC_OUTPUT = "./out/output-sync.py";
 const CSHARP_OUTPUT = "./out/output.cs";
 
+const GO_OUTPUT = "./out/output.go";
+const go = result[3].content;
+
 writeFileSync(PHP_OUTPUT, phpRes);
 // // writeFileSync(PYTHON_OUTPUT, pythonRes.content ?? "");
 writeFileSync(PYTHON_OUTPUT, pythonAsync ?? "");
@@ -99,6 +107,7 @@ writeFileSync(PYTHON_OUTPUT, pythonAsync ?? "");
 // writeFileSync(PHP_SYNC_OUTPUT, phpSyncRes);
 
 writeFileSync(CSHARP_OUTPUT, csharp);
+writeFileSync(GO_OUTPUT, go);
 
 console.log("TRANSPILED!!");
 

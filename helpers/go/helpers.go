@@ -2,6 +2,7 @@ package main
 
 import (
 	"reflect"
+	"strings"
 )
 
 func add(a interface{}, b interface{}) interface{} {
@@ -450,4 +451,37 @@ func inOp(dict interface{}, key interface{}) bool {
 		return true
 	}
 	return false
+}
+
+func getIndexOf(str interface{}, target interface{}) int {
+	switch v := str.(type) {
+	case []string:
+		t, ok := target.(string)
+		if !ok {
+			return -1
+		}
+		for i, s := range v {
+			if s == t {
+				return i
+			}
+		}
+	case []int:
+		t, ok := target.(int)
+		if !ok {
+			return -1
+		}
+		for i, n := range v {
+			if n == t {
+				return i
+			}
+		}
+	case string:
+		t, ok := target.(string)
+		if !ok {
+			return -1
+		}
+		return strings.Index(v, t)
+	}
+
+	return -1
 }
