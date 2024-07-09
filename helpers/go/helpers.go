@@ -1,11 +1,11 @@
-package main
+package ccxt
 
 import (
 	"reflect"
 	"strings"
 )
 
-func add(a interface{}, b interface{}) interface{} {
+func Add(a interface{}, b interface{}) interface{} {
 	switch aType := a.(type) {
 	case int:
 		if bType, ok := b.(int); ok {
@@ -24,12 +24,12 @@ func add(a interface{}, b interface{}) interface{} {
 	return nil
 }
 
-func isTrue(a interface{}, b interface{}) bool {
-	return evalTruthy(a) && evalTruthy(b)
+func IsTrue(a interface{}, b interface{}) bool {
+	return EvalTruthy(a) && EvalTruthy(b)
 }
 
-// evalTruthy determines if a single interface value is truthy.
-func evalTruthy(val interface{}) bool {
+// EvalTruthy determines if a single interface value is truthy.
+func EvalTruthy(val interface{}) bool {
 	if val == nil {
 		return false
 	}
@@ -200,7 +200,7 @@ func GetArrayLength(value interface{}) int {
 	return 0
 }
 
-func isGreaterThan(a, b interface{}) bool {
+func IsGreaterThan(a, b interface{}) bool {
 	if a != nil && b == nil {
 		return true
 	}
@@ -208,7 +208,7 @@ func isGreaterThan(a, b interface{}) bool {
 		return false
 	}
 
-	aVal, bVal, ok := normalizeAndConvert(a, b)
+	aVal, bVal, ok := NormalizeAndConvert(a, b)
 	if !ok {
 		return false
 	}
@@ -225,28 +225,28 @@ func isGreaterThan(a, b interface{}) bool {
 	}
 }
 
-// isLessThan checks if a is less than b
-func isLessThan(a, b interface{}) bool {
-	return !isGreaterThan(a, b) && !isEqual(a, b)
+// IsLessThan checks if a is less than b
+func IsLessThan(a, b interface{}) bool {
+	return !IsGreaterThan(a, b) && !IsEqual(a, b)
 }
 
-// isGreaterThanOrEqual checks if a is greater than or equal to b
-func isGreaterThanOrEqual(a, b interface{}) bool {
-	return isGreaterThan(a, b) || isEqual(a, b)
+// IsGreaterThanOrEqual checks if a is greater than or equal to b
+func IsGreaterThanOrEqual(a, b interface{}) bool {
+	return IsGreaterThan(a, b) || IsEqual(a, b)
 }
 
-// isLessThanOrEqual checks if a is less than or equal to b
-func isLessThanOrEqual(a, b interface{}) bool {
-	return isLessThan(a, b) || isEqual(a, b)
+// IsLessThanOrEqual checks if a is less than or equal to b
+func IsLessThanOrEqual(a, b interface{}) bool {
+	return IsLessThan(a, b) || IsEqual(a, b)
 }
 
-// mod performs a modulus operation on a and b
-func mod(a, b interface{}) interface{} {
+// Mod performs a modulus operation on a and b
+func Mod(a, b interface{}) interface{} {
 	if a == nil || b == nil {
 		return nil
 	}
 
-	aVal, bVal, ok := normalizeAndConvert(a, b)
+	aVal, bVal, ok := NormalizeAndConvert(a, b)
 	if !ok || bVal.Float() == 0 {
 		return nil
 	}
@@ -254,8 +254,8 @@ func mod(a, b interface{}) interface{} {
 	return float64(int(aVal.Float()) % int(bVal.Float()))
 }
 
-// isEqual checks for equality of a and b with dynamic type support
-func isEqual(a, b interface{}) bool {
+// IsEqual checks for equality of a and b with dynamic type support
+func IsEqual(a, b interface{}) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -263,7 +263,7 @@ func isEqual(a, b interface{}) bool {
 		return false
 	}
 
-	aVal, bVal, ok := normalizeAndConvert(a, b)
+	aVal, bVal, ok := NormalizeAndConvert(a, b)
 	if !ok {
 		return false
 	}
@@ -280,25 +280,25 @@ func isEqual(a, b interface{}) bool {
 	}
 }
 
-// normalizeAndConvert normalizes and attempts to convert a and b to a common type
-func normalizeAndConvert(a, b interface{}) (reflect.Value, reflect.Value, bool) {
+// NormalizeAndConvert normalizes and attempts to convert a and b to a common type
+func NormalizeAndConvert(a, b interface{}) (reflect.Value, reflect.Value, bool) {
 	aVal := reflect.ValueOf(a)
 	bVal := reflect.ValueOf(b)
 
 	if aVal.Kind() != bVal.Kind() {
 		if aVal.Kind() < bVal.Kind() {
-			aVal = reflect.ValueOf(toFloat64(a))
-			bVal = reflect.ValueOf(toFloat64(b))
+			aVal = reflect.ValueOf(ToFloat64(a))
+			bVal = reflect.ValueOf(ToFloat64(b))
 		} else {
-			bVal = reflect.ValueOf(toFloat64(b))
-			aVal = reflect.ValueOf(toFloat64(a))
+			bVal = reflect.ValueOf(ToFloat64(b))
+			aVal = reflect.ValueOf(ToFloat64(a))
 		}
 	}
 
 	return aVal, bVal, true
 }
 
-func toFloat64(v interface{}) float64 {
+func ToFloat64(v interface{}) float64 {
 	var result float64
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
@@ -390,7 +390,7 @@ func PlusEqual(a, value interface{}) interface{} {
 	}
 }
 
-func appendToArray(array interface{}, value interface{}) interface{} {
+func AppendToArray(array interface{}, value interface{}) interface{} {
 	// Use reflection to work with the array dynamically
 	arrVal := reflect.ValueOf(array)
 
@@ -407,7 +407,7 @@ func appendToArray(array interface{}, value interface{}) interface{} {
 	return resultVal.Interface()
 }
 
-func addElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value interface{}) {
+func AddElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value interface{}) {
 	val := reflect.ValueOf(arrayOrDict)
 	key := reflect.ValueOf(stringOrInt)
 	valueVal := reflect.ValueOf(value)
@@ -436,7 +436,7 @@ func addElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value 
 	// return nil
 }
 
-func inOp(dict interface{}, key interface{}) bool {
+func InOp(dict interface{}, key interface{}) bool {
 	dictVal := reflect.ValueOf(dict)
 
 	// Ensure that the provided dict is a map
@@ -453,7 +453,7 @@ func inOp(dict interface{}, key interface{}) bool {
 	return false
 }
 
-func getIndexOf(str interface{}, target interface{}) int {
+func GetIndexOf(str interface{}, target interface{}) int {
 	switch v := str.(type) {
 	case []string:
 		t, ok := target.(string)
