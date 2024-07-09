@@ -5,7 +5,7 @@ const SyntaxKind = ts.SyntaxKind;
 
 const parserConfig = {
     'ELSEIF_TOKEN': 'else if',
-    'OBJECT_OPENING': 'new Dictionary<string, object>() {',
+    'OBJECT_OPENING': 'make(map[string]interface{}) {',
     'ARRAY_OPENING_TOKEN': '[]interface{}{',
     'ARRAY_CLOSING_TOKEN': '}',
     'PROPERTY_ASSIGNMENT_TOKEN': ',',
@@ -310,22 +310,25 @@ export class GoTranspiler extends BaseTranspiler {
         return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue.trim();
     }
 
-    printObjectLiteralExpression(node, identation) {
-        const objectCreation = 'make(map[string]interface{})';
-        let formattedObjectBody = '';
-        if (node.properties.length > 0) {
-            const objectBody = this.printObjectLiteralBody(node, identation);
-            formattedObjectBody = objectBody ? "\n" + objectBody + "\n" + this.getIden(identation) : objectBody;
-        }
-        // return  this.OBJECT_OPENING + formattedObjectBody + this.OBJECT_CLOSING;
-        return objectCreation + formattedObjectBody;
-    }
+    // printObjectLiteralExpression(node, identation) {
+    //     const objectCreation = 'make(map[string]interface{}) {';
+    //     let formattedObjectBody = '{}';
+    //     if (node.properties?.length > 0) {
+    //         const objectBody = this.printObjectLiteralBody(node, identation);
+    //         formattedObjectBody = objectBody ? "\n" + objectBody + "\n" + this.getIden(identation) : objectBody;
+    //     }
+    //     // return  this.OBJECT_OPENING + formattedObjectBody + this.OBJECT_CLOSING;
+    //     return objectCreation + formattedObjectBody;
+    // }
 
-    printObjectLiteralBody(node, identation) {
-        const objectName = node.parent.name.escapedText;
-        const body =  node.properties.map((p) => `${this.getIden(identation)}${objectName}["${node.properties[0].name.text}"] = ${p.initializer.text}` ).join("\n");
-        return body;
-    }
+    // printObjectLiteralBody(node, identation) {
+    //     let objectName = node.parent?.name?.escapedText;
+    //     if (objectName === undefined) {
+    //         objectName = "object";
+    //     }
+    //     const body =  node.properties.map((p) => `${this.getIden(identation)}${objectName}["${node.properties[0].name.text}"] = ${p.initializer.text}` ).join("\n");
+    //     return body;
+    // }
 
     printConstructorDeclaration (node, identation) {
         const classNode = node.parent;
