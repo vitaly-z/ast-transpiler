@@ -242,6 +242,17 @@ export class GoTranspiler extends BaseTranspiler {
         return this.printNodeCommentsIfAny(node, identation, methodDef);
     }
 
+    printMethodParameters(node) {
+        const params = node.parameters.map(param => this.printParameter(param));
+        const hasOptionalParameter = params.some(p => p === 'optional');
+        if (!hasOptionalParameter) {
+            return params.join(", ");
+        }
+        const paramsWithOptional = params.filter(param => param !== 'optional');
+        paramsWithOptional.push('optionalArgs ...interface{}');
+        return paramsWithOptional.join(", ");
+    }
+
     printParameter(node, defaultValue = true) {
         const name = this.printNode(node.name, 0);
         const initializer = node.initializer;
@@ -249,6 +260,9 @@ export class GoTranspiler extends BaseTranspiler {
         const type = this.printParameterType(node);
 
         if (defaultValue) {
+            if (initializer) {
+                return 'optional'; // will be handled later
+            }
             // not supported we have to find an alternative for go like defining multiple methods with different parameters
             // if (initializer) {
             //     const customDefaultValue = this.printCustomDefaultValueIfNeeded(initializer);
@@ -646,6 +660,45 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printFunctionBody(node, identation) {
+
+        // check if there is any default parameter to initialize
+        const funcParams = node.parameters;
+        const initParams = [];
+        if (funcParams.length > 0) {
+            const body = node.body.statements;
+            const first = body.length > 0 ? body[0] : [];
+            const remaining = body.length > 0 ? body.slice(1): [];
+            let firstStatement = this.printNode(first, identation + 1);
+
+            const remainingString = remaining.map((statement) => this.printNode(statement, identation + 1)).join("\n");
+            funcParams.forEach((param, i) => {
+                const initializer = param.initializer;
+                if (initializer) {
+                    const paramName = this.printNode(param.name, 0);
+                    initParams.push(`${paramName} := GetArg(optionalArgs, ${i}, ${this.printNode(initializer, 0)})`);
+                    initParams.push(`_ = ${paramName}`);
+                }
+            });
+
+            if (initParams.length > 0) {
+                const defaultInitializers = initParams.map( l => this.getIden(identation+1) + l ).join("\n") + "\n";
+                const bodyParts = firstStatement.split("\n");
+                const commentPart = bodyParts.filter(line => this.isComment(line));
+                const isComment = commentPart.length > 0;
+                if (isComment) {
+                    const commentPartString = commentPart.map((c) => this.getIden(identation+1) + c.trim()).join("\n");
+                    const firstStmNoComment = bodyParts.filter(line => !this.isComment(line)).join("\n");
+                    firstStatement = commentPartString + "\n" + defaultInitializers + firstStmNoComment;
+                } else {
+                    firstStatement = defaultInitializers + firstStatement;
+                }
+            }
+            const blockOpen = this.getBlockOpen(identation);
+            const blockClose = this.getBlockClose(identation);
+            firstStatement = remainingString.length > 0 ? firstStatement + "\n" : firstStatement;
+            return blockOpen + firstStatement + remainingString + blockClose;
+        }
+
         return super.printFunctionBody(node, identation);
     }
 
