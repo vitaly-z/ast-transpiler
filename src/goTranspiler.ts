@@ -5,50 +5,50 @@ const SyntaxKind = ts.SyntaxKind;
 
 const parserConfig = {
     'ELSEIF_TOKEN': 'else if',
-    'OBJECT_OPENING': 'make(map[string]interface{}) {',
+    'OBJECT_OPENING': 'map[string]interface{} {',
     'ARRAY_OPENING_TOKEN': '[]interface{}{',
     'ARRAY_CLOSING_TOKEN': '}',
-    'PROPERTY_ASSIGNMENT_TOKEN': ',',
+    'PROPERTY_ASSIGNMENT_TOKEN': ':',
     'VAR_TOKEN': 'object', // object
     'METHOD_TOKEN': 'func',
     'PROPERTY_ASSIGNMENT_OPEN': '',
     'PROPERTY_ASSIGNMENT_CLOSE': '',
     'SUPER_TOKEN': 'base',
     'SUPER_CALL_TOKEN': 'base',
-    'FALSY_WRAPPER_OPEN': 'isTrue(',
+    'FALSY_WRAPPER_OPEN': 'IsTrue(',
     'FALSY_WRAPPER_CLOSE': ')',
-    'COMPARISON_WRAPPER_OPEN' : "isEqual(",
+    'COMPARISON_WRAPPER_OPEN' : "IsEqual(",
     'COMPARISON_WRAPPER_CLOSE' : ")",
     'UKNOWN_PROP_WRAPPER_OPEN': 'this.call(',
     'UNKOWN_PROP_WRAPPER_CLOSE': ')',
     'UKNOWN_PROP_ASYNC_WRAPPER_OPEN': 'this.callAsync(',
     'UNKOWN_PROP_ASYNC_WRAPPER_CLOSE': ')',
     'DYNAMIC_CALL_OPEN': 'callDynamically(',
-    'EQUALS_EQUALS_WRAPPER_OPEN': 'isEqual(',
+    'EQUALS_EQUALS_WRAPPER_OPEN': 'IsEqual(',
     'EQUALS_EQUALS_WRAPPER_CLOSE': ')',
-    'DIFFERENT_WRAPPER_OPEN': '!isEqual(',
+    'DIFFERENT_WRAPPER_OPEN': '!IsEqual(',
     'DIFFERENT_WRAPPER_CLOSE': ')',
-    'GREATER_THAN_WRAPPER_OPEN': 'isGreaterThan(',
+    'GREATER_THAN_WRAPPER_OPEN': 'IsGreaterThan(',
     'GREATER_THAN_WRAPPER_CLOSE': ')',
-    'GREATER_THAN_EQUALS_WRAPPER_OPEN': 'isGreaterThanOrEqual(',
+    'GREATER_THAN_EQUALS_WRAPPER_OPEN': 'IsGreaterThanOrEqual(',
     'GREATER_THAN_EQUALS_WRAPPER_CLOSE': ')',
-    'LESS_THAN_WRAPPER_OPEN': 'isLessThan(',
+    'LESS_THAN_WRAPPER_OPEN': 'IsLessThan(',
     'LESS_THAN_WRAPPER_CLOSE': ')',
-    'LESS_THAN_EQUALS_WRAPPER_OPEN': 'isLessThanOrEqual(',
+    'LESS_THAN_EQUALS_WRAPPER_OPEN': 'IsLessThanOrEqual(',
     'LESS_THAN_EQUALS_WRAPPER_CLOSE': ')',
-    'PLUS_WRAPPER_OPEN':'add(',
+    'PLUS_WRAPPER_OPEN':'Add(',
     'PLUS_WRAPPER_CLOSE':')',
-    'MINUS_WRAPPER_OPEN':'subtract(',
+    'MINUS_WRAPPER_OPEN':'Subtract(',
     'MINUS_WRAPPER_CLOSE':')',
-    'ARRAY_LENGTH_WRAPPER_OPEN': 'getArrayLength(',
+    'ARRAY_LENGTH_WRAPPER_OPEN': 'GetArrayLength(',
     'ARRAY_LENGTH_WRAPPER_CLOSE': ')',
-    'DIVIDE_WRAPPER_OPEN': 'divide(',
+    'DIVIDE_WRAPPER_OPEN': 'Divide(',
     'DIVIDE_WRAPPER_CLOSE': ')',
-    'MULTIPLY_WRAPPER_OPEN': 'multiply(',
+    'MULTIPLY_WRAPPER_OPEN': 'Multiply(',
     'MULTIPLY_WRAPPER_CLOSE': ')',
-    'INDEXOF_WRAPPER_OPEN': 'getIndexOf(',
+    'INDEXOF_WRAPPER_OPEN': 'GetIndexOf(',
     'INDEXOF_WRAPPER_CLOSE': ')',
-    'MOD_WRAPPER_OPEN': 'mod(',
+    'MOD_WRAPPER_OPEN': 'Mod(',
     'MOD_WRAPPER_CLOSE': ')',
     'FUNCTION_TOKEN': '',
     'DEFAULT_RETURN_TYPE': '',
@@ -155,7 +155,9 @@ export class GoTranspiler extends BaseTranspiler {
         // modifiers = modifiers ? modifiers + " " : modifiers;
         const name = this.printNode(node.name, 0);
         let type = 'interface{}';
-        if (node.type.kind === SyntaxKind.StringKeyword) {
+        if (node.type === undefined) {
+            type = 'interface{}';
+        } else if (node.type.kind === SyntaxKind.StringKeyword) {
             type = 'string';
         } else if (node.type.kind === SyntaxKind.NumberKeyword) {
             type = 'int';
@@ -419,7 +421,8 @@ export class GoTranspiler extends BaseTranspiler {
             parsedArguments = parsedArguments ? parsedArguments : "";
             const propName = node.expression?.name.escapedText;
             // const isAsyncDecl = true;
-            const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+            // const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
+            const isAsyncDecl = false;
             // const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
             // const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
             // return `${open}"${propName}"${parsedArguments}${close}`;
@@ -496,15 +499,15 @@ export class GoTranspiler extends BaseTranspiler {
         const target = this.printNode(expression, 0);
         switch (right) {
         case "string":
-            return notOperator + `(${target} is string)`;
+            return notOperator + `IsString(${target})`;
         case "number":
-            return notOperator + `(${target} is Int64 || ${target} is int || ${target} is float || ${target} is double)`;
+            return notOperator + `IsNumber(${target})`;
         case "boolean":
-            return notOperator + `(${target} is bool)`;
+            return notOperator + `IsBool(${target})`;
         case "object":
-            return notOperator + `(${target} is IDictionary<string, object>)`;
+            return notOperator + `IsObject(${target})`;
         case "function":
-            return notOperator + `(${target} is Delegate)`;
+            return notOperator + `IsFunction(${target})`;
         }
 
         return undefined;
@@ -733,19 +736,19 @@ export class GoTranspiler extends BaseTranspiler {
     // check this out later
 
     printArrayIsArrayCall(node, identation, parsedArg = undefined) {
-        return `((${parsedArg} is IList<object>) || (${parsedArg}.GetType().IsGenericType && ${parsedArg}.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))))`;
+        return `IsArray(${parsedArg})`;
     }
 
     printObjectKeysCall(node, identation, parsedArg = undefined) {
-        return `new List<object>(((IDictionary<string,object>)${parsedArg}).Keys)`;
+        return `ObjectKeys(${parsedArg})`;
     }
 
     printObjectValuesCall(node, identation, parsedArg = undefined) {
-        return `new List<object>(((IDictionary<string,object>)${parsedArg}).Values)`;
+        return `ObjectValues(${parsedArg})`;
     }
 
     printJsonParseCall(node, identation, parsedArg = undefined) {
-        return `parseJson(${parsedArg})`;
+        return `JsonParse(${parsedArg})`;
     }
 
     printJsonStringifyCall(node, identation, parsedArg = undefined) {
@@ -757,27 +760,27 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printMathFloorCall(node, identation, parsedArg = undefined) {
-        return `(Math.Floor(Double.Parse((${parsedArg}).ToString())))`;
+        return `MathFloor(${parsedArg})`;
     }
 
     printMathRoundCall(node, identation, parsedArg = undefined) {
-        return `Math.Round(Convert.ToDouble(${parsedArg}))`;
+        return `MathRound(${parsedArg})`;
     }
 
     printMathCeilCall(node, identation, parsedArg = undefined) {
-        return `Math.Ceiling(Convert.ToDouble(${parsedArg}))`;
+        return `MathCeil(${parsedArg})`;
     }
 
     printNumberIsIntegerCall(node: any, identation: any, parsedArg?: any) {
-        return `((${parsedArg} is int) || (${parsedArg} is long) || (${parsedArg} is Int32) || (${parsedArg} is Int64))`;
+        return `IsInt(${parsedArg})`;
     }
 
     printArrayPushCall(node, identation, name = undefined, parsedArg = undefined) {
-        return  `${name} = appendToArray(${name},${parsedArg}).([]interface{})`;
+        return  `${name} = AppendToArray(${name},${parsedArg}).([]interface{})`;
     }
 
     printIncludesCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `${name}.Contains(${parsedArg})`;
+        return `Contains(${name},${parsedArg})`;
     }
 
     printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
@@ -785,23 +788,23 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).StartsWith(((string)${parsedArg}))`;
+        return `StartsWith(${name}, ${parsedArg})`;
     }
 
     printEndsWithCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).EndsWith(((string)${parsedArg}))`;
+        return `EndsWith(${name}, ${parsedArg})`;
     }
 
     printTrimCall(node, identation, name = undefined) {
-        return `((string)${name}).Trim()`;
+        return `Trim(${name})`;
     }
 
     printJoinCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `String.Join(${parsedArg}, ((IList<object>)${name}).ToArray())`;
+        return `Join(${name}, ${parsedArg})`;
     }
 
     printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `((string)${name}).Split(new [] {((string)${parsedArg})}, StringSplitOptions.None).ToList<object>()`;
+        return `Split(${name}, ${parsedArg})`;
     }
 
     printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
@@ -809,27 +812,27 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printToStringCall(node, identation, name = undefined) {
-        return `((object)${name}).ToString()`;
+        return `ToString(${name})`;
     }
 
     printToUpperCaseCall(node, identation, name = undefined) {
-        return `((string)${name}).ToUpper()`;
+        return `ToUpper(${name})`;
     }
 
     printToLowerCaseCall(node, identation, name = undefined) {
-        return `((string)${name}).ToLower()`;
+        return `ToLower(${name})`;
     }
 
     printShiftCall(node, identation, name = undefined) {
-        return `((IList<object>)${name}).First()`;
+        return `Shift(${name}))`;
     }
 
     printReverseCall(node, identation, name = undefined) {
-        return `${name} = (${name} as IList<object>).Reverse().ToList()`;
+        return `Reverse(${name})`;
     }
 
     printPopCall(node, identation, name = undefined) {
-        return `((IList<object>)${name}).Last()`;
+        return `Pop(${name}))`;
     }
 
     printAssertCall(node, identation, parsedArgs) {
@@ -846,19 +849,19 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printReplaceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
-        return `((string)${name}).Replace((string)${parsedArg}, (string)${parsedArg2})`;
+        return `Replace(${name}, ${parsedArg}, ${parsedArg2})`;
     }
 
     printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
-        return `(${name} as String).PadRight(Convert.ToInt32(${parsedArg}), Convert.ToChar(${parsedArg2}))`;
+        return `PadEnd(${name}, ${parsedArg}, ${parsedArg2})`;
     }
 
     printPadStartCall(node, identation, name, parsedArg, parsedArg2) {
-        return `(${name} as String).PadLeft(Convert.ToInt32(${parsedArg}), Convert.ToChar(${parsedArg2}))`;
+        return `PadStart(${name}, ${parsedArg}), ${parsedArg2})`;
     }
 
     printDateNowCall(node, identation) {
-        return "(new DateTimeOffset(DateTime.UtcNow)).ToUnixTimeMilliseconds()";
+        return "DateNow()";
     }
 
     printLengthProperty(node, identation, name = undefined) {

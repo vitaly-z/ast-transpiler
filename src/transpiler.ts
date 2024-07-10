@@ -229,6 +229,15 @@ export default class Transpiler {
         return this.transpile(Languages.CSharp, TranspilationMode.ByPath, path);
     }
 
+    transpileGoByPath(path): ITranspiledFile {
+        return this.transpile(Languages.Go, TranspilationMode.ByPath, path);
+    }
+
+    transpileGo(content): ITranspiledFile {
+        return this.transpile(Languages.Go, TranspilationMode.ByContent, content);
+    }
+
+
     getFileImports(content: string): IFileImport[] {
         this.createProgramInMemoryAndSetGlobals(content);
         return this.phpTranspiler.getFileImports(global.src);
