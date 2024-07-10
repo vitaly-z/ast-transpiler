@@ -51,13 +51,15 @@ const parserConfig = {
     'MOD_WRAPPER_OPEN': 'Mod(',
     'MOD_WRAPPER_CLOSE': ')',
     'FUNCTION_TOKEN': '',
-    'DEFAULT_RETURN_TYPE': '',
+    'DEFAULT_RETURN_TYPE': 'interface{}',
     'BLOCK_OPENING_TOKEN': '{',
     'DEFAULT_PARAMETER_TYPE': 'interface{}',
     'LINE_TERMINATOR': '',
     'CONDITION_OPENING':'',
     'CONDITION_CLOSE':'',
-    'AWAIT_TOKEN': ''
+    'AWAIT_TOKEN': '',
+    'NULL_TOKEN': 'nil',
+    'UNDEFINED_TOKEN': 'nil'
 };
 
 export class GoTranspiler extends BaseTranspiler {
@@ -71,7 +73,7 @@ export class GoTranspiler extends BaseTranspiler {
 
         this.requiresParameterType = true;
         this.requiresReturnType = true;
-        this.asyncTranspiling = true;
+        this.asyncTranspiling = false;
         this.supportsFalsyOrTruthyValues = false;
         this.requiresCallExpressionCast = true;
         this.id = "Go";
@@ -310,6 +312,11 @@ export class GoTranspiler extends BaseTranspiler {
         // const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
         // const name = declaration.name.escapedText;
         const parsedValue = (declaration.initializer) ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
+
+        if (parsedValue === this.UNDEFINED_TOKEN) {
+            return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
+        }
+
         return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue.trim();
     }
 
@@ -534,7 +541,7 @@ export class GoTranspiler extends BaseTranspiler {
             const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e, 0));
             const syntheticName = parsedArrayBindingElements.join("") + "Variable";
 
-            let arrayBindingStatement = `var ${syntheticName} = ${this.printNode(right, 0)};\n`;
+            let arrayBindingStatement = `${syntheticName} := ${this.printNode(right, 0)};\n`;
 
             parsedArrayBindingElements.forEach((e, index) => {
                 // const type = this.getType(node);
@@ -546,7 +553,7 @@ export class GoTranspiler extends BaseTranspiler {
                 const castExp = parsedType ? `(${parsedType})` : "";
 
                 // const statement = this.getIden(identation) + `${e} = (${castExp}((List<object>)${syntheticName}))[${index}]`;
-                const statement = this.getIden(identation) + `${e} = ((IList<object>)${syntheticName})[${index}]`;
+                const statement = this.getIden(identation) + `${e} = GetValue(${syntheticName},${index})`;
                 if (index < parsedArrayBindingElements.length - 1) {
                     arrayBindingStatement += statement + ";\n";
                 } else {
@@ -843,7 +850,7 @@ export class GoTranspiler extends BaseTranspiler {
     printSliceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
         if (parsedArg2 === undefined){
             // return `((string)${name}).Substring((int)${parsedArg})`;
-            parsedArg2 = 'null';
+            parsedArg2 = 'nil';
         }
         // return `((string)${name})[((int)${parsedArg})..((int)${parsedArg2})]`;
         return `slice(${name}, ${parsedArg}, ${parsedArg2})`;
@@ -939,7 +946,7 @@ export class GoTranspiler extends BaseTranspiler {
                     if (isClassDeclaration){
                         return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${id.escapedText} ((string)${parsedArg}) ${this.LINE_TERMINATOR}`;
                     } else {
-                        return this.getIden(identation) + `throwDynamicException(${id.escapedText}, ${parsedArg});return null;`;
+                        return this.getIden(identation) + `throwDynamicException(${id.escapedText}, ${parsedArg});return nil;`;
                     }
                 }
                 return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${newExpression} (${parsedArg}) ${this.LINE_TERMINATOR}`;
