@@ -119,12 +119,12 @@ export class GoTranspiler extends BaseTranspiler {
         };
 
         this.ReservedKeywordsReplacements = {
-            'string': 'str',
-            'params': 'parameters',
-            'base': 'bs',
-            'internal': 'intern',
-            'event': 'eventVar',
-            'fixed': 'fixedVar',
+            // 'string': 'str',
+            // 'params': 'parameters',
+            'type': 'typeVar',
+            // 'internal': 'intern',
+            // 'event': 'eventVar',
+            // 'fixed': 'fixedVar',
         };
 
         this.binaryExpressionsWrappers = {
@@ -150,6 +150,18 @@ export class GoTranspiler extends BaseTranspiler {
 
     printSuperCallInsideConstructor(node, identation) {
         return ""; // csharp does not need super call inside constructor
+    }
+
+    printStringLiteral(node) {
+        const token = this.STRING_QUOTE_TOKEN;
+        let text = node.text;
+        if (text in this.StringLiteralReplacements) {
+            return this.StringLiteralReplacements[text];
+        }
+        text = text.replaceAll("'", "\\\\" + "'");
+        text = text.replaceAll("\"", "\\" + "\"");
+        text = text.replaceAll("\n", "\\n");
+        return token + text + token;
     }
 
 
@@ -325,6 +337,30 @@ export class GoTranspiler extends BaseTranspiler {
         const declaration = node.declarations[0];
         // const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
         // const name = declaration.name.escapedText;
+
+        if (declaration?.name.kind === ts.SyntaxKind.ArrayBindingPattern) {
+            const arrayBindingPattern = declaration.name;
+            const arrayBindingPatternElements = arrayBindingPattern.elements;
+            const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e.name, 0));
+            const syntheticName = parsedArrayBindingElements.join("") + "Variable";
+
+            let arrayBindingStatement =  `${this.getIden(identation)}${syntheticName} := ${this.printNode(declaration.initializer, 0)};\n`;
+
+            parsedArrayBindingElements.forEach((e, index) => {
+                // const type = this.getType(node);
+                // const parsedType = this.getTypeFromRawType(type);
+                const statement = this.getIden(identation) + `${e} := GetValue(${syntheticName},${index})`;
+                if (index < parsedArrayBindingElements.length - 1) {
+                    arrayBindingStatement += statement + ";\n";
+                } else {
+                    // printStatement adds the last ;
+                    arrayBindingStatement += statement;
+                }
+            });
+
+            return arrayBindingStatement;
+        }
+
         const parsedValue = (declaration.initializer) ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
 
         if (parsedValue === this.UNDEFINED_TOKEN) {
@@ -967,7 +1003,7 @@ export class GoTranspiler extends BaseTranspiler {
         const whenTrue = this.printNode(node.whenTrue, 0);
         const whenFalse = this.printNode(node.whenFalse, 0);
 
-        return `((bool) ${condition})` + " ? " + whenTrue + " : " + whenFalse;
+        return `Ternary(${condition}, ${whenTrue}, ${whenFalse})`;
     }
 
     printDeleteExpression(node, identation) {
@@ -992,17 +1028,17 @@ export class GoTranspiler extends BaseTranspiler {
             if (expression.expression.kind === ts.SyntaxKind.Identifier) {
                 // handle throw new X
                 const id = expression.expression;
-                const symbol = global.checker.getSymbolAtLocation(expression.expression);
-                if (symbol) {
-                    const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
-                    const isClassDeclaration = declarations.find(l => l.kind === ts.SyntaxKind.InterfaceDeclaration ||  l.kind === ts.SyntaxKind.ClassDeclaration);
-                    if (isClassDeclaration){
-                        return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${id.escapedText} ((string)${parsedArg}) ${this.LINE_TERMINATOR}`;
-                    } else {
-                        return this.getIden(identation) + `throwDynamicException(${id.escapedText}, ${parsedArg});return nil;`;
-                    }
-                }
-                return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${newExpression} (${parsedArg}) ${this.LINE_TERMINATOR}`;
+                // const symbol = global.checker.getSymbolAtLocation(expression.expression);
+                // if (symbol) {
+                //     const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
+                //     const isClassDeclaration = declarations.find(l => l.kind === ts.SyntaxKind.InterfaceDeclaration ||  l.kind === ts.SyntaxKind.ClassDeclaration);
+                //     if (isClassDeclaration){
+                //         return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${id.escapedText} ((string)${parsedArg}) ${this.LINE_TERMINATOR}`;
+                //     } else {
+                //         return this.getIden(identation) + `throwDynamicException(${id.escapedText}, ${parsedArg});return nil;`;
+                //     }
+                // }
+                return this.getIden(identation) + `panic(${id.escapedText}(${parsedArg}))${this.LINE_TERMINATOR}`;
             } else if (expression.expression.kind === ts.SyntaxKind.ElementAccessExpression) {
                 return this.getIden(identation) + `throwDynamicException(${newExpression}, ${parsedArg});`;
             }
@@ -1038,6 +1074,37 @@ export class GoTranspiler extends BaseTranspiler {
                 const propName = this.printNode(elementAccess.argumentExpression, 0);
                 return `addElementToObject(${leftSide}, ${propName}, ${rightSide})`;
             }
+        }
+
+        const op = operatorToken.kind;
+        // handle: [x,d] = this.method()
+        if (op === ts.SyntaxKind.EqualsToken && left.kind === ts.SyntaxKind.ArrayLiteralExpression) {
+            const arrayBindingPatternElements = left.elements;
+            const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e, 0));
+            const syntheticName = parsedArrayBindingElements.join("") + "Variable";
+
+            let arrayBindingStatement = `${syntheticName} := ${this.printNode(right, 0)};\n`;
+
+            parsedArrayBindingElements.forEach((e, index) => {
+                // const type = this.getType(node);
+                // const parsedType = this.getTypeFromRawType(type);
+                const leftElement = arrayBindingPatternElements[index];
+                const leftType = global.checker.getTypeAtLocation(leftElement);
+                const parsedType = this.getTypeFromRawType(leftType);
+
+                const castExp = parsedType ? `(${parsedType})` : "";
+
+                // const statement = this.getIden(identation) + `${e} = (${castExp}((List<object>)${syntheticName}))[${index}]`;
+                const statement = this.getIden(identation) + `${e} = GetValue(${syntheticName}),${index})`;
+                if (index < parsedArrayBindingElements.length - 1) {
+                    arrayBindingStatement += statement + ";\n";
+                } else {
+                    // printStatement adds the last ;
+                    arrayBindingStatement += statement;
+                }
+            });
+
+            return arrayBindingStatement;
         }
 
         let operator = this.SupportedKindNames[operatorToken.kind];
