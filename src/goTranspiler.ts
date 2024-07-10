@@ -56,7 +56,8 @@ const parserConfig = {
     'DEFAULT_PARAMETER_TYPE': 'interface{}',
     'LINE_TERMINATOR': '',
     'CONDITION_OPENING':'',
-    'CONDITION_CLOSE':''
+    'CONDITION_CLOSE':'',
+    'AWAIT_TOKEN': ''
 };
 
 export class GoTranspiler extends BaseTranspiler {
@@ -558,18 +559,18 @@ export class GoTranspiler extends BaseTranspiler {
         }
 
         if (op === ts.SyntaxKind.InKeyword) {
-            return `inOp(${this.printNode(right, 0)}, ${this.printNode(left, 0)})`;
+            return `InOp(${this.printNode(right, 0)}, ${this.printNode(left, 0)})`;
         }
 
         const leftText = this.printNode(left, 0);
         const rightText = this.printNode(right, 0);
 
         if (op === ts.SyntaxKind.PlusEqualsToken) {
-            return `${leftText} = add(${leftText}, ${rightText})`;
+            return `${leftText} = Add(${leftText}, ${rightText})`;
         }
 
         if (op === ts.SyntaxKind.MinusEqualsToken) {
-            return `${leftText} = subtract(${leftText}, ${rightText})`;
+            return `${leftText} = Subtract(${leftText}, ${rightText})`;
         }
 
 
@@ -651,20 +652,20 @@ export class GoTranspiler extends BaseTranspiler {
         const type = node.type;
 
         if (type.kind === ts.SyntaxKind.AnyKeyword) {
-            return `((object)${this.printNode(node.expression, identation)})`;
+            // return `(()${this.printNode(node.expression, identation)})`;
         }
 
         if (type.kind === ts.SyntaxKind.StringKeyword) {
-            return `((string)${this.printNode(node.expression, identation)})`;
+            // return `((string)${this.printNode(node.expression, identation)})`;
         }
 
         if (type.kind === ts.SyntaxKind.ArrayType) {
-            if (type.elementType.kind === ts.SyntaxKind.AnyKeyword) {
-                return `(IList<object>)(${this.printNode(node.expression, identation)})`;
-            }
-            if (type.elementType.kind === ts.SyntaxKind.StringKeyword) {
-                return `(IList<string>)(${this.printNode(node.expression, identation)})`;
-            }
+            // if (type.elementType.kind === ts.SyntaxKind.AnyKeyword) {
+            //     return `(IList<object>)(${this.printNode(node.expression, identation)})`;
+            // }
+            // if (type.elementType.kind === ts.SyntaxKind.StringKeyword) {
+            //     return `(IList<string>)(${this.printNode(node.expression, identation)})`;
+            // }
         }
 
         return this.printNode(node.expression, identation);
@@ -684,19 +685,19 @@ export class GoTranspiler extends BaseTranspiler {
             const first = elems[0];
             if (first.kind === ts.SyntaxKind.CallExpression) {
                 // const type = global.checker.getTypeAtLocation(first);
-                let type = this.getFunctionType(first);
+                const type = this.getFunctionType(first);
                 // const parsedType = this.getTypeFromRawType(type);
                 // parsedType === "Task" ||
                 // to do check this later
                 if (type === undefined || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
                     // if (type === undefined) {
-                    arrayOpen = "new List<object> {";
+                    arrayOpen = "[]interface{}{";
                     // }
                     //  else {
                     //     arrayOpen = "new List<Task<object>> {";
                     // }
                 } else {
-                    type = 'object';
+                    // type = 'object';
                     // check this out later
                     // if (type === 'Task<List<object>>') {
                     //     type = 'Task<object>';
@@ -705,7 +706,7 @@ export class GoTranspiler extends BaseTranspiler {
                     //     type = 'object';
                     // }
                     // type =
-                    arrayOpen = `new List<${type}> {`;
+                    arrayOpen = `[]interface{}{`;
                 }
             }
         }
@@ -866,9 +867,9 @@ export class GoTranspiler extends BaseTranspiler {
 
     printLengthProperty(node, identation, name = undefined) {
         const leftSide = this.printNode(node.expression, 0);
-        const type = (global.checker as TypeChecker).getTypeAtLocation(node.expression); // eslint-disable-line
-        this.warnIfAnyType(node, type.flags, leftSide, "length");
-        return this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`;
+        // const type = (global.checker as TypeChecker).getTypeAtLocation(node.expression); // eslint-disable-line
+        // this.warnIfAnyType(node, type.flags, leftSide, "length");
+        return `GetLength(${leftSide})`;
     }
 
     // printPostFixUnaryExpression(node, identation) {

@@ -802,3 +802,15 @@ func PadStart(input interface{}, length int, padStr interface{}) string {
 func DateNow() string {
 	return time.Now().Format(time.RFC3339)
 }
+
+func GetLength(v interface{}) int {
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.String:
+		return len(val.String())
+	case reflect.Array, reflect.Slice:
+		return val.Len()
+	default:
+		return 0
+	}
+}
