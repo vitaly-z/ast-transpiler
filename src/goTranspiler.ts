@@ -59,12 +59,16 @@ const parserConfig = {
     'CONDITION_CLOSE':'',
     'AWAIT_TOKEN': '',
     'NULL_TOKEN': 'nil',
-    'UNDEFINED_TOKEN': 'nil'
+    'UNDEFINED_TOKEN': 'nil',
+    'WHILE_TOKEN': 'for',
+    'ELEMENT_ACCESS_WRAPPER_OPEN': 'GetValue(',
+    'ELEMENT_ACCESS_WRAPPER_CLOSE': ')',
 };
 
 export class GoTranspiler extends BaseTranspiler {
 
     binaryExpressionsWrappers;
+    className: string;
 
     constructor(config = {}) {
         config['parser'] = Object.assign ({}, parserConfig, config['parser'] ?? {});
@@ -77,6 +81,7 @@ export class GoTranspiler extends BaseTranspiler {
         this.supportsFalsyOrTruthyValues = false;
         this.requiresCallExpressionCast = true;
         this.id = "Go";
+        this.className = "undefined";
 
 
         this.initConfig();
@@ -208,6 +213,8 @@ export class GoTranspiler extends BaseTranspiler {
 
         const struct = this.printStruct(node, identation);
 
+        this.className = node.name.escapedText;
+
         const methods = node.members.filter(member => member.kind === SyntaxKind.MethodDeclaration);
         const classMethods = methods.map(method => this.printMethodDeclaration(method, identation)).join("\n");
         // const classDefinition = this.printClassDefinition(node, identation);
@@ -292,6 +299,9 @@ export class GoTranspiler extends BaseTranspiler {
         // //     return typeText;
         // // }
 
+        //tmp default to interface
+        return 'interface{}';
+
         if (typeText === this.STRING_KEYWORD) {
             return 'string';
         }
@@ -364,6 +374,10 @@ export class GoTranspiler extends BaseTranspiler {
         const parsedValue = (declaration.initializer) ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
 
         if (parsedValue === this.UNDEFINED_TOKEN) {
+            return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
+        }
+
+        if (node?.parent?.kind === ts.SyntaxKind.FirstStatement) {
             return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
         }
 
@@ -447,16 +461,16 @@ export class GoTranspiler extends BaseTranspiler {
     }
 
     printDynamicCall(node, identation) {
-        const isAsync = true; // setting to true for now, because there are some scenarios where we don't know
+        // const isAsync = true; // setting to true for now, because there are some scenarios where we don't know
         const elementAccess = node.expression;
         if (elementAccess?.kind === ts.SyntaxKind.ElementAccessExpression) {
             const parsedArg = node.arguments?.length > 0 ? node.arguments.map(n => this.printNode(n, identation).trimStart()).join(", ") : "";
-            const target = this.printNode(elementAccess.expression, 0);
+            // const target = this.printNode(elementAccess.expression, 0);
             const propName = this.printNode(elementAccess.argumentExpression, 0);
-            const argsArray = `new object[] { ${parsedArg} }`;
+            const argsArray = `${parsedArg}`;
             const open = this.DYNAMIC_CALL_OPEN;
-            let statement = `${open}${target}, ${propName}, ${argsArray})`;
-            statement = isAsync ? `((Task<object>)${statement})` : statement;
+            const statement = `${open}${propName}, ${argsArray})`;
+            // statement = isAsync ? `((Task<object>)${statement})` : statement;
             return statement;
         }
         return undefined;
@@ -480,14 +494,13 @@ export class GoTranspiler extends BaseTranspiler {
             const propName = node.expression?.name.escapedText;
             // const isAsyncDecl = true;
             // const isAsyncDecl = node?.parent?.kind === ts.SyntaxKind.AwaitExpression;
-            const isAsyncDecl = false;
+            // const isAsyncDecl = false;
             // const open = isAsyncDecl ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
             // const close = this.UNKOWN_PROP_WRAPPER_CLOSE;
             // return `${open}"${propName}"${parsedArguments}${close}`;
-            const argsArray = `new object[] { ${parsedArguments} }`;
+            const argsArray = `${parsedArguments}`;
             const open = this.DYNAMIC_CALL_OPEN;
-            let statement = `${open}this, "${propName}", ${argsArray})`;
-            statement = isAsyncDecl ? `((Task<object>)${statement})` : statement;
+            const statement = `${open}"${propName}", ${argsArray})`;
             return statement;
         }
         return undefined;
@@ -677,9 +690,9 @@ export class GoTranspiler extends BaseTranspiler {
         switch(rightSide) {
         case 'length':
                 const type = (global.checker as TypeChecker).getTypeAtLocation(expression); // eslint-disable-line
-            this.warnIfAnyType(node, type.flags, leftSide, "length");
+            // this.warnIfAnyType(node, type.flags, leftSide, "length");
             // rawExpression = this.isStringType(type.flags) ? `(string${leftSide}).Length` : `(${leftSide}.Cast<object>().ToList()).Count`;
-            rawExpression = this.isStringType(type.flags) ? `((string)${leftSide}).Length` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`; // `(${leftSide}.Cast<object>()).ToList().Count`
+            rawExpression = this.isStringType(type.flags) ? `GetLength(${leftSide})` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`; // `(${leftSide}.Cast<object>()).ToList().Count`
             break;
         case 'push':
             rawExpression = `((IList<object>)${leftSide}).Add`;
@@ -741,7 +754,7 @@ export class GoTranspiler extends BaseTranspiler {
     printInstanceOfExpression(node, identation) {
         const left = node.left.escapedText;
         const right = node.right.escapedText;
-        return this.getIden(identation) + `${left} is ${right}`;
+        return this.getIden(identation) + `IsInstance(${left}, ${right})`;
     }
 
     printAsExpression(node, identation) {
@@ -942,7 +955,7 @@ export class GoTranspiler extends BaseTranspiler {
             parsedArg2 = 'nil';
         }
         // return `((string)${name})[((int)${parsedArg})..((int)${parsedArg2})]`;
-        return `slice(${name}, ${parsedArg}, ${parsedArg2})`;
+        return `Slice(${name}, ${parsedArg}, ${parsedArg2})`;
     }
 
     printReplaceCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
@@ -1016,7 +1029,7 @@ export class GoTranspiler extends BaseTranspiler {
         // const expression = this.printNode(node.expression, 0);
         // return this.getIden(node) + this.THROW_TOKEN + " " + expression + this.LINE_TERMINATOR;
         if (node.expression.kind === ts.SyntaxKind.Identifier) {
-            return this.getIden(identation) + this.THROW_TOKEN + ' ' + this.printNode(node.expression, 0) + this.LINE_TERMINATOR;
+            return this.getIden(identation) + 'panic(' + this.printNode(node.expression, 0) + ')' + this.LINE_TERMINATOR;
         }
         if (node.expression.kind === ts.SyntaxKind.NewExpression) {
             const expression = node.expression;
@@ -1072,7 +1085,7 @@ export class GoTranspiler extends BaseTranspiler {
                 const leftSide = this.printNode(elementAccess.expression, 0);
                 const rightSide = this.printNode(right, 0);
                 const propName = this.printNode(elementAccess.argumentExpression, 0);
-                return `addElementToObject(${leftSide}, ${propName}, ${rightSide})`;
+                return `AddElementToObject(${leftSide}, ${propName}, ${rightSide})`;
             }
         }
 
@@ -1136,6 +1149,41 @@ export class GoTranspiler extends BaseTranspiler {
         operator = customOperator ? customOperator : operator;
 
         return leftVar +" "+ operator + " " + rightVar.trim();
+    }
+
+    printTryStatement(node, identation) {
+        // const tryBody = this.printNode(node.tryBlock, 0);
+        const tryBody = node.tryBlock.statements.map((s) => this.printNode(s, identation + 1)).join("\n");
+
+        // const catchBody = this.printNode(node.catchClause.block, 0);
+        const catchBody = node.catchClause.block.statements.map((s) => this.printNode(s, identation + 1)).join("\n");
+        const catchDeclaration = this.printNode(node.catchClause.variableDeclaration.name, 0);
+
+        const className = this.className;
+        const catchBlock = `
+{		ret__ := func(this *${className}) (ret_ interface{}) {
+		defer func() {
+			if e := recover().(interface{}); e != nil {
+				ret_ = func(this *${className}) interface{} {
+					// catch block:
+                    ${catchBody}
+					return nil
+				}(this)
+			}
+		}()
+		// try block:
+        ${tryBody}
+		return nil
+	}(this)
+	if ret__ != nil {
+		return ret__
+	}
+}`;
+        // add identation
+        const indentedBlock = catchBlock.split("\n").map((line) => this.getIden(identation) + line).join("\n");
+        // const catchCondOpen = this.CONDITION_OPENING ? this.CONDITION_OPENING : " ";
+
+        return indentedBlock;
     }
 }
 
