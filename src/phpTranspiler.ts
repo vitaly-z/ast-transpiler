@@ -218,6 +218,10 @@ export class PhpTranspiler extends BaseTranspiler {
         }
     }
 
+    printSearchCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `mb_strpos(${name}, ${parsedArg})`;
+    }
+
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
         return `str_starts_with(${name}, ${parsedArg})`;
     }
