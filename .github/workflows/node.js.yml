@@ -23,9 +23,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -37,10 +34,12 @@ jobs:
       - name: Test
         run: npm run test-ci
       - name: Generating coverage badges
+        if: github.ref == 'refs/heads/master'
         uses: jpb06/jest-badges-action@latest
         with:
           branches: master
       - name: Pushing generated files
+        if: github.ref == 'refs/heads/master'
         uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
         with:
           add: 'dist/ -f'
