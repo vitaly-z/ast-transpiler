@@ -822,5 +822,11 @@ describe('php transpiling tests', () => {
         const php = "unset($someObject[$key]);";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
-    })
+    });
+    test('string literal', () => {
+        const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
+        const php = "$x = 'foo, \\\'single\\\', \"double\" \\t \\n \\r \\b \\f ';";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
   });
