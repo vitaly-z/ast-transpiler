@@ -897,9 +897,17 @@ class BaseTranspiler {
         if (text in this.StringLiteralReplacements) {
             return this.StringLiteralReplacements[text];
         }
-        text = text.replaceAll("'", "\\" + "'");
-        text = text.replaceAll("\"", "\\" + "\"");
+        text = text.replaceAll("\b", "\\b");
+        text = text.replaceAll("\f", "\\f");
         text = text.replaceAll("\n", "\\n");
+        text = text.replaceAll("\r", "\\r");
+        text = text.replaceAll("\t", "\\t");
+        if (token === "'") {
+            text = text.replaceAll("\\\"", "\""); // unscape double quotes
+            text = text.replaceAll("'", "\\'"); // escape single quotes
+        } else if (token === "\"") {
+            text = text.replaceAll("\"", "\\\""); // escape double quotes
+        }
         return token + text + token;
     }
 
