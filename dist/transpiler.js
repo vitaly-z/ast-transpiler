@@ -775,9 +775,17 @@ var BaseTranspiler = class {
     if (text in this.StringLiteralReplacements) {
       return this.StringLiteralReplacements[text];
     }
-    text = text.replaceAll("'", "\\'");
-    text = text.replaceAll('"', '\\"');
+    text = text.replaceAll("\b", "\\b");
+    text = text.replaceAll("\f", "\\f");
     text = text.replaceAll("\n", "\\n");
+    text = text.replaceAll("\r", "\\r");
+    text = text.replaceAll("	", "\\t");
+    if (token === "'") {
+      text = text.replaceAll('\\"', '"');
+      text = text.replaceAll("'", "\\'");
+    } else if (token === '"') {
+      text = text.replaceAll('"', '\\"');
+    }
     return token + text + token;
   }
   printNumericLiteral(node) {
