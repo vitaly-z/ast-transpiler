@@ -239,7 +239,7 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     printConcatCall(node: any, identation: any, name?: any, parsedArg?: any) {
-        return `array_merge (${name}, ${parsedArg})`;
+        return `array_merge(${name}, ${parsedArg})`;
     }
 
     printPadEndCall(node, identation, name, parsedArg, parsedArg2) {

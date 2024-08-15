@@ -762,6 +762,12 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('should convert concat', () => {
+        const ts = "y.concat(z)";
+        const result = "y + z";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(result);
+    });
     test('string literal', () => {
         const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
         const python = "x = 'foo, \\'single\\', \"double\" \\t \\n \\r \\b \\f '";

@@ -823,6 +823,12 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('should convert concat', () => {
+        const ts = "y.concat(z)";
+        const result = "array_merge($x, $y)";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(result);
+    });
     test('string literal', () => {
         const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
         const php = "$x = 'foo, \\\'single\\\', \"double\" \\t \\n \\r \\b \\f ';";

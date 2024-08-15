@@ -902,6 +902,12 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    test('should convert concat', () => {
+        const ts = "y.concat(z)";
+        const result = "y.Concat(x).ToList()";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(result);
+    });
     test('string literal', () => {
         const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
         const csharp = "object x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
