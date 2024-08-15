@@ -763,8 +763,8 @@ describe('python tests', () => {
         expect(output).toBe(python);
     })
     test('should convert search', () => {
-        const ts = '"sometext".search("xt");';
-        const python = '"sometext".find("xt")';
+        const ts = '"abcdxtzyw".search("xt");';
+        const python = '"abcdxtzyw".find("xt")';
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     })

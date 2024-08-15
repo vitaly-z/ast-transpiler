@@ -910,8 +910,8 @@ describe('csharp transpiling tests', () => {
     //     expect(output).toBe(csharp);
     // });
     test('should convert search', () => {
-        const ts = '"sometext".search("xt");';
-        const csharp = '"sometext".IndexOf("xt");';
+        const ts = '"abcdxtzyw".search("xt");';
+        const csharp = '"abcdxtzyw".IndexOf("xt");';
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });

@@ -824,8 +824,8 @@ describe('php transpiling tests', () => {
         expect(output).toBe(php);
     });
     test('should convert search', () => {
-        const ts = '"sometext".search("xt");';
-        const php = 'mb_strpos("sometext", "xt");';
+        const ts = '"abcdxtzyw".search("xt");';
+        const php = 'mb_strpos("abcdxtzyw", "xt");';
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
