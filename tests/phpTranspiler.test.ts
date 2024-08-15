@@ -822,5 +822,11 @@ describe('php transpiling tests', () => {
         const php = "unset($someObject[$key]);";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
-    })
+    });
+    test('should convert search', () => {
+        const ts = '"sometext".search("xt");';
+        const php = 'mb_strpos("sometext", "xt");';
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
   });

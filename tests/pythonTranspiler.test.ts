@@ -758,8 +758,14 @@ describe('python tests', () => {
     })
     test('should convert delete', () => {
         const ts = "delete someObject[key];";
-        const php = "del someObject[key]";
+        const python = "del someObject[key]";
         const output = transpiler.transpilePython(ts).content;
-        expect(output).toBe(php);
+        expect(output).toBe(python);
+    })
+    test('should convert search', () => {
+        const ts = '"sometext".search("xt");';
+        const python = '"sometext".find("xt")';
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
     })
 });
