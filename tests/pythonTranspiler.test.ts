@@ -755,17 +755,23 @@ describe('python tests', () => {
         const output = transpiler.transpilePythonByPath('./tests/files/input/test1.ts').content;
         transpiler.setPythonUncamelCaseIdentifiers(false);
         expect(output).toBe(python);
-    })
+    });
     test('should convert delete', () => {
         const ts = "delete someObject[key];";
         const python = "del someObject[key]";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
-    })
+    });
     test('should convert search', () => {
         const ts = '"abcdxtzyw".search("xt");';
         const python = '"abcdxtzyw".find("xt")';
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
-    })
+    });
+    test('string literal', () => {
+        const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
+        const python = "x = 'foo, \\'single\\', \"double\" \\t \\n \\r \\b \\f '";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
 });

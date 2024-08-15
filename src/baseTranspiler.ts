@@ -561,8 +561,13 @@ class BaseTranspiler {
             if (initializer) {
                 const customDefaultValue = this.printCustomDefaultValueIfNeeded(initializer);
                 const defaultValue = customDefaultValue ? customDefaultValue : this.printNode(initializer, 0);
-                type = (defaultValue === "null" && type !== "object") ? type + "? ": type + " ";
+                if (type) {
+                    type = (defaultValue === "null" && type !== "object") ? type + "? ": type + " ";
+                }
                 return type + name + this.SPACE_DEFAULT_PARAM + "=" + this.SPACE_DEFAULT_PARAM + defaultValue;
+            }
+            if (type === "") {
+                return name;
             }
             return type + " " + name;
         }
@@ -892,9 +897,17 @@ class BaseTranspiler {
         if (text in this.StringLiteralReplacements) {
             return this.StringLiteralReplacements[text];
         }
-        text = text.replaceAll("'", "\\" + "'");
-        text = text.replaceAll("\"", "\\" + "\"");
+        text = text.replaceAll("\b", "\\b");
+        text = text.replaceAll("\f", "\\f");
         text = text.replaceAll("\n", "\\n");
+        text = text.replaceAll("\r", "\\r");
+        text = text.replaceAll("\t", "\\t");
+        if (token === "'") {
+            text = text.replaceAll("\\\"", "\""); // unscape double quotes
+            text = text.replaceAll("'", "\\'"); // escape single quotes
+        } else if (token === "\"") {
+            text = text.replaceAll("\"", "\\\""); // escape double quotes
+        }
         return token + text + token;
     }
 
