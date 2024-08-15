@@ -767,5 +767,11 @@ describe('python tests', () => {
         const python = "x = 'foo, \\'single\\', \"double\" \\t \\n \\r \\b \\f '";
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
-    })
+    });
+    test('should convert isArray', () => {
+        const ts = "Array.isArray(x)";
+        const result = "isinstance(x, list)";
+        const output = transpiler.transpilePython(result).content;
+        expect(output).toBe(result);
+    });
 });
