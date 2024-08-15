@@ -262,6 +262,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return this.getIden(identation) + "$"+left+" instanceof "+right+"";
     }
 
+    printDeleteExpression(node, identation) {
+        const expression = this.printNode (node.expression, 0);
+        return `unset(${expression})`;
+    }
 
     getExceptionalAccessTokenIfAny(node) {
         const leftSide = node.expression.escapedText ?? node.expression.getFullText().trim();

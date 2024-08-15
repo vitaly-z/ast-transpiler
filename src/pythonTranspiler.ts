@@ -375,6 +375,11 @@ export class PythonTranspiler extends BaseTranspiler {
         return this.getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
     }
 
+    printDeleteExpression(node, identation) {
+        const expression = this.printNode (node.expression);
+        return `del ${expression}`;
+    }
+
     getCustomOperatorIfAny(left, right, operator) {
         const rightText = right.getText();
         const isUndefined = rightText === "undefined";
