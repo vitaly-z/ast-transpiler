@@ -28,8 +28,8 @@ func Add(a interface{}, b interface{}) interface{} {
 	return nil
 }
 
-func IsTrue(a interface{}, b interface{}) bool {
-	return EvalTruthy(a) && EvalTruthy(b)
+func IsTrue(a interface{}) bool {
+	return EvalTruthy(a)
 }
 
 // EvalTruthy determines if a single interface value is truthy.
@@ -394,21 +394,24 @@ func PlusEqual(a, value interface{}) interface{} {
 	}
 }
 
-func AppendToArray(array interface{}, value interface{}) interface{} {
+func AppendToArray(array interface{}, value interface{}) {
 	// Use reflection to work with the array dynamically
 	arrVal := reflect.ValueOf(array)
 
-	// Check if the input is actually a slice
-	if arrVal.Kind() != reflect.Slice {
-		return nil
+	// Check if the input is actually a pointer to a slice
+	if arrVal.Kind() != reflect.Ptr || arrVal.Elem().Kind() != reflect.Slice {
+		return
 	}
+
+	// Get the actual slice
+	sliceVal := arrVal.Elem()
 
 	// Use reflection to append the value to the slice
 	valueVal := reflect.ValueOf(value)
-	resultVal := reflect.Append(arrVal, valueVal)
+	resultVal := reflect.Append(sliceVal, valueVal)
 
-	// Return the new slice as interface{}
-	return resultVal.Interface()
+	// Set the new slice back to the original array
+	arrVal.Elem().Set(resultVal)
 }
 
 func AddElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value interface{}) {
@@ -812,5 +815,62 @@ func GetLength(v interface{}) int {
 		return val.Len()
 	default:
 		return 0
+	}
+}
+
+func GetArg(v []interface{}, index int, def interface{}) interface{} {
+	if len(v) <= index {
+		return def
+	}
+	return v[index]
+}
+
+func Ternary(cond bool, whenTrue interface{}, whenFalse interface{}) interface{} {
+	if cond {
+		return whenTrue
+	}
+	return whenFalse
+}
+
+func IsInstance(value interface{}, typ interface{}) bool {
+	// Get the reflect.Type of the value and the type
+	valueType := reflect.TypeOf(value)
+	typeType := reflect.TypeOf(typ)
+
+	// Compare the two types
+	return valueType == typeType
+}
+
+// Slice slices the string based on the provided start and end indices
+func Slice(str2 interface{}, idx1 interface{}, idx2 interface{}) string {
+	if str2 == nil {
+		return ""
+	}
+	str := str2.(string)
+	start := -1
+	if idx1 != nil {
+		start = idx1.(int)
+	}
+	if idx2 == nil {
+		if start < 0 {
+			innerStart := len(str) + start
+			if innerStart < 0 {
+				innerStart = 0
+			}
+			return str[innerStart:]
+		}
+		return str[start:]
+	} else {
+		end := idx2.(int)
+		if start < 0 {
+			start = len(str) + start
+		}
+		if end < 0 {
+			end = len(str) + end
+		}
+		if end > len(str) {
+			end = len(str)
+		}
+		return str[start:end]
 	}
 }
