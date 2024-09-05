@@ -78,16 +78,40 @@ export class PhpTranspiler extends BaseTranspiler {
         return this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
     }
 
-    transformIdentifier(identifier) {
-
+    transformIdentifier(node, identifier) {
         if (this.uncamelcaseIdentifiers) {
             identifier = this.unCamelCaseIfNeeded(identifier);
         }
-        if (!this.startsWithUpperCase(identifier)) {
-            return "$" + identifier; // avoid adding $ to constants, and classes
+
+        // Get the symbol for the identifier
+        const symbol = global.checker.getSymbolAtLocation(node);
+
+        // Check if the symbol references a function declaration or expression
+        if (symbol && symbol.valueDeclaration) {
+            const valueDecl = symbol.valueDeclaration;
+
+            // Check if it's a function (FunctionDeclaration, FunctionExpression, ArrowFunction)
+            if (ts.isFunctionDeclaration(valueDecl) || ts.isFunctionExpression(valueDecl) || ts.isArrowFunction(valueDecl)) {
+                // Check if the identifier is passed as an argument in a function call
+                if (node.parent && ts.isCallExpression(node.parent) && node.parent.arguments.includes(node)) {
+                    return `'${identifier}'`;  // Transpile function reference as string
+                }
+            }
         }
+
+        // If the identifier is a function parameter (callback), it should remain a variable with `$` prefix
+        if (node.parent && ts.isParameter(node.parent) || (node.parent && ts.isCallExpression(node.parent) && ts.isIdentifier(node))) {
+            return "$" + identifier;
+        }
+
+        // Default case: prepend $ for variables (non-functions), unless it's a class or constant
+        if (!this.startsWithUpperCase(identifier)) {
+            return "$" + identifier;  // Prepend $ for variable names
+        }
+
         return identifier;
     }
+
 
     getCustomOperatorIfAny(left, right, operator) {
         const STRING_CONCAT = '.';

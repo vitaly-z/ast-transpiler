@@ -344,6 +344,20 @@ describe('csharp transpiling tests', () => {
     //     transpiler.setPhpAsyncTranspiling(true);
     //     expect(output).toBe(csharp);
     // });
+    test('callback function transpilation', () => {
+        const ts =
+        "function printResult(result) {\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, printResult);";
+        const cs =
+        "public void printResult(object result)\n{\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, printResult);";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(cs);
+    });
     test('basic class with constructor', () => {
         const ts =
         "class teste extends Test {\n" +

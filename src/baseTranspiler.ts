@@ -390,7 +390,7 @@ class BaseTranspiler {
         return name;
     }
 
-    transformIdentifier(identifier) {
+    transformIdentifier(node, identifier) {
         return this.unCamelCaseIfNeeded(identifier);
     }
 
@@ -404,7 +404,7 @@ class BaseTranspiler {
         if (idValue === "undefined") {
             return this.UNDEFINED_TOKEN;
         }
-        return this.transformIdentifier(idValue); // check this later
+        return this.transformIdentifier(node, idValue); // check this later
     }
 
     shouldRemoveParenthesisFromCallExpression(node) {

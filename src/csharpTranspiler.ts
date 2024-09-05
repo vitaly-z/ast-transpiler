@@ -228,7 +228,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             }
         }
 
-        return this.transformIdentifier(idValue); // check this later
+        return this.transformIdentifier(node, idValue); // check this later
     }
 
     printConstructorDeclaration (node, identation) {

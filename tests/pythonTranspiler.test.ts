@@ -71,6 +71,19 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('callback function transpilation', () => {
+        const ts =
+        "function printResult(result) {\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, printResult);";
+        const py =
+        "def printResult(result):\n" +
+        "    return\n" +
+        "processNumbers(5, 10, printResult)";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(py);
+    });
     test('basic identation test [nested if]', () => {
         const ts =
         "if (1) {\n" +
