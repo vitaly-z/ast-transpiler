@@ -84,6 +84,17 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(py);
     });
+    test('function expression transpilation', () => {
+        const ts =
+        "const consumer = function consumer(a) {\n" +
+        "    return a + 1;\n" +
+        "};\n";
+        const python =
+        "def consumer(a):\n" +
+        "    return a + 1";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic identation test [nested if]', () => {
         const ts =
         "if (1) {\n" +

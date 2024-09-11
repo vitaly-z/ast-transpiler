@@ -358,6 +358,19 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(cs);
     });
+    test('function expression transpilation', () => {
+        const ts =
+        "const consumer = function consumer(a) {\n" +
+        "    return;\n" +
+        "};";
+        const csharp =
+        "void consumer(object a)\n" +
+        "{\n" +
+        "    return;\n" +
+        "};";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     test('basic class with constructor', () => {
         const ts =
         "class teste extends Test {\n" +

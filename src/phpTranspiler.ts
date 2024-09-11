@@ -53,6 +53,8 @@ export class PhpTranspiler extends BaseTranspiler {
         this.id = "php";
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
+        this.removeVariableDeclarationForFunctionExpression = config['removeFunctionAssignToVariable'] ?? false;
+        this.includeFunctionNameInFunctionExpressionDeclaration = config['includeFunctionNameInFunctionExpressionDeclaration'] ?? false;
 
         this.propRequiresScopeResolutionOperator = ['super'] + (config['ScopeResolutionProps'] ?? []);
 
