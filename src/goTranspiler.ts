@@ -240,7 +240,9 @@ export class GoTranspiler extends BaseTranspiler {
 
         let methodDef = this.printMethodDefinition(node, identation);
 
-        const funcBody = this.printFunctionBody(node, identation);
+        const isAsync = this.isAsyncFunction(node);
+
+        const funcBody = this.printFunctionBody(node, identation, isAsync);
 
         methodDef += funcBody;
 
@@ -339,7 +341,7 @@ export class GoTranspiler extends BaseTranspiler {
             // throw new FunctionReturnTypeError("Function return type is not supported");
             let res = "";
             if (this.isAsyncFunction(node)) {
-                res = `${this.DEFAULT_RETURN_TYPE}`;
+                res = `<- chan ${this.DEFAULT_RETURN_TYPE}`;
             } else {
                 res = this.DEFAULT_RETURN_TYPE;
             }
@@ -740,9 +742,10 @@ export class GoTranspiler extends BaseTranspiler {
         return undefined;
     }
 
-    printFunctionBody(node, identation) {
+    printFunctionBody(node, identation, wrapInChannel = false) {
 
         // check if there is any default parameter to initialize
+        let functionBody: string;
         const funcParams = node.parameters;
         const initParams = [];
         if (funcParams.length > 0) {
@@ -782,10 +785,72 @@ export class GoTranspiler extends BaseTranspiler {
             const blockOpen = this.getBlockOpen(identation);
             const blockClose = this.getBlockClose(identation);
             firstStatement = remainingString.length > 0 ? firstStatement + "\n" : firstStatement;
-            return blockOpen + firstStatement + remainingString + blockClose;
+            if (!wrapInChannel) {
+                functionBody = blockOpen + firstStatement + remainingString + blockClose;
+            } else {
+                functionBody = firstStatement + remainingString;
+            }
+        } else {
+            if (!wrapInChannel) {
+                functionBody = super.printFunctionBody(node, identation);
+            } else {
+                functionBody = node.body.statements.map(statement => {
+                    if (statement.kind === ts.SyntaxKind.ReturnStatement) {
+                        if (statement?.expression) {
+                            return this.getIden(identation) + "ch <-" + this.printNode(statement.expression) + '\n' + this.getIden(identation) + "return " + this.printNode(statement.expression);
+                        }
+                    }
+                    return this.printNode(statement, identation);
+                }).join("\n");
+
+            }
+        }
+        if (wrapInChannel) {
+            // return statement might be inside ifs or other complex statements so we still have to replace them manually :(
+            // functionBody = functionBody.replace(/(\s*)return\s+([^\n]+\n?)/g, '$1ch <- $2$1');
+            const functionBodySplit = functionBody.split("\n");
+            const bodyWithIndentationExtraAndNoReturn = functionBodySplit.map((line) => {
+
+                const trimmedLine = line.trim();
+
+                if(trimmedLine.startsWith("return") && trimmedLine !== "return") {
+                    const returnIndentation = line.indexOf("return");
+                    let channelReturn = this.getIden(returnIndentation) + "ch <-" + line.replace("return", "").trimStart();
+                    if (trimmedLine === "return nil") {
+                        channelReturn = this.getIden(returnIndentation) + "ch <- nil\n" + this.getIden(returnIndentation) + "return nil";
+                        // it's hard because we don't want to remove the treturns from the emulated try-catches we have that are also functions
+                        // with return statements
+                    }
+                    return channelReturn;
+                }
+                return this.getIden(identation+2) + line;
+            }).join("\n");
+            let shouldAddLastReturn = true;
+
+            const bodySplit = bodyWithIndentationExtraAndNoReturn.split("\n");
+            const lastLine = bodySplit[bodySplit.length - 1];
+            if (lastLine.trim().startsWith("return") || lastLine.trim().startsWith("panic")) {
+                shouldAddLastReturn = false;
+            }
+
+            const lastReturn = shouldAddLastReturn ? this.getIden(identation+2) + "return nil" : "";
+            functionBody = `{
+${this.getIden(identation + 1)}ch := make(chan ${this.DEFAULT_RETURN_TYPE})
+${this.getIden(identation + 1)}go func() interface{} {
+${this.getIden(identation + 2)}defer close(ch)
+${bodyWithIndentationExtraAndNoReturn}
+${lastReturn}
+${this.getIden(identation + 1)}}()
+${this.getIden(identation + 1)}return ch
+${this.getIden(identation)}}`;
         }
 
-        return super.printFunctionBody(node, identation);
+        return functionBody;
+    }
+
+    printAwaitExpression(node, identation) {
+        const expression = this.printNode(node.expression, identation);
+        return `(<-${expression})`;
     }
 
     printInstanceOfExpression(node, identation) {
