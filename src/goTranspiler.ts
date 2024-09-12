@@ -379,6 +379,8 @@ export class GoTranspiler extends BaseTranspiler {
             return arrayBindingStatement;
         }
 
+        const isNew = declaration.initializer && (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
+
         const parsedValue = (declaration.initializer) ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
 
         if (parsedValue === this.UNDEFINED_TOKEN) {
@@ -386,6 +388,9 @@ export class GoTranspiler extends BaseTranspiler {
         }
 
         if (node?.parent?.kind === ts.SyntaxKind.FirstStatement) {
+            if (isNew) {
+                return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue;
+            }
             return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
         }
 
@@ -1306,6 +1311,18 @@ ${this.getIden(identation)}}`;
         }
         return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printNode(operand, 0);
     }
+
+    printNewExpression(node, identation) {
+        let expression = node.expression?.escapedText;
+        expression = expression ? expression : this.printNode(node.expression); // new Exception or new exact[string] check this out
+        if (node.arguments.length === 0) {
+            return `new(${expression})`;
+        }
+        const args = node.arguments.map(n => this.printNode(n, identation)).join(", ");
+        const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
+        return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
+    }
+
 }
 
 

@@ -1,4 +1,4 @@
-package ccxt
+package main
 
 import (
 	"encoding/json"
@@ -1223,4 +1223,14 @@ func Remove(dict interface{}, key interface{}) {
 
 	// Remove the key from the map
 	delete(castedDict, keyStr)
+}
+
+func Capitalize(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	// Convert the first letter to uppercase
+	firstLetter := strings.ToUpper(string(s[0]))
+	// Combine the uppercase first letter with the rest of the string
+	return firstLetter + s[1:]
 }

@@ -8,11 +8,14 @@ const TS_TRANSPILABLE_FILE = "./tests/integration/source/transpilable.ts";
 const PY_TRANSPILABLE_FILE = "./tests/integration/py/transpilable.py";
 const PHP_TRANSPILABLE_FILE = "./tests/integration/php/transpilable.php";
 const CS_TRANSPILABLE_FILE = "./tests/integration/cs/transpilable.cs";
+const GO_TRANSPILABLE_FILE = "./tests/integration/go/transpilable.go";
+
 
 const TS_FILE = "./tests/integration/source/init.ts";
 const PY_FILE = "./tests/integration/py/init.py";
 const PHP_FILE = "./tests/integration/php/init.php";
 const CS_FILE = "./tests/integration/cs";
+const GO_FILE = "./tests/integration/go/main.go";
 
 const langConfig = [
     {
@@ -26,6 +29,10 @@ const langConfig = [
     },
     {
         language: "php",
+        async: true
+    },
+    {
+        language: "go",
         async: true
     },
 ]
@@ -49,9 +56,20 @@ function transpileTests() {
     let csharp = 'namespace tests;\n' + result[0].content;
     csharp = csharp.replace('class Test', 'partial class Test');
 
+
+    const goImports = [
+        '\n',
+        'import (',
+        '    "fmt"',
+        ')',
+        '\n'
+    ].join('\n');
+    const go = 'package main\n' + goImports + result[3].content;
+
     writeFileSync(PHP_TRANSPILABLE_FILE, phpRes.toString());
     writeFileSync(PY_TRANSPILABLE_FILE, pythonAsync);
     writeFileSync(CS_TRANSPILABLE_FILE, csharp);
+    writeFileSync(GO_TRANSPILABLE_FILE, go);
 }
 
 function runCommand(command) {
@@ -95,6 +113,14 @@ async function runCS() {
     const buildCommand = "dotnet build " + CS_FILE;
     await runCommand(buildCommand);
     const command = "dotnet run --project " + CS_FILE + '/cs.csproj';
+    const result = await runCommand(command);
+    return result;
+}
+
+async function runGO() {
+    const buildCommand = "go build" + GO_FILE;
+    await runCommand(buildCommand);
+    const command = "go run" + GO_FILE;
     const result = await runCommand(command);
     return result;
 }
