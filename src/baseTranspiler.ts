@@ -261,6 +261,10 @@ class BaseTranspiler {
         };
     }
 
+    capitalize(str: string) {
+        return str[0].toUpperCase() + str.slice(1);
+    }
+
     applyUserOverrides(config): void {
         this.LeftPropertyAccessReplacements = Object.assign ({}, this.LeftPropertyAccessReplacements, config['LeftPropertyAccessReplacements'] ?? {});
         this.RightPropertyAccessReplacements = Object.assign ({}, this.RightPropertyAccessReplacements, config['RightPropertyAccessReplacements'] ?? {});
@@ -398,6 +402,14 @@ class BaseTranspiler {
         return this.unCamelCaseIfNeeded(identifier);
     }
 
+    transformCallExpressionName(name: string) {
+        return name;
+    }
+
+    transformPropertyAccessExpressionName(name: string) {
+        return name;
+    }
+
     printIdentifier(node) {
         let idValue = node.text ?? node.escapedText;
 
@@ -527,7 +539,7 @@ class BaseTranspiler {
         // join together the left and right side again
         const accessToken = this.getExceptionalAccessTokenIfAny(node) ?? this.PROPERTY_ACCESS_TOKEN;
 
-        rawExpression = leftSide + accessToken + rightSide;
+        rawExpression = leftSide + accessToken + this.transformPropertyAccessExpressionName(rightSide);
 
         return rawExpression;
     }
@@ -1266,7 +1278,7 @@ class BaseTranspiler {
         } else {
             if (expression.kind === ts.SyntaxKind.Identifier) {
                 const idValue = expression.text ?? expression.escapedText;
-                parsedExpression = this.unCamelCaseIfNeeded(idValue);
+                parsedExpression = this.transformCallExpressionName(this.unCamelCaseIfNeeded(idValue));
             } else {
                 parsedExpression = this.printNode(expression, 0);
             }
@@ -1466,8 +1478,15 @@ class BaseTranspiler {
             }
 
             if (isString || isUnionString || type.flags === ts.TypeFlags.Any) { // default to string when unknown
-                const cast = ts.isStringLiteralLike(argumentExpression) ? "" : '(string)';
-                return `((IDictionary<string,object>)${expressionAsString})[${cast}${argumentAsString}]`;
+                // to do refactor and move this to the derived classes
+                if (this.id === "C#") {
+                    const cast = ts.isStringLiteralLike(argumentExpression) ? "" : '(string)';
+                    return `((IDictionary<string,object>)${expressionAsString})[${cast}${argumentAsString}]`;
+                }
+                // if (this.id === "Go") {
+                //     return `AddElementToObject(${expressionAsString}, ${argumentAsString})`;
+                // }
+
             }
             return `((${this.ARRAY_KEYWORD})${expressionAsString})[Convert.ToInt32(${argumentAsString})]`;
         }
