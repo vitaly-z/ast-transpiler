@@ -916,6 +916,9 @@ var BaseTranspiler = class {
   printToFixedCall(node, identation, name = void 0, parsedArg = void 0) {
     return void 0;
   }
+  printSearchCall(node, identation, name = void 0, parsedArg = void 0) {
+    return void 0;
+  }
   printSliceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
     return void 0;
   }
@@ -1027,6 +1030,8 @@ var BaseTranspiler = class {
             return this.printSplitCall(node, identation, name, parsedArg);
           case "toFixed":
             return this.printToFixedCall(node, identation, name, parsedArg);
+          case "search":
+            return this.printSearchCall(node, identation, name, parsedArg);
           case "endsWith":
             return this.printEndsWithCall(node, identation, name, parsedArg);
           case "startsWith":
@@ -1833,6 +1838,9 @@ var PythonTranspiler = class extends BaseTranspiler {
   printIndexOfCall(node, identation, name = void 0, parsedArg = void 0) {
     return `${name}.find(${parsedArg})`;
   }
+  printSearchCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `${name}.find(${parsedArg})`;
+  }
   printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
     return `${name}.startswith(${parsedArg})`;
   }
@@ -2143,7 +2151,7 @@ var PhpTranspiler = class extends BaseTranspiler {
     return `((string) ${name})`;
   }
   printArrayIsArrayCall(node, identation, parsedArg = void 0) {
-    return `gettype(${parsedArg}) === 'array' && array_keys(${parsedArg}) === array_keys(array_keys(${parsedArg}))`;
+    return `gettype(${parsedArg}) === 'array' && array_is_list(${parsedArg})`;
   }
   printObjectKeysCall(node, identation, parsedArg = void 0) {
     return `is_array(${parsedArg}) ? array_keys(${parsedArg}) : array()`;
@@ -2200,6 +2208,9 @@ var PhpTranspiler = class extends BaseTranspiler {
     } else {
       return `array_search(${parsedArg}, ${name})`;
     }
+  }
+  printSearchCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `mb_strpos(${name}, ${parsedArg})`;
   }
   printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
     return `str_starts_with(${name}, ${parsedArg})`;
@@ -2988,6 +2999,9 @@ var CSharpTranspiler = class extends BaseTranspiler {
   }
   printIndexOfCall(node, identation, name = void 0, parsedArg = void 0) {
     return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
+  }
+  printSearchCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `((string)${name}).IndexOf(${parsedArg})`;
   }
   printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
     return `((string)${name}).StartsWith(((string)${parsedArg}))`;

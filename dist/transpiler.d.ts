@@ -275,6 +275,7 @@ declare class BaseTranspiler {
     printJoinCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printToFixedCall(node: any, identation: any, name?: any, parsedArg?: any): any;
+    printSearchCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printSliceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): any;
     printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): any;
     printToStringCall(node: any, identation: any, name?: any): any;
@@ -356,6 +357,7 @@ declare class PythonTranspiler extends BaseTranspiler {
     printArrayPushCall(node: any, identation: any, name: any, parsedArg: any): string;
     printToStringCall(node: any, identation: any, name?: any): string;
     printIndexOfCall(node: any, identation: any, name?: any, parsedArg?: any): string;
+    printSearchCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printStartsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printEndsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printPadEndCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
@@ -414,6 +416,7 @@ declare class PhpTranspiler extends BaseTranspiler {
     printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
     printIncludesCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printIndexOfCall(node: any, identation: any, name?: any, parsedArg?: any): string;
+    printSearchCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printStartsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printEndsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printTrimCall(node: any, identation: any, name?: any): string;
@@ -469,6 +472,7 @@ declare class CSharpTranspiler extends BaseTranspiler {
     printArrayPushCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printIncludesCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printIndexOfCall(node: any, identation: any, name?: any, parsedArg?: any): string;
+    printSearchCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printStartsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printEndsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printTrimCall(node: any, identation: any, name?: any): string;
