@@ -257,6 +257,8 @@ var BaseTranspiler = class {
     this.requiresParameterType = false;
     this.supportsFalsyOrTruthyValues = true;
     this.requiresCallExpressionCast = false;
+    this.removeVariableDeclarationForFunctionExpression = true;
+    this.includeFunctionNameInFunctionExpressionDeclaration = true;
     this.initOperators();
   }
   initOperators() {
@@ -402,7 +404,7 @@ var BaseTranspiler = class {
     }
     return name;
   }
-  transformIdentifier(identifier) {
+  transformIdentifier(node, identifier) {
     return this.unCamelCaseIfNeeded(identifier);
   }
   printIdentifier(node) {
@@ -413,7 +415,7 @@ var BaseTranspiler = class {
     if (idValue === "undefined") {
       return this.UNDEFINED_TOKEN;
     }
-    return this.transformIdentifier(idValue);
+    return this.transformIdentifier(node, idValue);
   }
   shouldRemoveParenthesisFromCallExpression(node) {
     if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression) {
@@ -721,7 +723,7 @@ var BaseTranspiler = class {
     return typeText;
   }
   printFunctionDefinition(node, identation) {
-    let name = node.name.escapedText;
+    let name = node.name?.escapedText ?? "";
     name = this.transformFunctionNameIfNeeded(name);
     const parsedArgs = node.parameters.map((param) => this.printParameter(param)).join(", ");
     let modifiers = this.printModifiers(node);
@@ -729,10 +731,14 @@ var BaseTranspiler = class {
     let returnType = this.printFunctionType(node);
     returnType = returnType ? returnType + " " : returnType;
     const fnKeyword = this.FUNCTION_TOKEN ? this.FUNCTION_TOKEN + " " : "";
-    if (!fnKeyword) {
+    if (!fnKeyword && ts.isFunctionDeclaration(node)) {
       modifiers = modifiers + "public ";
     }
-    const functionDef = this.getIden(identation) + modifiers + returnType + fnKeyword + name + "(" + parsedArgs + ")";
+    let functionDef = this.getIden(identation) + modifiers + returnType + fnKeyword;
+    if (this.includeFunctionNameInFunctionExpressionDeclaration || !ts.isFunctionExpression(node)) {
+      functionDef += name;
+    }
+    functionDef += "(" + parsedArgs + ")";
     return functionDef;
   }
   transformFunctionNameIfNeeded(name) {
@@ -800,6 +806,9 @@ var BaseTranspiler = class {
   printVariableDeclarationList(node, identation) {
     const declaration = node.declarations[0];
     const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " " : "";
+    if (this.removeVariableDeclarationForFunctionExpression && (ts.isFunctionExpression(declaration.initializer) || ts.isArrowFunction(declaration.initializer))) {
+      return this.printNode(declaration.initializer, identation).trimEnd();
+    }
     const parsedValue = declaration.initializer ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
     return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + parsedValue.trim();
   }
@@ -1339,7 +1348,7 @@ var BaseTranspiler = class {
         return this.printExpressionStatement(node, identation);
       } else if (ts.isBlock(node)) {
         return this.printBlock(node, identation);
-      } else if (ts.isFunctionDeclaration(node)) {
+      } else if (ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
         return this.printFunctionDeclaration(node, identation);
       } else if (ts.isClassDeclaration(node)) {
         return this.printClass(node, identation);
@@ -1736,6 +1745,8 @@ var PythonTranspiler = class extends BaseTranspiler {
     this.initConfig();
     this.asyncTranspiling = config["async"] ?? true;
     this.uncamelcaseIdentifiers = config["uncamelcaseIdentifiers"] ?? true;
+    this.removeVariableDeclarationForFunctionExpression = config["removeVariableDeclarationForFunctionExpression"] ?? true;
+    this.includeFunctionNameInFunctionExpressionDeclaration = config["includeFunctionNameInFunctionExpressionDeclaration"] ?? true;
     this.applyUserOverrides(config);
   }
   initConfig() {
@@ -2052,6 +2063,8 @@ var PhpTranspiler = class extends BaseTranspiler {
     this.id = "php";
     this.asyncTranspiling = config["async"] ?? true;
     this.uncamelcaseIdentifiers = config["uncamelcaseIdentifiers"] ?? false;
+    this.removeVariableDeclarationForFunctionExpression = config["removeFunctionAssignToVariable"] ?? false;
+    this.includeFunctionNameInFunctionExpressionDeclaration = config["includeFunctionNameInFunctionExpressionDeclaration"] ?? false;
     this.propRequiresScopeResolutionOperator = ["super"] + (config["ScopeResolutionProps"] ?? []);
     this.initConfig();
     this.applyUserOverrides(config);
@@ -2065,9 +2078,21 @@ var PhpTranspiler = class extends BaseTranspiler {
     }
     return this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
   }
-  transformIdentifier(identifier) {
+  transformIdentifier(node, identifier) {
     if (this.uncamelcaseIdentifiers) {
       identifier = this.unCamelCaseIfNeeded(identifier);
+    }
+    const symbol = global.checker.getSymbolAtLocation(node);
+    if (symbol && symbol.valueDeclaration) {
+      const valueDecl = symbol.valueDeclaration;
+      if (ts3.isFunctionDeclaration(valueDecl) || ts3.isFunctionExpression(valueDecl) || ts3.isArrowFunction(valueDecl)) {
+        if (node.parent && ts3.isCallExpression(node.parent) && node.parent.arguments.includes(node)) {
+          return `'${identifier}'`;
+        }
+      }
+    }
+    if (node.parent && ts3.isParameter(node.parent) || node.parent && ts3.isCallExpression(node.parent) && ts3.isIdentifier(node)) {
+      return "$" + identifier;
     }
     if (!this.startsWithUpperCase(identifier)) {
       return "$" + identifier;
@@ -2525,7 +2550,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
         }
       }
     }
-    return this.transformIdentifier(idValue);
+    return this.transformIdentifier(node, idValue);
   }
   printConstructorDeclaration(node, identation) {
     const classNode = node.parent;
@@ -2709,6 +2734,9 @@ var CSharpTranspiler = class extends BaseTranspiler {
   }
   printVariableDeclarationList(node, identation) {
     const declaration = node.declarations[0];
+    if (this.removeVariableDeclarationForFunctionExpression && ts4.isFunctionExpression(declaration.initializer)) {
+      return this.printNode(declaration.initializer, identation).trimEnd();
+    }
     if (declaration?.name.kind === ts4.SyntaxKind.ArrayBindingPattern) {
       const arrayBindingPattern = declaration.name;
       const arrayBindingPatternElements = arrayBindingPattern.elements;
