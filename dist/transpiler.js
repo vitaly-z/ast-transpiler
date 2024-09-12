@@ -46,7 +46,7 @@ var require_dirname = __commonJS({
 // src/transpiler.ts
 init_esm_shims();
 var import_dirname = __toESM(require_dirname(), 1);
-import ts5 from "typescript";
+import ts6 from "typescript";
 
 // src/pythonTranspiler.ts
 init_esm_shims();
@@ -311,6 +311,9 @@ var BaseTranspiler = class {
       [ts.SyntaxKind.StaticKeyword]: this.STATIC_TOKEN
     };
   }
+  capitalize(str) {
+    return str[0].toUpperCase() + str.slice(1);
+  }
   applyUserOverrides(config) {
     this.LeftPropertyAccessReplacements = Object.assign({}, this.LeftPropertyAccessReplacements, config["LeftPropertyAccessReplacements"] ?? {});
     this.RightPropertyAccessReplacements = Object.assign({}, this.RightPropertyAccessReplacements, config["RightPropertyAccessReplacements"] ?? {});
@@ -407,6 +410,12 @@ var BaseTranspiler = class {
   transformIdentifier(node, identifier) {
     return this.unCamelCaseIfNeeded(identifier);
   }
+  transformCallExpressionName(name) {
+    return name;
+  }
+  transformPropertyAccessExpressionName(name) {
+    return name;
+  }
   printIdentifier(node) {
     let idValue = node.text ?? node.escapedText;
     if (this.ReservedKeywordsReplacements[idValue]) {
@@ -495,7 +504,7 @@ var BaseTranspiler = class {
     leftSide = this.LeftPropertyAccessReplacements.hasOwnProperty(leftSide) ? this.LeftPropertyAccessReplacements[leftSide] : this.printNode(expression, 0);
     rightSide = this.RightPropertyAccessReplacements.hasOwnProperty(rightSide) ? this.RightPropertyAccessReplacements[rightSide] : this.transformPropertyAcessRightIdentifierIfNeeded(rightSide) ?? rightSide;
     const accessToken = this.getExceptionalAccessTokenIfAny(node) ?? this.PROPERTY_ACCESS_TOKEN;
-    rawExpression = leftSide + accessToken + rightSide;
+    rawExpression = leftSide + accessToken + this.transformPropertyAccessExpressionName(rightSide);
     return rawExpression;
   }
   printCustomDefaultValueIfNeeded(node) {
@@ -1070,7 +1079,7 @@ var BaseTranspiler = class {
     } else {
       if (expression.kind === ts.SyntaxKind.Identifier) {
         const idValue = expression.text ?? expression.escapedText;
-        parsedExpression = this.unCamelCaseIfNeeded(idValue);
+        parsedExpression = this.transformCallExpressionName(this.unCamelCaseIfNeeded(idValue));
       } else {
         parsedExpression = this.printNode(expression, 0);
       }
@@ -1192,8 +1201,10 @@ var BaseTranspiler = class {
         isUnionString = this.isStringType(type?.types[0].flags);
       }
       if (isString || isUnionString || type.flags === ts.TypeFlags.Any) {
-        const cast = ts.isStringLiteralLike(argumentExpression) ? "" : "(string)";
-        return `((IDictionary<string,object>)${expressionAsString})[${cast}${argumentAsString}]`;
+        if (this.id === "C#") {
+          const cast = ts.isStringLiteralLike(argumentExpression) ? "" : "(string)";
+          return `((IDictionary<string,object>)${expressionAsString})[${cast}${argumentAsString}]`;
+        }
       }
       return `((${this.ARRAY_KEYWORD})${expressionAsString})[Convert.ToInt32(${argumentAsString})]`;
     }
@@ -3136,12 +3147,914 @@ var CSharpTranspiler = class extends BaseTranspiler {
 
 // src/transpiler.ts
 import * as path2 from "path";
+
+// src/goTranspiler.ts
+init_esm_shims();
+import ts5 from "typescript";
+var SyntaxKind3 = ts5.SyntaxKind;
+var parserConfig4 = {
+  "ELSEIF_TOKEN": "else if",
+  "OBJECT_OPENING": "map[string]interface{} {",
+  "ARRAY_OPENING_TOKEN": "[]interface{}{",
+  "ARRAY_CLOSING_TOKEN": "}",
+  "PROPERTY_ASSIGNMENT_TOKEN": ":",
+  "VAR_TOKEN": "object",
+  "METHOD_TOKEN": "func",
+  "PROPERTY_ASSIGNMENT_OPEN": "",
+  "PROPERTY_ASSIGNMENT_CLOSE": "",
+  "SUPER_TOKEN": "base",
+  "SUPER_CALL_TOKEN": "base",
+  "FALSY_WRAPPER_OPEN": "IsTrue(",
+  "FALSY_WRAPPER_CLOSE": ")",
+  "COMPARISON_WRAPPER_OPEN": "IsEqual(",
+  "COMPARISON_WRAPPER_CLOSE": ")",
+  "UKNOWN_PROP_WRAPPER_OPEN": "this.call(",
+  "UNKOWN_PROP_WRAPPER_CLOSE": ")",
+  "UKNOWN_PROP_ASYNC_WRAPPER_OPEN": "this.callAsync(",
+  "UNKOWN_PROP_ASYNC_WRAPPER_CLOSE": ")",
+  "DYNAMIC_CALL_OPEN": "callDynamically(",
+  "EQUALS_EQUALS_WRAPPER_OPEN": "IsEqual(",
+  "EQUALS_EQUALS_WRAPPER_CLOSE": ")",
+  "DIFFERENT_WRAPPER_OPEN": "!IsEqual(",
+  "DIFFERENT_WRAPPER_CLOSE": ")",
+  "GREATER_THAN_WRAPPER_OPEN": "IsGreaterThan(",
+  "GREATER_THAN_WRAPPER_CLOSE": ")",
+  "GREATER_THAN_EQUALS_WRAPPER_OPEN": "IsGreaterThanOrEqual(",
+  "GREATER_THAN_EQUALS_WRAPPER_CLOSE": ")",
+  "LESS_THAN_WRAPPER_OPEN": "IsLessThan(",
+  "LESS_THAN_WRAPPER_CLOSE": ")",
+  "LESS_THAN_EQUALS_WRAPPER_OPEN": "IsLessThanOrEqual(",
+  "LESS_THAN_EQUALS_WRAPPER_CLOSE": ")",
+  "PLUS_WRAPPER_OPEN": "Add(",
+  "PLUS_WRAPPER_CLOSE": ")",
+  "MINUS_WRAPPER_OPEN": "Subtract(",
+  "MINUS_WRAPPER_CLOSE": ")",
+  "ARRAY_LENGTH_WRAPPER_OPEN": "GetArrayLength(",
+  "ARRAY_LENGTH_WRAPPER_CLOSE": ")",
+  "DIVIDE_WRAPPER_OPEN": "Divide(",
+  "DIVIDE_WRAPPER_CLOSE": ")",
+  "MULTIPLY_WRAPPER_OPEN": "Multiply(",
+  "MULTIPLY_WRAPPER_CLOSE": ")",
+  "INDEXOF_WRAPPER_OPEN": "GetIndexOf(",
+  "INDEXOF_WRAPPER_CLOSE": ")",
+  "MOD_WRAPPER_OPEN": "Mod(",
+  "MOD_WRAPPER_CLOSE": ")",
+  "FUNCTION_TOKEN": "",
+  "DEFAULT_RETURN_TYPE": "interface{}",
+  "BLOCK_OPENING_TOKEN": "{",
+  "DEFAULT_PARAMETER_TYPE": "interface{}",
+  "LINE_TERMINATOR": "",
+  "CONDITION_OPENING": "",
+  "CONDITION_CLOSE": "",
+  "AWAIT_TOKEN": "",
+  "NULL_TOKEN": "nil",
+  "UNDEFINED_TOKEN": "nil",
+  "WHILE_TOKEN": "for",
+  "ELEMENT_ACCESS_WRAPPER_OPEN": "GetValue(",
+  "ELEMENT_ACCESS_WRAPPER_CLOSE": ")"
+};
+var GoTranspiler = class extends BaseTranspiler {
+  constructor(config = {}) {
+    config["parser"] = Object.assign({}, parserConfig4, config["parser"] ?? {});
+    super(config);
+    this.wrapCallMethods = [];
+    this.requiresParameterType = true;
+    this.requiresReturnType = true;
+    this.asyncTranspiling = false;
+    this.supportsFalsyOrTruthyValues = false;
+    this.requiresCallExpressionCast = true;
+    this.wrapThisCalls = false;
+    this.id = "Go";
+    this.className = "undefined";
+    this.initConfig();
+    this.applyUserOverrides(config);
+    this.wrapThisCalls = config["wrapThisCalls"] ?? false;
+    this.wrapCallMethods = config["wrapCallMethods"] ?? [];
+  }
+  initConfig() {
+    this.LeftPropertyAccessReplacements = {};
+    this.RightPropertyAccessReplacements = {
+      "push": "Add",
+      "indexOf": "IndexOf",
+      "toUpperCase": "ToUpper",
+      "toLowerCase": "ToLower",
+      "toString": "ToString"
+    };
+    this.FullPropertyAccessReplacements = {
+      "JSON.parse": "parseJson",
+      "console.log": "fmt.Println",
+      "Number.MAX_SAFE_INTEGER": "Int32.MaxValue",
+      "Math.min": "Math.Min",
+      "Math.max": "Math.Max",
+      "Math.log": "Math.Log",
+      "Math.abs": "Math.Abs",
+      "Math.floor": "Math.Floor",
+      "Math.pow": "Math.Pow"
+    };
+    this.CallExpressionReplacements = {};
+    this.ReservedKeywordsReplacements = {
+      "type": "typeVar"
+    };
+    this.binaryExpressionsWrappers = {
+      [ts5.SyntaxKind.EqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.EqualsEqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.ExclamationEqualsToken]: [this.DIFFERENT_WRAPPER_OPEN, this.DIFFERENT_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.ExclamationEqualsEqualsToken]: [this.DIFFERENT_WRAPPER_OPEN, this.DIFFERENT_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.GreaterThanToken]: [this.GREATER_THAN_WRAPPER_OPEN, this.GREATER_THAN_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.GreaterThanEqualsToken]: [this.GREATER_THAN_EQUALS_WRAPPER_OPEN, this.GREATER_THAN_EQUALS_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.LessThanToken]: [this.LESS_THAN_WRAPPER_OPEN, this.LESS_THAN_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.LessThanEqualsToken]: [this.LESS_THAN_EQUALS_WRAPPER_OPEN, this.LESS_THAN_EQUALS_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.PlusToken]: [this.PLUS_WRAPPER_OPEN, this.PLUS_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.MinusToken]: [this.MINUS_WRAPPER_OPEN, this.MINUS_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.AsteriskToken]: [this.MULTIPLY_WRAPPER_OPEN, this.MULTIPLY_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.PercentToken]: [this.MOD_WRAPPER_OPEN, this.MOD_WRAPPER_CLOSE],
+      [ts5.SyntaxKind.SlashToken]: [this.DIVIDE_WRAPPER_OPEN, this.DIVIDE_WRAPPER_CLOSE]
+    };
+  }
+  printSuperCallInsideConstructor(node, identation) {
+    return "";
+  }
+  printStringLiteral(node) {
+    const token = this.STRING_QUOTE_TOKEN;
+    let text = node.text;
+    if (text in this.StringLiteralReplacements) {
+      return this.StringLiteralReplacements[text];
+    }
+    text = text.replaceAll("'", "\\\\'");
+    text = text.replaceAll('"', '\\"');
+    text = text.replaceAll("\n", "\\n");
+    return token + text + token;
+  }
+  printPropertyDeclaration(node, identation) {
+    const name = this.printNode(node.name, 0);
+    let type = "interface{}";
+    if (node.type === void 0) {
+      type = "interface{}";
+    } else if (node.type.kind === SyntaxKind3.StringKeyword) {
+      type = "string";
+    } else if (node.type.kind === SyntaxKind3.NumberKeyword) {
+      type = "int";
+    } else if (node.type.kind === SyntaxKind3.BooleanKeyword) {
+      type = "bool";
+    } else if (node.type.kind === SyntaxKind3.ArrayType) {
+      type = "[]interface{}";
+    }
+    if (node.initializer) {
+    }
+    return this.getIden(identation) + name + " " + type + this.LINE_TERMINATOR;
+  }
+  printStruct(node, indentation) {
+    const className = node.name.escapedText;
+    let heritageName = "";
+    if (node?.heritageClauses?.length > 0) {
+      const heritage = node.heritageClauses[0];
+      const heritageType = heritage.types[0];
+      heritageName = this.getIden(indentation + 1) + heritageType.expression.escapedText + "\n";
+    }
+    const propDeclarations = node.members.filter((member) => member.kind === SyntaxKind3.PropertyDeclaration);
+    return `type ${className} struct {
+${heritageName}${propDeclarations.map((member) => this.printNode(member, indentation + 1)).join("\n")}
+}`;
+  }
+  printClass(node, identation) {
+    const struct = this.printStruct(node, identation);
+    this.className = node.name.escapedText;
+    const methods = node.members.filter((member) => member.kind === SyntaxKind3.MethodDeclaration);
+    const classMethods = methods.map((method) => this.printMethodDeclaration(method, identation)).join("\n");
+    return struct + "\n" + classMethods;
+  }
+  printMethodDeclaration(node, identation) {
+    const className = node.parent.name.escapedText;
+    let methodDef = this.printMethodDefinition(node, identation);
+    const isAsync = this.isAsyncFunction(node);
+    const funcBody = this.printFunctionBody(node, identation, isAsync);
+    methodDef += funcBody;
+    return methodDef;
+  }
+  printMethodDefinition(node, identation) {
+    const className = node.parent.name.escapedText;
+    let name = node.name.escapedText;
+    name = this.transformMethodNameIfNeeded(name);
+    let returnType = this.printFunctionType(node);
+    const parsedArgs = this.printMethodParameters(node);
+    returnType = returnType ? returnType + " " : returnType;
+    const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
+    const structReceiver = `(${this.THIS_TOKEN} *${className})`;
+    const methodDef = this.getIden(identation) + methodToken + " " + structReceiver + " " + name + "(" + parsedArgs + ") " + returnType;
+    return this.printNodeCommentsIfAny(node, identation, methodDef);
+  }
+  printMethodParameters(node) {
+    const params = node.parameters.map((param) => this.printParameter(param));
+    const hasOptionalParameter = params.some((p) => p === "optional");
+    if (!hasOptionalParameter) {
+      return params.join(", ");
+    }
+    const paramsWithOptional = params.filter((param) => param !== "optional");
+    paramsWithOptional.push("optionalArgs ...interface{}");
+    return paramsWithOptional.join(", ");
+  }
+  printParameter(node, defaultValue = true) {
+    const name = this.printNode(node.name, 0);
+    const initializer = node.initializer;
+    const type = this.printParameterType(node);
+    if (defaultValue) {
+      if (initializer) {
+        return "optional";
+      }
+      return name + " " + type;
+    }
+    return name + " " + type;
+  }
+  printParameterType(node) {
+    const typeText = this.getType(node);
+    return "interface{}";
+    if (typeText === this.STRING_KEYWORD) {
+      return "string";
+    }
+    if (typeText === this.NUMBER_KEYWORD) {
+      return "float64";
+    }
+    if (typeText === this.BOOLEAN_KEYWORD) {
+      return "bool";
+    }
+    return this.DEFAULT_PARAMETER_TYPE;
+    if (typeText === void 0 || typeText === this.STRING_KEYWORD) {
+      this.warn(node, node.getText(), "Parameter type not found, will default to: " + this.DEFAULT_PARAMETER_TYPE);
+      return this.DEFAULT_PARAMETER_TYPE;
+    }
+    return typeText;
+  }
+  printFunctionType(node) {
+    const typeText = this.getFunctionType(node);
+    if (typeText === "void") {
+      return "";
+    }
+    if (typeText === void 0 || typeText !== this.VOID_KEYWORD && typeText !== this.PROMISE_TYPE_KEYWORD) {
+      let res = "";
+      if (this.isAsyncFunction(node)) {
+        res = `<- chan ${this.DEFAULT_RETURN_TYPE}`;
+      } else {
+        res = this.DEFAULT_RETURN_TYPE;
+      }
+      this.warn(node, node.name.getText(), "Function return type not found, will default to: " + res);
+      return res;
+    }
+    return typeText;
+  }
+  printVariableDeclarationList(node, identation) {
+    const declaration = node.declarations[0];
+    if (declaration?.name.kind === ts5.SyntaxKind.ArrayBindingPattern) {
+      const arrayBindingPattern = declaration.name;
+      const arrayBindingPatternElements = arrayBindingPattern.elements;
+      const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e.name, 0));
+      const syntheticName = parsedArrayBindingElements.join("") + "Variable";
+      let arrayBindingStatement = `${this.getIden(identation)}${syntheticName} := ${this.printNode(declaration.initializer, 0)};
+`;
+      parsedArrayBindingElements.forEach((e, index) => {
+        const statement = this.getIden(identation) + `${e} := GetValue(${syntheticName},${index})`;
+        if (index < parsedArrayBindingElements.length - 1) {
+          arrayBindingStatement += statement + ";\n";
+        } else {
+          arrayBindingStatement += statement;
+        }
+      });
+      return arrayBindingStatement;
+    }
+    const isNew = declaration.initializer && declaration.initializer.kind === ts5.SyntaxKind.NewExpression;
+    const parsedValue = declaration.initializer ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
+    if (parsedValue === this.UNDEFINED_TOKEN) {
+      return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
+    }
+    if (node?.parent?.kind === ts5.SyntaxKind.FirstStatement) {
+      if (isNew) {
+        return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue;
+      }
+      return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
+    }
+    return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue.trim();
+  }
+  printConstructorDeclaration(node, identation) {
+    const classNode = node.parent;
+    const className = this.printNode(classNode.name, 0);
+    const args = this.printMethodParameters(node);
+    const constructorBody = this.printFunctionBody(node, identation);
+    let superCallParams = "";
+    let hasSuperCall = false;
+    node.body?.statements.forEach((statement) => {
+      if (ts5.isExpressionStatement(statement)) {
+        const expression = statement.expression;
+        if (ts5.isCallExpression(expression)) {
+          const expressionText = expression.expression.getText().trim();
+          if (expressionText === "super") {
+            hasSuperCall = true;
+            superCallParams = expression.arguments.map((a) => {
+              return this.printNode(a, identation).trim();
+            }).join(", ");
+          }
+        }
+      }
+    });
+    if (hasSuperCall) {
+      return this.getIden(identation) + className + `(${args}) : ${this.SUPER_CALL_TOKEN}(${superCallParams})` + constructorBody;
+    }
+    return this.getIden(identation) + className + "(" + args + ")" + constructorBody;
+  }
+  printThisElementAccesssIfNeeded(node, identation) {
+    const isAsync = true;
+    const elementAccess = node.expression;
+    if (elementAccess?.kind === ts5.SyntaxKind.ElementAccessExpression) {
+      if (elementAccess?.expression?.kind === ts5.SyntaxKind.ThisKeyword) {
+        let parsedArg = node.arguments?.length > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
+        const propName = this.printNode(elementAccess.argumentExpression, 0);
+        const wrapperOpen = isAsync ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
+        const wrapperClose = isAsync ? this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE : this.UNKOWN_PROP_WRAPPER_CLOSE;
+        parsedArg = parsedArg ? ", " + parsedArg : "";
+        return wrapperOpen + propName + parsedArg + wrapperClose;
+      }
+    }
+    return;
+  }
+  printDynamicCall(node, identation) {
+    const elementAccess = node.expression;
+    if (elementAccess?.kind === ts5.SyntaxKind.ElementAccessExpression) {
+      const parsedArg = node.arguments?.length > 0 ? node.arguments.map((n) => this.printNode(n, identation).trimStart()).join(", ") : "";
+      const propName = this.printNode(elementAccess.argumentExpression, 0);
+      const argsArray = `${parsedArg}`;
+      const open = this.DYNAMIC_CALL_OPEN;
+      const statement = `${open}${propName}, ${argsArray})`;
+      return statement;
+    }
+    return void 0;
+  }
+  printElementAccessExpressionExceptionIfAny(node) {
+  }
+  printWrappedUnknownThisProperty(node) {
+    const type = global.checker.getResolvedSignature(node);
+    if (type?.declaration === void 0) {
+      let parsedArguments = node.arguments?.map((a) => this.printNode(a, 0)).join(", ");
+      parsedArguments = parsedArguments ? parsedArguments : "";
+      const propName = node.expression?.name.escapedText;
+      const argsArray = `${parsedArguments}`;
+      const open = this.DYNAMIC_CALL_OPEN;
+      const statement = `${open}"${propName}", ${argsArray})`;
+      return statement;
+    }
+    return void 0;
+  }
+  transformMethodNameIfNeeded(name) {
+    const res = this.unCamelCaseIfNeeded(name);
+    return this.capitalize(res);
+  }
+  transformCallExpressionName(name) {
+    return this.capitalize(name);
+  }
+  transformPropertyAccessExpressionName(name) {
+    return this.capitalize(name);
+  }
+  printOutOfOrderCallExpressionIfAny(node, identation) {
+    if (node.expression.kind === ts5.SyntaxKind.PropertyAccessExpression) {
+      const args = node.arguments;
+      if (node.expression.expression.kind === ts5.SyntaxKind.ThisKeyword) {
+        const methodName = this.printNode(node.expression.name, 0);
+        if (this.wrapThisCalls || this.wrapCallMethods.includes(methodName)) {
+          let argsParsed = "";
+          if (args.length > 0) {
+            argsParsed = args.map((a) => this.printNode(a, 0)).join(", ");
+            return `this.callInternal("${methodName}", ${argsParsed})`;
+          }
+          return `this.callInternal("${methodName}")`;
+        }
+      }
+      const expressionText = node.expression.getText().trim();
+      if (args.length === 1) {
+        const parsedArg = this.printNode(args[0], 0);
+        switch (expressionText) {
+          case "Math.abs":
+            return `Math.Abs(Convert.ToDouble(${parsedArg}))`;
+        }
+      } else if (args.length === 2) {
+        const parsedArg1 = this.printNode(args[0], 0);
+        const parsedArg2 = this.printNode(args[1], 0);
+        switch (expressionText) {
+          case "Math.min":
+            return `mathMin(${parsedArg1}, ${parsedArg2})`;
+          case "Math.max":
+            return `mathMax(${parsedArg1}, ${parsedArg2})`;
+          case "Math.pow":
+            return `Math.Pow(Convert.ToDouble(${parsedArg1}), Convert.ToDouble(${parsedArg2}))`;
+        }
+      }
+      const leftSide = node.expression?.expression;
+      const leftSideText = leftSide ? this.printNode(leftSide, 0) : void 0;
+      if (leftSideText === this.THIS_TOKEN || leftSide.getFullText().indexOf("(this as any)") > -1) {
+        const res = this.printWrappedUnknownThisProperty(node);
+        if (res) {
+          return res;
+        }
+      }
+    }
+    if (node.expression.kind === ts5.SyntaxKind.ElementAccessExpression) {
+      return this.printDynamicCall(node, identation);
+    }
+    return void 0;
+  }
+  handleTypeOfInsideBinaryExpression(node, identation) {
+    const left = node.left;
+    const right = node.right.text;
+    const op = node.operatorToken.kind;
+    const expression = left.expression;
+    const isDifferentOperator = op === ts5.SyntaxKind.ExclamationEqualsEqualsToken || op === ts5.SyntaxKind.ExclamationEqualsToken;
+    const notOperator = isDifferentOperator ? this.NOT_TOKEN : "";
+    const target = this.printNode(expression, 0);
+    switch (right) {
+      case "string":
+        return notOperator + `IsString(${target})`;
+      case "number":
+        return notOperator + `IsNumber(${target})`;
+      case "boolean":
+        return notOperator + `IsBool(${target})`;
+      case "object":
+        return notOperator + `IsObject(${target})`;
+      case "function":
+        return notOperator + `IsFunction(${target})`;
+    }
+    return void 0;
+  }
+  printCustomBinaryExpressionIfAny(node, identation) {
+    const left = node.left;
+    const right = node.right;
+    const op = node.operatorToken.kind;
+    if (left.kind === ts5.SyntaxKind.TypeOfExpression) {
+      const typeOfExpression = this.handleTypeOfInsideBinaryExpression(node, identation);
+      if (typeOfExpression) {
+        return typeOfExpression;
+      }
+    }
+    if (op === ts5.SyntaxKind.EqualsToken && left.kind === ts5.SyntaxKind.ArrayLiteralExpression) {
+      const arrayBindingPatternElements = left.elements;
+      const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e, 0));
+      const syntheticName = parsedArrayBindingElements.join("") + "Variable";
+      let arrayBindingStatement = `${syntheticName} := ${this.printNode(right, 0)};
+`;
+      parsedArrayBindingElements.forEach((e, index) => {
+        const leftElement = arrayBindingPatternElements[index];
+        const leftType = global.checker.getTypeAtLocation(leftElement);
+        const parsedType = this.getTypeFromRawType(leftType);
+        const castExp = parsedType ? `(${parsedType})` : "";
+        const statement = this.getIden(identation) + `${e} = GetValue(${syntheticName},${index})`;
+        if (index < parsedArrayBindingElements.length - 1) {
+          arrayBindingStatement += statement + ";\n";
+        } else {
+          arrayBindingStatement += statement;
+        }
+      });
+      return arrayBindingStatement;
+    }
+    if (op === ts5.SyntaxKind.InKeyword) {
+      return `InOp(${this.printNode(right, 0)}, ${this.printNode(left, 0)})`;
+    }
+    const leftText = this.printNode(left, 0);
+    const rightText = this.printNode(right, 0);
+    if (op === ts5.SyntaxKind.PlusEqualsToken) {
+      return `${leftText} = Add(${leftText}, ${rightText})`;
+    }
+    if (op === ts5.SyntaxKind.MinusEqualsToken) {
+      return `${leftText} = Subtract(${leftText}, ${rightText})`;
+    }
+    if (op in this.binaryExpressionsWrappers) {
+      const wrapper = this.binaryExpressionsWrappers[op];
+      const open = wrapper[0];
+      const close = wrapper[1];
+      return `${open}${leftText}, ${rightText}${close}`;
+    }
+    return void 0;
+  }
+  transformPropertyAcessExpressionIfNeeded(node) {
+    const expression = node.expression;
+    const leftSide = this.printNode(expression, 0);
+    const rightSide = node.name.escapedText;
+    let rawExpression = void 0;
+    switch (rightSide) {
+      case "length":
+        const type = global.checker.getTypeAtLocation(expression);
+        rawExpression = this.isStringType(type.flags) ? `GetLength(${leftSide})` : `${this.ARRAY_LENGTH_WRAPPER_OPEN}${leftSide}${this.ARRAY_LENGTH_WRAPPER_CLOSE}`;
+        break;
+      case "push":
+        rawExpression = `((IList<object>)${leftSide}).Add`;
+        break;
+    }
+    return rawExpression;
+  }
+  printCustomDefaultValueIfNeeded(node) {
+    return void 0;
+  }
+  printFunctionBody(node, identation, wrapInChannel = false) {
+    let functionBody;
+    const funcParams = node.parameters;
+    const initParams = [];
+    if (funcParams.length > 0) {
+      const body = node.body.statements;
+      const first = body.length > 0 ? body[0] : [];
+      const remaining = body.length > 0 ? body.slice(1) : [];
+      let firstStatement = this.printNode(first, identation + 1);
+      const remainingString = remaining.map((statement) => this.printNode(statement, identation + 1)).join("\n");
+      let offSetIndex = 0;
+      funcParams.forEach((param, i) => {
+        const initializer = param.initializer;
+        if (initializer) {
+          const index = i + offSetIndex;
+          const paramName = this.printNode(param.name, 0);
+          initParams.push(`${paramName} := GetArg(optionalArgs, ${index}, ${this.printNode(initializer, 0)})`);
+          initParams.push(`_ = ${paramName}`);
+        } else {
+          offSetIndex--;
+        }
+      });
+      if (initParams.length > 0) {
+        const defaultInitializers = initParams.map((l) => this.getIden(identation + 1) + l).join("\n") + "\n";
+        const bodyParts = firstStatement.split("\n");
+        const commentPart = bodyParts.filter((line) => this.isComment(line));
+        const isComment = commentPart.length > 0;
+        if (isComment) {
+          const commentPartString = commentPart.map((c) => this.getIden(identation + 1) + c.trim()).join("\n");
+          const firstStmNoComment = bodyParts.filter((line) => !this.isComment(line)).join("\n");
+          firstStatement = commentPartString + "\n" + defaultInitializers + firstStmNoComment;
+        } else {
+          firstStatement = defaultInitializers + firstStatement;
+        }
+      }
+      const blockOpen = this.getBlockOpen(identation);
+      const blockClose = this.getBlockClose(identation);
+      firstStatement = remainingString.length > 0 ? firstStatement + "\n" : firstStatement;
+      if (!wrapInChannel) {
+        functionBody = blockOpen + firstStatement + remainingString + blockClose;
+      } else {
+        functionBody = firstStatement + remainingString;
+      }
+    } else {
+      if (!wrapInChannel) {
+        functionBody = super.printFunctionBody(node, identation);
+      } else {
+        functionBody = node.body.statements.map((statement) => {
+          if (statement.kind === ts5.SyntaxKind.ReturnStatement) {
+            if (statement?.expression) {
+              return this.getIden(identation) + "ch <-" + this.printNode(statement.expression) + "\n" + this.getIden(identation) + "return " + this.printNode(statement.expression);
+            }
+          }
+          return this.printNode(statement, identation);
+        }).join("\n");
+      }
+    }
+    if (wrapInChannel) {
+      const functionBodySplit = functionBody.split("\n");
+      const bodyWithIndentationExtraAndNoReturn = functionBodySplit.map((line) => {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith("return") && trimmedLine !== "return") {
+          const returnIndentation = line.indexOf("return");
+          let channelReturn = this.getIden(returnIndentation) + "ch <-" + line.replace("return", "").trimStart();
+          if (trimmedLine === "return nil") {
+            channelReturn = this.getIden(returnIndentation) + "ch <- nil\n" + this.getIden(returnIndentation) + "return nil";
+          }
+          return channelReturn;
+        }
+        return this.getIden(identation + 2) + line;
+      }).join("\n");
+      let shouldAddLastReturn = true;
+      const bodySplit = bodyWithIndentationExtraAndNoReturn.split("\n");
+      const lastLine = bodySplit[bodySplit.length - 1];
+      if (lastLine.trim().startsWith("return") || lastLine.trim().startsWith("panic")) {
+        shouldAddLastReturn = false;
+      }
+      const lastReturn = shouldAddLastReturn ? this.getIden(identation + 2) + "return nil" : "";
+      functionBody = `{
+${this.getIden(identation + 1)}ch := make(chan ${this.DEFAULT_RETURN_TYPE})
+${this.getIden(identation + 1)}go func() interface{} {
+${this.getIden(identation + 2)}defer close(ch)
+${bodyWithIndentationExtraAndNoReturn}
+${lastReturn}
+${this.getIden(identation + 1)}}()
+${this.getIden(identation + 1)}return ch
+${this.getIden(identation)}}`;
+    }
+    return functionBody;
+  }
+  printAwaitExpression(node, identation) {
+    const expression = this.printNode(node.expression, identation);
+    return `(<-${expression})`;
+  }
+  printInstanceOfExpression(node, identation) {
+    const left = node.left.escapedText;
+    const right = node.right.escapedText;
+    return this.getIden(identation) + `IsInstance(${left}, ${right})`;
+  }
+  printAsExpression(node, identation) {
+    const type = node.type;
+    if (type.kind === ts5.SyntaxKind.AnyKeyword) {
+    }
+    if (type.kind === ts5.SyntaxKind.StringKeyword) {
+    }
+    if (type.kind === ts5.SyntaxKind.ArrayType) {
+    }
+    return this.printNode(node.expression, identation);
+  }
+  printArrayLiteralExpression(node) {
+    let arrayOpen = this.ARRAY_OPENING_TOKEN;
+    const elems = node.elements;
+    const elements = node.elements.map((e) => {
+      return this.printNode(e);
+    }).join(", ");
+    if (elems.length > 0) {
+      const first = elems[0];
+      if (first.kind === ts5.SyntaxKind.CallExpression) {
+        const type = this.getFunctionType(first);
+        if (type === void 0 || elements.indexOf(this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN) > -1) {
+          arrayOpen = "[]interface{}{";
+        } else {
+          arrayOpen = `[]interface{}{`;
+        }
+      }
+    }
+    return arrayOpen + elements + this.ARRAY_CLOSING_TOKEN;
+  }
+  printArgsForCallExpression(node, identation) {
+    const args = node.arguments;
+    let parsedArgs = "";
+    if (false) {
+      const parsedTypes = this.getTypesFromCallExpressionParameters(node);
+      const tmpArgs = [];
+      args.forEach((arg, index) => {
+        const parsedType = parsedTypes[index];
+        let cast = "";
+        if (parsedType !== "object" && parsedType !== "float" && parsedType !== "int") {
+          cast = parsedType ? `(${parsedType})` : "";
+        }
+        tmpArgs.push(cast + this.printNode(arg, identation).trim());
+      });
+      parsedArgs = tmpArgs.join(",");
+      return parsedArgs;
+    }
+    return super.printArgsForCallExpression(node, identation);
+  }
+  printArrayIsArrayCall(node, identation, parsedArg = void 0) {
+    return `IsArray(${parsedArg})`;
+  }
+  printObjectKeysCall(node, identation, parsedArg = void 0) {
+    return `ObjectKeys(${parsedArg})`;
+  }
+  printObjectValuesCall(node, identation, parsedArg = void 0) {
+    return `ObjectValues(${parsedArg})`;
+  }
+  printJsonParseCall(node, identation, parsedArg = void 0) {
+    return `JsonParse(${parsedArg})`;
+  }
+  printJsonStringifyCall(node, identation, parsedArg = void 0) {
+    return `JsonStringify(${parsedArg})`;
+  }
+  printPromiseAllCall(node, identation, parsedArg = void 0) {
+    return `promiseAll(${parsedArg})`;
+  }
+  printMathFloorCall(node, identation, parsedArg = void 0) {
+    return `MathFloor(${parsedArg})`;
+  }
+  printMathRoundCall(node, identation, parsedArg = void 0) {
+    return `MathRound(${parsedArg})`;
+  }
+  printMathCeilCall(node, identation, parsedArg = void 0) {
+    return `MathCeil(${parsedArg})`;
+  }
+  printNumberIsIntegerCall(node, identation, parsedArg) {
+    return `IsInt(${parsedArg})`;
+  }
+  printArrayPushCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `AppendToArray(&${name},${parsedArg})`;
+  }
+  printIncludesCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `Contains(${name},${parsedArg})`;
+  }
+  printIndexOfCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
+  }
+  printStartsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `StartsWith(${name}, ${parsedArg})`;
+  }
+  printEndsWithCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `EndsWith(${name}, ${parsedArg})`;
+  }
+  printTrimCall(node, identation, name = void 0) {
+    return `Trim(${name})`;
+  }
+  printJoinCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `Join(${name}, ${parsedArg})`;
+  }
+  printSplitCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `Split(${name}, ${parsedArg})`;
+  }
+  printToFixedCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `toFixed(${name}, ${parsedArg})`;
+  }
+  printToStringCall(node, identation, name = void 0) {
+    return `ToString(${name})`;
+  }
+  printToUpperCaseCall(node, identation, name = void 0) {
+    return `ToUpper(${name})`;
+  }
+  printToLowerCaseCall(node, identation, name = void 0) {
+    return `ToLower(${name})`;
+  }
+  printShiftCall(node, identation, name = void 0) {
+    return `Shift(${name}))`;
+  }
+  printReverseCall(node, identation, name = void 0) {
+    return `Reverse(${name})`;
+  }
+  printPopCall(node, identation, name = void 0) {
+    return `Pop(${name}))`;
+  }
+  printAssertCall(node, identation, parsedArgs) {
+    return `assert(${parsedArgs})`;
+  }
+  printSliceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    if (parsedArg2 === void 0) {
+      parsedArg2 = "nil";
+    }
+    return `Slice(${name}, ${parsedArg}, ${parsedArg2})`;
+  }
+  printReplaceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    return `Replace(${name}, ${parsedArg}, ${parsedArg2})`;
+  }
+  printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
+    return `PadEnd(${name}, ${parsedArg}, ${parsedArg2})`;
+  }
+  printPadStartCall(node, identation, name, parsedArg, parsedArg2) {
+    return `PadStart(${name}, ${parsedArg}, ${parsedArg2})`;
+  }
+  printDateNowCall(node, identation) {
+    return "DateNow()";
+  }
+  printLengthProperty(node, identation, name = void 0) {
+    const leftSide = this.printNode(node.expression, 0);
+    return `GetLength(${leftSide})`;
+  }
+  printConditionalExpression(node, identation) {
+    const condition = this.printCondition(node.condition, 0);
+    const whenTrue = this.printNode(node.whenTrue, 0);
+    const whenFalse = this.printNode(node.whenFalse, 0);
+    return `Ternary(${condition}, ${whenTrue}, ${whenFalse})`;
+  }
+  printDeleteExpression(node, identation) {
+    const object = this.printNode(node.expression.expression, 0);
+    const key = this.printNode(node.expression.argumentExpression, 0);
+    return `Remove(${object}, ${key})`;
+  }
+  printThrowStatement(node, identation) {
+    if (node.expression.kind === ts5.SyntaxKind.Identifier) {
+      return this.getIden(identation) + "panic(" + this.printNode(node.expression, 0) + ")" + this.LINE_TERMINATOR;
+    }
+    if (node.expression.kind === ts5.SyntaxKind.NewExpression) {
+      const expression = node.expression;
+      const argumentsExp = expression?.arguments ?? [];
+      const parsedArg = argumentsExp.map((n) => this.printNode(n, 0)).join(",") ?? "";
+      const newExpression = this.printNode(expression.expression, 0);
+      if (expression.expression.kind === ts5.SyntaxKind.Identifier) {
+        const id = expression.expression;
+        const symbol = global.checker.getSymbolAtLocation(expression.expression);
+        if (symbol) {
+          const declarations = global.checker.getDeclaredTypeOfSymbol(symbol).symbol?.declarations ?? [];
+          const isClassDeclaration = declarations.find((l) => l.kind === ts5.SyntaxKind.InterfaceDeclaration || l.kind === ts5.SyntaxKind.ClassDeclaration);
+          if (isClassDeclaration) {
+          } else {
+            return this.getIden(identation) + `throwDynamicException(${id.escapedText}, ${parsedArg});return nil;`;
+          }
+        }
+        return this.getIden(identation) + `panic(${id.escapedText}(${parsedArg}))${this.LINE_TERMINATOR}`;
+      } else if (expression.expression.kind === ts5.SyntaxKind.ElementAccessExpression) {
+        return this.getIden(identation) + `throwDynamicException(${newExpression}, ${parsedArg});`;
+      }
+      return super.printThrowStatement(node, identation);
+    }
+  }
+  printBinaryExpression(node, identation) {
+    const { left, right, operatorToken } = node;
+    const customBinaryExp = this.printCustomBinaryExpressionIfAny(node, identation);
+    if (customBinaryExp) {
+      return customBinaryExp;
+    }
+    if (operatorToken.kind == ts5.SyntaxKind.InstanceOfKeyword) {
+      return this.printInstanceOfExpression(node, identation);
+    }
+    if (operatorToken.kind === ts5.SyntaxKind.EqualsToken) {
+      if (left.kind === ts5.SyntaxKind.ElementAccessExpression) {
+        const elementAccess = left;
+        const leftSide = this.printNode(elementAccess.expression, 0);
+        const rightSide = this.printNode(right, 0);
+        const propName = this.printNode(elementAccess.argumentExpression, 0);
+        return `AddElementToObject(${leftSide}, ${propName}, ${rightSide})`;
+      }
+    }
+    const op = operatorToken.kind;
+    if (op === ts5.SyntaxKind.EqualsToken && left.kind === ts5.SyntaxKind.ArrayLiteralExpression) {
+      const arrayBindingPatternElements = left.elements;
+      const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e, 0));
+      const syntheticName = parsedArrayBindingElements.join("") + "Variable";
+      let arrayBindingStatement = `${syntheticName} := ${this.printNode(right, 0)};
+`;
+      parsedArrayBindingElements.forEach((e, index) => {
+        const leftElement = arrayBindingPatternElements[index];
+        const leftType = global.checker.getTypeAtLocation(leftElement);
+        const parsedType = this.getTypeFromRawType(leftType);
+        const castExp = parsedType ? `(${parsedType})` : "";
+        const statement = this.getIden(identation) + `${e} = GetValue(${syntheticName}),${index})`;
+        if (index < parsedArrayBindingElements.length - 1) {
+          arrayBindingStatement += statement + ";\n";
+        } else {
+          arrayBindingStatement += statement;
+        }
+      });
+      return arrayBindingStatement;
+    }
+    let operator = this.SupportedKindNames[operatorToken.kind];
+    let leftVar = void 0;
+    let rightVar = void 0;
+    if (operatorToken.kind === ts5.SyntaxKind.EqualsEqualsToken || operatorToken.kind === ts5.SyntaxKind.EqualsEqualsEqualsToken) {
+      if (this.COMPARISON_WRAPPER_OPEN) {
+        leftVar = this.printNode(left, 0);
+        rightVar = this.printNode(right, identation);
+        return `${this.COMPARISON_WRAPPER_OPEN}${leftVar}, ${rightVar}${this.COMPARISON_WRAPPER_CLOSE}`;
+      }
+    }
+    if (operatorToken.kind === ts5.SyntaxKind.BarBarToken || operatorToken.kind === ts5.SyntaxKind.AmpersandAmpersandToken) {
+      leftVar = this.printCondition(left, 0);
+      rightVar = this.printCondition(right, identation);
+    } else {
+      leftVar = this.printNode(left, 0);
+      rightVar = this.printNode(right, identation);
+    }
+    const customOperator = this.getCustomOperatorIfAny(left, right, operatorToken);
+    operator = customOperator ? customOperator : operator;
+    return leftVar + " " + operator + " " + rightVar.trim();
+  }
+  printTryStatement(node, identation) {
+    let tryBody = node.tryBlock.statements.map((s) => {
+      return this.printNode(s, identation + 1);
+    }).join("\n");
+    tryBody = tryBody.replaceAll(/(\s*)break\s*$/gm, '$1panic("break")');
+    const catchBody = node.catchClause.block.statements.map((s) => this.printNode(s, identation + 1)).join("\n");
+    const catchDeclaration = this.printNode(node.catchClause.variableDeclaration.name, 0);
+    const className = this.className;
+    const catchBlock = `
+{		ret__ := func(this *${className}) (ret_ interface{}) {
+		defer func() {
+			if e := recover().(interface{}); e != nil {
+                if e == "break" {
+				    return
+			    }
+				ret_ = func(this *${className}) interface{} {
+					// catch block:
+                    ${catchBody}
+					return nil
+				}(this)
+			}
+		}()
+		// try block:
+        ${tryBody}
+		return nil
+	}(this)
+	if ret__ != nil {
+		return ret__
+	}
+}`;
+    const indentedBlock = catchBlock.split("\n").map((line) => this.getIden(identation) + line).join("\n");
+    return indentedBlock;
+  }
+  printPrefixUnaryExpression(node, identation) {
+    const { operand, operator } = node;
+    if (operator === ts5.SyntaxKind.ExclamationToken) {
+      return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printCondition(node.operand, 0);
+    }
+    if (operator === ts5.SyntaxKind.MinusToken) {
+      return this.getIden(identation) + `OpNeg(${this.printNode(node.operand, 0)})`;
+    }
+    return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printNode(operand, 0);
+  }
+  printNewExpression(node, identation) {
+    let expression = node.expression?.escapedText;
+    expression = expression ? expression : this.printNode(node.expression);
+    if (node.arguments.length === 0) {
+      return `new(${expression})`;
+    }
+    const args = node.arguments.map((n) => this.printNode(n, identation)).join(", ");
+    const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
+    return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
+  }
+};
+
+// src/transpiler.ts
 var __dirname_mock = import_dirname.default;
 function getProgramAndTypeCheckerFromMemory(rootDir, text, options = {}) {
-  options = options || ts5.getDefaultCompilerOptions();
+  options = options || ts6.getDefaultCompilerOptions();
   const inMemoryFilePath = path2.resolve(path2.join(rootDir, "__dummy-file.ts"));
-  const textAst = ts5.createSourceFile(inMemoryFilePath, text, options.target || ts5.ScriptTarget.Latest);
-  const host = ts5.createCompilerHost(options, true);
+  const textAst = ts6.createSourceFile(inMemoryFilePath, text, options.target || ts6.ScriptTarget.Latest);
+  const host = ts6.createCompilerHost(options, true);
   function overrideIfInMemoryFile(methodName, inMemoryValue) {
     const originalMethod = host[methodName];
     host[methodName] = (...args) => {
@@ -3154,7 +4067,7 @@ function getProgramAndTypeCheckerFromMemory(rootDir, text, options = {}) {
   overrideIfInMemoryFile("getSourceFile", textAst);
   overrideIfInMemoryFile("readFile", text);
   overrideIfInMemoryFile("fileExists", true);
-  const program = ts5.createProgram({
+  const program = ts6.createProgram({
     options,
     rootNames: [inMemoryFilePath],
     host
@@ -3169,12 +4082,14 @@ var Transpiler = class {
     const phpConfig = config["php"] || {};
     const pythonConfig = config["python"] || {};
     const csharpConfig = config["csharp"] || {};
+    const goConfig = config["go"] || {};
     if ("verbose" in config) {
       Logger.setVerboseMode(config["verbose"]);
     }
     this.pythonTranspiler = new PythonTranspiler(pythonConfig);
     this.phpTranspiler = new PhpTranspiler(phpConfig);
     this.csharpTranspiler = new CSharpTranspiler(csharpConfig);
+    this.goTranspiler = new GoTranspiler(goConfig);
   }
   setVerboseMode(verbose) {
     Logger.setVerboseMode(verbose);
@@ -3186,7 +4101,7 @@ var Transpiler = class {
     global.program = memProgram;
   }
   createProgramByPathAndSetGlobals(path3) {
-    const program = ts5.createProgram([path3], {});
+    const program = ts6.createProgram([path3], {});
     const sourceFile = program.getSourceFile(path3);
     const typeChecker = program.getTypeChecker();
     global.src = sourceFile;
@@ -3194,7 +4109,7 @@ var Transpiler = class {
     global.program = program;
   }
   checkFileDiagnostics() {
-    const diagnostics = ts5.getPreEmitDiagnostics(global.program, global.src);
+    const diagnostics = ts6.getPreEmitDiagnostics(global.program, global.src);
     if (diagnostics.length > 0) {
       let errorMessage = "Errors found in the typescript code. Transpilation might produce invalid results:\n";
       diagnostics.forEach((msg) => {
@@ -3226,6 +4141,10 @@ var Transpiler = class {
         break;
       case 2 /* CSharp */:
         transpiledContent = this.csharpTranspiler.printNode(global.src, -1);
+        break;
+      case 3 /* Go */:
+        transpiledContent = this.goTranspiler.printNode(global.src, -1);
+        break;
     }
     let imports = [];
     let exports = [];
@@ -3305,6 +4224,12 @@ var Transpiler = class {
   transpileCSharpByPath(path3) {
     return this.transpile(2 /* CSharp */, 0 /* ByPath */, path3);
   }
+  transpileGoByPath(path3) {
+    return this.transpile(3 /* Go */, 0 /* ByPath */, path3);
+  }
+  transpileGo(content) {
+    return this.transpile(3 /* Go */, 1 /* ByContent */, content);
+  }
   getFileImports(content) {
     this.createProgramInMemoryAndSetGlobals(content);
     return this.phpTranspiler.getFileImports(global.src);
@@ -3339,6 +4264,8 @@ var Transpiler = class {
         return 1 /* Php */;
       case "csharp":
         return 2 /* CSharp */;
+      case "go":
+        return 3 /* Go */;
     }
   }
 };
