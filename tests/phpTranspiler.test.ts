@@ -870,7 +870,7 @@ describe('php transpiling tests', () => {
     test('should convert isArray', () => {
         const ts = "Array.isArray(x);";
         const result = "gettype($x) === 'array' && array_is_list($x);";
-        const output = transpiler.transpilePhp(result).content;
+        const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(result);
     });
   });

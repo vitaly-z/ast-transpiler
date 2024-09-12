@@ -948,4 +948,10 @@ describe('csharp transpiling tests', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(false);
     //     expect(output).toBe(csharp);
     // });
+    test('should convert search', () => {
+        const ts = '"abcdxtzyw".search("xt");';
+        const csharp = '((string)"abcdxtzyw").IndexOf("xt");';
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
   });

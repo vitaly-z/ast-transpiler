@@ -861,6 +861,10 @@ export class CSharpTranspiler extends BaseTranspiler {
         return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
     }
 
+    printSearchCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).IndexOf(${parsedArg})`;
+    }
+
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
         return `((string)${name}).StartsWith(((string)${parsedArg}))`;
     }
