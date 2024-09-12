@@ -52,6 +52,8 @@ export class PythonTranspiler extends BaseTranspiler {
         this.initConfig();
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? true;
+        this.removeVariableDeclarationForFunctionExpression = config['removeVariableDeclarationForFunctionExpression'] ?? true;
+        this.includeFunctionNameInFunctionExpressionDeclaration = config['includeFunctionNameInFunctionExpressionDeclaration'] ?? true;
 
         // user overrides
         this.applyUserOverrides(config);
