@@ -863,7 +863,7 @@ describe('php transpiling tests', () => {
     });
     test('should convert concat', () => {
         const ts = "y.concat(z)";
-        const result = "array_merge($x, $y)";
+        const result = "array_merge($x, $y);";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(result);
     });
