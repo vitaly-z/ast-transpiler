@@ -862,7 +862,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printSearchCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `${name}.IndexOf(${parsedArg})`;
+        return `((string)${name}).IndexOf(${parsedArg})`;
     }
 
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
