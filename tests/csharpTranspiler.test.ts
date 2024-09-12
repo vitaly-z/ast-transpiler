@@ -950,7 +950,7 @@ describe('csharp transpiling tests', () => {
     // });
     test('should convert search', () => {
         const ts = '"abcdxtzyw".search("xt");';
-        const csharp = '"abcdxtzyw".IndexOf("xt");';
+        const csharp = '((string)"abcdxtzyw").IndexOf("xt");';
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
