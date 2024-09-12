@@ -71,6 +71,30 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('callback function transpilation', () => {
+        const ts =
+        "function printResult(result) {\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, printResult);";
+        const py =
+        "def printResult(result):\n" +
+        "    return\n" +
+        "processNumbers(5, 10, printResult)";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(py);
+    });
+    test('function expression transpilation', () => {
+        const ts =
+        "const consumer = function consumer(a) {\n" +
+        "    return a + 1;\n" +
+        "};\n";
+        const python =
+        "def consumer(a):\n" +
+        "    return a + 1";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
     test('basic identation test [nested if]', () => {
         const ts =
         "if (1) {\n" +
@@ -755,11 +779,29 @@ describe('python tests', () => {
         const output = transpiler.transpilePythonByPath('./tests/files/input/test1.ts').content;
         transpiler.setPythonUncamelCaseIdentifiers(false);
         expect(output).toBe(python);
-    })
+    });
     test('should convert delete', () => {
         const ts = "delete someObject[key];";
-        const php = "del someObject[key]";
+        const python = "del someObject[key]";
         const output = transpiler.transpilePython(ts).content;
-        expect(output).toBe(php);
-    })
+        expect(output).toBe(python);
+    });
+    test('should convert search', () => {
+        const ts = '"abcdxtzyw".search("xt");';
+        const python = "'abcdxtzyw'.find('xt')";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
+    test('string literal', () => {
+        const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
+        const python = "x = 'foo, \\'single\\', \"double\" \\t \\n \\r \\b \\f '";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(python);
+    });
+    test('should convert isArray', () => {
+        const ts = "Array.isArray(x)";
+        const result = "isinstance(x, list)";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(result);
+    });
 });

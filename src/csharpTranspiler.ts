@@ -49,6 +49,8 @@ const parserConfig = {
     'MOD_WRAPPER_OPEN': 'mod(',
     'MOD_WRAPPER_CLOSE': ')',
     'FUNCTION_TOKEN': '',
+    'INFER_VAR_TYPE': false,
+    'INFER_ARG_TYPE': false,
 };
 
 export class CSharpTranspiler extends BaseTranspiler {
@@ -115,6 +117,28 @@ export class CSharpTranspiler extends BaseTranspiler {
             'internal': 'intern',
             'event': 'eventVar',
             'fixed': 'fixedVar',
+        };
+
+        this.VariableTypeReplacements = {
+            'string': 'string',
+            'Str': 'string',
+            'number': 'double',
+            'Int': 'Int64',
+            'Num': 'double',
+            'Dict': 'Dictionary<string, object>',
+            'Strings': 'List<string>',
+            'List': 'List<object>',
+        };
+
+        this.ArgTypeReplacements = {
+            'string': 'string',
+            'Str': 'string',
+            'number': 'double',
+            'Int': 'Int64',
+            'Num': 'double',
+            'Dict': 'Dictionary<string, object>',
+            'Strings': 'List<string>',
+            'List': 'List<object>',
         };
 
         this.binaryExpressionsWrappers = {
@@ -204,7 +228,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             }
         }
 
-        return this.transformIdentifier(idValue); // check this later
+        return this.transformIdentifier(node, idValue); // check this later
     }
 
     printConstructorDeclaration (node, identation) {
@@ -487,6 +511,9 @@ export class CSharpTranspiler extends BaseTranspiler {
         const declaration = node.declarations[0];
         // const name = declaration.name.escapedText;
 
+        if (this.removeVariableDeclarationForFunctionExpression && ts.isFunctionExpression(declaration.initializer)) {
+            return this.printNode(declaration.initializer, identation).trimEnd();
+        }
         // handle array binding : input: const [a,b] = this.method()
         // output: var abVar = this.method; var a = abVar[0]; var b = abVar[1];
         if (declaration?.name.kind === ts.SyntaxKind.ArrayBindingPattern) {
@@ -513,7 +540,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
 
         const isNew = declaration.initializer && (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
-        const varToken = isNew ? 'var ' : 'object ' ;
+        const varToken = isNew ? 'var ' : this.VAR_TOKEN + ' ' ;
 
         // handle default undefined initialization
         if (declaration.initializer === undefined) {
@@ -522,7 +549,14 @@ export class CSharpTranspiler extends BaseTranspiler {
         }
         const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
         if (parsedValue === this.UNDEFINED_TOKEN) {
-            return this.getIden(identation) + "object " + this.printNode(declaration.name) + " = " + parsedValue;
+            let specificVarToken = "object";
+            if (this.INFER_VAR_TYPE) {
+                const variableType = global.checker.typeToString(global.checker.getTypeAtLocation(declaration));
+                if (this.VariableTypeReplacements[variableType]) {
+                    specificVarToken = this.VariableTypeReplacements[variableType] + '?';
+                }
+            }
+            return this.getIden(identation) + specificVarToken + " " + this.printNode(declaration.name) + " = " + parsedValue;
         }
         return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + parsedValue;
     }
@@ -825,6 +859,10 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
         return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
+    }
+
+    printSearchCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).IndexOf(${parsedArg})`;
     }
 
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {

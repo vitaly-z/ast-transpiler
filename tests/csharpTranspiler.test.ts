@@ -344,6 +344,33 @@ describe('csharp transpiling tests', () => {
     //     transpiler.setPhpAsyncTranspiling(true);
     //     expect(output).toBe(csharp);
     // });
+    test('callback function transpilation', () => {
+        const ts =
+        "function printResult(result) {\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, printResult);";
+        const cs =
+        "public void printResult(object result)\n{\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, printResult);";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(cs);
+    });
+    test('function expression transpilation', () => {
+        const ts =
+        "const consumer = function consumer(a) {\n" +
+        "    return;\n" +
+        "};";
+        const csharp =
+        "void consumer(object a)\n" +
+        "{\n" +
+        "    return;\n" +
+        "};";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
     test('basic class with constructor', () => {
         const ts =
         "class teste extends Test {\n" +
@@ -441,7 +468,7 @@ describe('csharp transpiling tests', () => {
         "x[\"teste\"] = 1;";
         const csharp =
         "object x = new Dictionary<string, object>() {};\n" +
-        "((Dictionary<string, object>)x)[\"teste\"] = 1;";
+        "((IDictionary<string,object>)x)[\"teste\"] = 1;";
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })
@@ -453,7 +480,7 @@ describe('csharp transpiling tests', () => {
         const csharp =
         "object a = new Dictionary<string, object>() {};\n" +
         "object b = getValue(a, \"teste\");\n" +
-        "((Dictionary<string, object>)a)[\"b\"] = getValue(a, \"teste\");"
+        "((IDictionary<string,object>)a)[\"b\"] = getValue(a, \"teste\");"
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     })
@@ -898,10 +925,22 @@ describe('csharp transpiling tests', () => {
     });
     test('should convert delete', () => {
         const ts = "delete someObject[key];";
-        const csharp = "someObject.Remove(key);";
+        const csharp = "((IDictionary<string,object>)someObject).Remove((string)key);";
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    test('string literal', () => {
+        const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
+        const csharp = "object x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
+    // test('should convert isArray', () => {
+    //     const ts = "Array.isArray(x);";
+    //     const result = "((x is IList<object>) || (x.GetType().IsGenericType && x.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))));";
+    //     const output = transpiler.transpileCSharp(result).content;
+    //     expect(output).toBe(result);
+    // });
     // test('should transpile file from path', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(true);
     //     const csharp = readFileSync ('./tests/files/output/php/test1.php', "utf8");
@@ -909,4 +948,10 @@ describe('csharp transpiling tests', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(false);
     //     expect(output).toBe(csharp);
     // });
+    test('should convert search', () => {
+        const ts = '"abcdxtzyw".search("xt");';
+        const csharp = '((string)"abcdxtzyw").IndexOf("xt");';
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(csharp);
+    });
   });

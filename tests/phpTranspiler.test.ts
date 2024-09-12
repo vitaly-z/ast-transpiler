@@ -77,6 +77,44 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test('callback function transpilation', () => {
+        const ts =
+        "function printResult(result) {\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, printResult);";
+        const php =
+        "function printResult($result) {\n" +
+        "    return;\n" +
+        "}\n" +
+        "processNumbers(5, 10, 'printResult');";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('function expression transpilation', () => {
+        const ts =
+        "const consumer = function consumer (a) {\n" +
+        "    return a;\n" +
+        "};";
+        const php =
+        "$consumer = function ($a) {\n" +
+        "    return $a;\n" +
+        "};"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('arrow function', () => {
+        const ts =
+        "const consumer = (a) => {\n" +
+        "    return a;\n" +
+        "};";
+        const php =
+        "$consumer = function ($a) {\n" +
+        "    return $a;\n" +
+        "};"
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('basic identation check [nested if]', () => {
         const ts =
         "if (1) {\n" +
@@ -822,5 +860,17 @@ describe('php transpiling tests', () => {
         const php = "unset($someObject[$key]);";
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
-    })
+    });
+    test('string literal', () => {
+        const ts = "const x = \"foo, 'single', \\\"double\\\" \\t \\n \\r \\b \\f \";";
+        const php = "$x = 'foo, \\\'single\\\', \"double\" \\t \\n \\r \\b \\f ';";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
+    test('should convert isArray', () => {
+        const ts = "Array.isArray(x);";
+        const result = "gettype($x) === 'array' && array_is_list($x);";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(result);
+    });
   });
