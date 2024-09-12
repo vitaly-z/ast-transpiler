@@ -935,6 +935,12 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    // test('should convert isArray', () => {
+    //     const ts = "Array.isArray(x);";
+    //     const result = "((x is IList<object>) || (x.GetType().IsGenericType && x.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))));";
+    //     const output = transpiler.transpileCSharp(result).content;
+    //     expect(output).toBe(result);
+    // });
     // test('should transpile file from path', () => {
     //     transpiler.setPhpUncamelCaseIdentifiers(true);
     //     const csharp = readFileSync ('./tests/files/output/php/test1.php', "utf8");

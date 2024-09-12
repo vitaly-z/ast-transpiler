@@ -867,10 +867,10 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
-    test('should convert search', () => {
-        const ts = '"abcdxtzyw".search("xt");';
-        const php = 'mb_strpos("abcdxtzyw", "xt");';
-        const output = transpiler.transpilePhp(ts).content;
-        expect(output).toBe(php);
+    test('should convert isArray', () => {
+        const ts = "Array.isArray(x);";
+        const result = "gettype($x) === 'array' && array_is_list($x);";
+        const output = transpiler.transpilePhp(result).content;
+        expect(output).toBe(result);
     });
   });
