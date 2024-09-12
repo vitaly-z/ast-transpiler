@@ -801,7 +801,7 @@ describe('python tests', () => {
     test('should convert isArray', () => {
         const ts = "Array.isArray(x)";
         const result = "isinstance(x, list)";
-        const output = transpiler.transpilePython(result).content;
+        const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(result);
     });
 });
