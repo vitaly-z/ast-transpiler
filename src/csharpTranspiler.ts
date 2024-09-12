@@ -228,7 +228,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             }
         }
 
-        return this.transformIdentifier(idValue); // check this later
+        return this.transformIdentifier(node, idValue); // check this later
     }
 
     printConstructorDeclaration (node, identation) {
@@ -511,6 +511,9 @@ export class CSharpTranspiler extends BaseTranspiler {
         const declaration = node.declarations[0];
         // const name = declaration.name.escapedText;
 
+        if (this.removeVariableDeclarationForFunctionExpression && ts.isFunctionExpression(declaration.initializer)) {
+            return this.printNode(declaration.initializer, identation).trimEnd();
+        }
         // handle array binding : input: const [a,b] = this.method()
         // output: var abVar = this.method; var a = abVar[0]; var b = abVar[1];
         if (declaration?.name.kind === ts.SyntaxKind.ArrayBindingPattern) {
@@ -875,6 +878,10 @@ export class CSharpTranspiler extends BaseTranspiler {
 
     printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
         return `${this.INDEXOF_WRAPPER_OPEN}${name}, ${parsedArg}${this.INDEXOF_WRAPPER_CLOSE}`;
+    }
+
+    printSearchCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `((string)${name}).IndexOf(${parsedArg})`;
     }
 
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
