@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -73,7 +75,34 @@ func IsInteger(value interface{}) bool {
 }
 
 func GetValue(collection interface{}, key interface{}) interface{} {
+
+	if collection == nil {
+		return nil
+	}
+	if key == nil {
+		return nil
+	}
 	reflectValue := reflect.ValueOf(collection)
+
+	if reflectValue.Kind() == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+	}
+	if reflectValue.Kind() == reflect.Struct {
+		stringKey := key.(string)
+		stringKeyCapitalized := Capitalize(stringKey)
+		field := reflectValue.FieldByName(stringKey)
+
+		fieldCapitalized := reflectValue.FieldByName(stringKeyCapitalized)
+		if fieldCapitalized.IsValid() {
+			return fieldCapitalized.Interface()
+		}
+
+		if field.IsValid() {
+			return field.Interface()
+		}
+
+		return nil
+	}
 
 	switch reflectValue.Kind() {
 	case reflect.Slice, reflect.Array:
@@ -267,6 +296,14 @@ func IsEqual(a, b interface{}) bool {
 		return false
 	}
 
+	if (a == true && b == false) || (a == false && b == true) {
+		return false
+	}
+
+	if (a == true && b == true) || (a == false && b == false) {
+		return true
+	}
+
 	aVal, bVal, ok := NormalizeAndConvert(a, b)
 	if !ok {
 		return false
@@ -394,24 +431,9 @@ func PlusEqual(a, value interface{}) interface{} {
 	}
 }
 
-func AppendToArray(array interface{}, value interface{}) {
-	// Use reflection to work with the array dynamically
-	arrVal := reflect.ValueOf(array)
-
-	// Check if the input is actually a pointer to a slice
-	if arrVal.Kind() != reflect.Ptr || arrVal.Elem().Kind() != reflect.Slice {
-		return
-	}
-
-	// Get the actual slice
-	sliceVal := arrVal.Elem()
-
-	// Use reflection to append the value to the slice
-	valueVal := reflect.ValueOf(value)
-	resultVal := reflect.Append(sliceVal, valueVal)
-
-	// Set the new slice back to the original array
-	arrVal.Elem().Set(resultVal)
+func AppendToArray(slicePtr *interface{}, element interface{}) {
+	array := (*slicePtr).([]interface{})
+	*slicePtr = append(array, element)
 }
 
 func AddElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value interface{}) {
@@ -433,9 +455,9 @@ func AddElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value 
 		if !key.Type().AssignableTo(val.Type().Key()) {
 			// return fmt.Errorf("key type %s does not match map key type %s", key.Type(), val.Type().Key())
 		}
-		if !valueVal.Type().AssignableTo(val.Type().Elem()) {
-			// return fmt.Errorf("value type %s does not match map value type %s", valueVal.Type(), val.Type().Elem())
-		}
+		// if !valueVal.Type().AssignableTo(val.Type().Elem()) {
+		// 	// return fmt.Errorf("value type %s does not match map value type %s", valueVal.Type(), val.Type().Elem())
+		// }
 		val.SetMapIndex(key, valueVal)
 	default:
 		// return fmt.Errorf("unsupported type: %s", val.Kind())
@@ -444,6 +466,13 @@ func AddElementToObject(arrayOrDict interface{}, stringOrInt interface{}, value 
 }
 
 func InOp(dict interface{}, key interface{}) bool {
+
+	if dict == nil {
+		return false
+	}
+	if key == nil {
+		return false
+	}
 	dictVal := reflect.ValueOf(dict)
 
 	// Ensure that the provided dict is a map
@@ -453,7 +482,7 @@ func InOp(dict interface{}, key interface{}) bool {
 
 	keyVal := reflect.ValueOf(key)
 
-	// Check if the map has the provided key
+	// Check if the map has the provided key todo:debug here
 	if dictVal.MapIndex(keyVal).IsValid() {
 		return true
 	}
@@ -714,7 +743,8 @@ func ObjectValues(v interface{}) []interface{} {
 	return values
 }
 
-func JsonParse(jsonStr string) interface{} {
+func JsonParse(jsonStr2 interface{}) interface{} {
+	jsonStr := jsonStr2.(string)
 	var result interface{}
 	err := json.Unmarshal([]byte(jsonStr), &result)
 	if err != nil {
@@ -841,7 +871,6 @@ func IsInstance(value interface{}, typ interface{}) bool {
 	return valueType == typeType
 }
 
-// Slice slices the string based on the provided start and end indices
 func Slice(str2 interface{}, idx1 interface{}, idx2 interface{}) string {
 	if str2 == nil {
 		return ""
@@ -873,4 +902,301 @@ func Slice(str2 interface{}, idx1 interface{}, idx2 interface{}) string {
 		}
 		return str[start:end]
 	}
+}
+
+type Task func() interface{}
+
+func promiseAll(tasksInterface interface{}) <-chan []interface{} {
+	ch := make(chan []interface{})
+
+	go func() {
+		defer close(ch)
+
+		// Ensure tasksInterface is a slice of channels (<-chan interface{})
+		tasks, ok := tasksInterface.([]interface{})
+		if !ok {
+			ch <- nil // Return nil if the input is not a slice of interfaces
+			return
+		}
+
+		results := make([]interface{}, len(tasks))
+		var wg sync.WaitGroup
+		wg.Add(len(tasks))
+
+		for i, task := range tasks {
+			go func(i int, task interface{}) {
+				defer wg.Done()
+
+				// Assert the task is a channel
+				if chanTask, ok := task.(<-chan interface{}); ok {
+					// Receive the result from the channel
+					results[i] = <-chanTask
+				} else {
+					// If the task is not a channel, set the result to nil
+					results[i] = nil
+				}
+			}(i, task)
+		}
+
+		// Wait for all tasks to complete
+		wg.Wait()
+
+		// Once all tasks are done, send the results
+		ch <- results
+	}()
+
+	return ch
+}
+func ParseInt(number interface{}) int64 {
+	switch v := number.(type) {
+	case int:
+		return int64(v)
+	case int8:
+		return int64(v)
+	case int16:
+		return int64(v)
+	case int32:
+		return int64(v)
+	case int64:
+		return v
+	case uint:
+		return int64(v)
+	case uint8:
+		return int64(v)
+	case uint16:
+		return int64(v)
+	case uint32:
+		return int64(v)
+	// case uint64:
+	// 	if v <= uint64(^int64(0)) {
+	// 		return int64(v)
+	// 	}
+	case float32:
+		return int64(v)
+	case float64:
+		return int64(v)
+	case string:
+		if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return i
+		}
+	}
+	return 0 // Default value if conversion is not possible
+}
+
+func mathMin(a, b interface{}) interface{} {
+	switch a := a.(type) {
+	case int:
+		b := b.(int)
+		if a < b {
+			return a
+		}
+		return b
+	case float64:
+		b := b.(float64)
+		if a < b {
+			return a
+		}
+		return b
+	case string:
+		b := b.(string)
+		if a < b {
+			return a
+		}
+		return b
+	default:
+		return nil
+	}
+}
+
+// mathMax returns the maximum of two values of the same type.
+// It supports int, float64, and string types.
+func mathMax(a, b interface{}) interface{} {
+	switch a := a.(type) {
+	case int:
+		b := b.(int)
+		if a > b {
+			return a
+		}
+		return b
+	case float64:
+		b := b.(float64)
+		if a > b {
+			return a
+		}
+		return b
+	case string:
+		b := b.(string)
+		if a > b {
+			return a
+		}
+		return b
+	default:
+		return nil
+	}
+}
+
+// parseInt tries to convert various types of input to an int
+// func parseInt(input interface{}) interface{} {
+// 	switch v := input.(type) {
+// 	case int:
+// 		return v
+// 	case int8:
+// 		return int(v)
+// 	case int16:
+// 		return int(v)
+// 	case int32:
+// 		return int(v)
+// 	case int64:
+// 		return int(v)
+// 	case uint:
+// 		return int(v)
+// 	case uint8:
+// 		return int(v)
+// 	case uint16:
+// 		return int(v)
+// 	case uint32:
+// 		return int(v)
+// 	case uint64:
+// 		return int(v)
+// 	case float32:
+// 		return int(v)
+// 	case float64:
+// 		return int(v)
+// 	case string:
+// 		if result, err := strconv.Atoi(v); err == nil {
+// 			return result
+// 		}
+// 		return nil
+// 	default:
+// 		return nil
+// 	}
+// }
+
+// parseFloat tries to convert various types of input to a float64
+func ParseFloat(input interface{}) interface{} {
+	switch v := input.(type) {
+	case float32:
+		return float64(v)
+	case float64:
+		return v
+	case int:
+		return float64(v)
+	case int8:
+		return float64(v)
+	case int16:
+		return float64(v)
+	case int32:
+		return float64(v)
+	case int64:
+		return float64(v)
+	case uint:
+		return float64(v)
+	case uint8:
+		return float64(v)
+	case uint16:
+		return float64(v)
+	case uint32:
+		return float64(v)
+	case uint64:
+		return float64(v)
+	case string:
+		if result, err := strconv.ParseFloat(v, 64); err == nil {
+			return result
+		}
+		return nil
+	default:
+		return nil
+	}
+}
+
+func ParseJSON(input interface{}) interface{} {
+	jsonString := fmt.Sprintf("%v", input)
+	// var result interface{}
+
+	if jsonString[0] == '[' {
+		var arrayResult []map[string]interface{}
+		err := json.Unmarshal([]byte(jsonString), &arrayResult)
+		if err != nil {
+			return nil
+		}
+		return arrayResult
+	}
+
+	var mapResult map[string]interface{}
+	err := json.Unmarshal([]byte(jsonString), &mapResult)
+	if err != nil {
+		return nil
+	}
+	return mapResult
+}
+
+func throwDynamicException(exceptionType interface{}, message interface{}) {
+	// to do implement
+	// // exceptionTypeStr, ok := exceptionType.(string)
+	// if !ok {
+	// 	panic("exceptionType must be a string representing the error type")
+
+	// // messageStr, ok := message.(string)
+	// // if !ok {
+	// // 	panic("message must be a string")
+	// // }
+
+	// // constructor, exists := customErrors[exceptionTypeStr]
+	// // if !exists {
+	// // 	panic(errors.New("unknown error type: " + exceptionTypeStr))
+	// // }
+
+	// // err := constructor(messageStr)
+	// // panic(err)
+}
+
+func OpNeg(value interface{}) interface{} {
+	val := reflect.ValueOf(value)
+
+	switch val.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return -val.Int()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return nil // Cannot negate unsigned integers, return nil
+	case reflect.Float32, reflect.Float64:
+		return -val.Float()
+	case reflect.Complex64, reflect.Complex128:
+		return -val.Complex()
+	default:
+		return nil // Unsupported type, return nil
+	}
+}
+
+func JsonStringify(obj interface{}) string {
+	if obj == nil {
+		return ""
+	}
+
+	// Check if the object is an error (Go's equivalent of an exception)
+	if err, ok := obj.(error); ok {
+		// Create an anonymous struct with the error type name
+		errorObj := struct {
+			Name string `json:"name"`
+		}{
+			Name: reflect.TypeOf(err).Name(),
+		}
+		// Serialize the error object to JSON
+		jsonData, _ := json.Marshal(errorObj)
+		return string(jsonData)
+	}
+
+	// Serialize the object to JSON
+	jsonData, _ := json.Marshal(obj)
+	return string(jsonData)
+}
+
+func toFixed(number interface{}, decimals interface{}) float64 {
+	// Assert that the number is a float64 or convert it
+	num := ToFloat64(number)
+
+	// Assert that the decimals is an int or convert it
+	dec := ParseInt(decimals)
+	// Calculate the rounding multiplier
+	multiplier := math.Pow(10, float64(dec))
+	return math.Round(num*multiplier) / multiplier
 }
