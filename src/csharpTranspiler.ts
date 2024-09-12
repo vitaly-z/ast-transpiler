@@ -886,7 +886,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printConcatCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `${name}.Concat(${parsedArg}).ToList()`;
+        return `((string)${name}).Concat(${parsedArg}).ToList()`;
     }
 
     printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
