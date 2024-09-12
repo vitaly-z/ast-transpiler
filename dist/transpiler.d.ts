@@ -34,8 +34,7 @@ interface ITranspiledFile {
 declare enum Languages {
     Python = 0,
     Php = 1,
-    CSharp = 2,
-    Go = 3
+    CSharp = 2
 }
 declare enum TranspilationMode {
     ByPath = 0,
@@ -191,7 +190,6 @@ declare class BaseTranspiler {
     id: any;
     constructor(config: any);
     initOperators(): void;
-    capitalize(str: string): string;
     applyUserOverrides(config: any): void;
     getLineAndCharacterOfNode(node: any): [number, number];
     isComment(line: string): boolean;
@@ -207,8 +205,6 @@ declare class BaseTranspiler {
     startsWithUpperCase(str: any): boolean;
     unCamelCaseIfNeeded(name: string): string;
     transformIdentifier(identifier: any): string;
-    transformCallExpressionName(name: string): string;
-    transformPropertyAccessExpressionName(name: string): string;
     printIdentifier(node: any): string;
     shouldRemoveParenthesisFromCallExpression(node: any): boolean;
     printInstanceOfExpression(node: any, identation: any): string;
@@ -318,7 +314,6 @@ declare class BaseTranspiler {
     printSpreadElement(node: any, identation: any): string;
     printNullKeyword(node: any, identation: any): string;
     printContinueStatement(node: any, identation: any): string;
-    printDeleteExpression(node: any, identation: any): any;
     printNode(node: any, identation?: number): string;
     getFileESMImports(node: any): IFileImport[];
     isCJSRequireStatement(node: any): boolean;
@@ -350,7 +345,6 @@ declare class PythonTranspiler extends BaseTranspiler {
     printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printPopCall(node: any, identation: any, name?: any): string;
     printShiftCall(node: any, identation: any, name?: any): string;
-    printReverseCall(node: any, identation: any, name?: any): string;
     printArrayPushCall(node: any, identation: any, name: any, parsedArg: any): string;
     printToStringCall(node: any, identation: any, name?: any): string;
     printIndexOfCall(node: any, identation: any, name?: any, parsedArg?: any): string;
@@ -377,7 +371,6 @@ declare class PythonTranspiler extends BaseTranspiler {
     handleTypeOfInsideBinaryExpression(node: any, identation: any): string;
     printCustomBinaryExpressionIfAny(node: any, identation: any): string;
     printConditionalExpression(node: any, identation: any): string;
-    printDeleteExpression(node: any, identation: any): string;
     getCustomOperatorIfAny(left: any, right: any, operator: any): "is" | "is not";
 }
 
@@ -393,7 +386,6 @@ declare class PhpTranspiler extends BaseTranspiler {
     getCustomOperatorIfAny(left: any, right: any, operator: any): "." | ".=";
     printLengthProperty(node: any, identation: any, name?: any): string;
     printPopCall(node: any, identation: any, name?: any): string;
-    printReverseCall(node: any, identation: any, name?: any): string;
     printShiftCall(node: any, identation: any, name?: any): string;
     printToLowerCaseCall(node: any, identation: any, name?: any): string;
     printToUpperCaseCall(node: any, identation: any, name?: any): string;
@@ -421,7 +413,6 @@ declare class PhpTranspiler extends BaseTranspiler {
     printPadStartCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
     printDateNowCall(node: any, identation: any): string;
     printInstanceOfExpression(node: any, identation: any): string;
-    printDeleteExpression(node: any, identation: any): string;
     getExceptionalAccessTokenIfAny(node: any): string;
     handleTypeOfInsideBinaryExpression(node: any, identation: any): string;
     printCustomBinaryExpressionIfAny(node: any, identation: any): string;
@@ -489,86 +480,7 @@ declare class CSharpTranspiler extends BaseTranspiler {
     printPostFixUnaryExpression(node: any, identation: any): string;
     printPrefixUnaryExpression(node: any, identation: any): any;
     printConditionalExpression(node: any, identation: any): string;
-    printDeleteExpression(node: any, identation: any): string;
     printThrowStatement(node: any, identation: any): string;
-}
-
-declare class GoTranspiler extends BaseTranspiler {
-    binaryExpressionsWrappers: any;
-    wrapThisCalls: boolean;
-    wrapCallMethods: string[];
-    className: string;
-    constructor(config?: {});
-    initConfig(): void;
-    printSuperCallInsideConstructor(node: any, identation: any): string;
-    printStringLiteral(node: any): any;
-    printPropertyDeclaration(node: any, identation: any): string;
-    printStruct(node: any, indentation: any): string;
-    printClass(node: any, identation: any): string;
-    printMethodDeclaration(node: any, identation: any): string;
-    printMethodDefinition(node: any, identation: any): string;
-    printMethodParameters(node: any): any;
-    printParameter(node: any, defaultValue?: boolean): string;
-    printParameterType(node: any): any;
-    printFunctionType(node: any): any;
-    printVariableDeclarationList(node: any, identation: any): string;
-    printConstructorDeclaration(node: any, identation: any): string;
-    printThisElementAccesssIfNeeded(node: any, identation: any): string;
-    printDynamicCall(node: any, identation: any): string;
-    printElementAccessExpressionExceptionIfAny(node: any): void;
-    printWrappedUnknownThisProperty(node: any): string;
-    transformMethodNameIfNeeded(name: string): string;
-    transformCallExpressionName(name: string): string;
-    transformPropertyAccessExpressionName(name: string): string;
-    printOutOfOrderCallExpressionIfAny(node: any, identation: any): string;
-    handleTypeOfInsideBinaryExpression(node: any, identation: any): string;
-    printCustomBinaryExpressionIfAny(node: any, identation: any): string;
-    transformPropertyAcessExpressionIfNeeded(node: any): any;
-    printCustomDefaultValueIfNeeded(node: any): any;
-    printFunctionBody(node: any, identation: any, wrapInChannel?: boolean): string;
-    printAwaitExpression(node: any, identation: any): string;
-    printInstanceOfExpression(node: any, identation: any): string;
-    printAsExpression(node: any, identation: any): string;
-    printArrayLiteralExpression(node: any): string;
-    printArgsForCallExpression(node: any, identation: any): any;
-    printArrayIsArrayCall(node: any, identation: any, parsedArg?: any): string;
-    printObjectKeysCall(node: any, identation: any, parsedArg?: any): string;
-    printObjectValuesCall(node: any, identation: any, parsedArg?: any): string;
-    printJsonParseCall(node: any, identation: any, parsedArg?: any): string;
-    printJsonStringifyCall(node: any, identation: any, parsedArg?: any): string;
-    printPromiseAllCall(node: any, identation: any, parsedArg?: any): string;
-    printMathFloorCall(node: any, identation: any, parsedArg?: any): string;
-    printMathRoundCall(node: any, identation: any, parsedArg?: any): string;
-    printMathCeilCall(node: any, identation: any, parsedArg?: any): string;
-    printNumberIsIntegerCall(node: any, identation: any, parsedArg?: any): string;
-    printArrayPushCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printIncludesCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printIndexOfCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printStartsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printEndsWithCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printTrimCall(node: any, identation: any, name?: any): string;
-    printJoinCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printToFixedCall(node: any, identation: any, name?: any, parsedArg?: any): string;
-    printToStringCall(node: any, identation: any, name?: any): string;
-    printToUpperCaseCall(node: any, identation: any, name?: any): string;
-    printToLowerCaseCall(node: any, identation: any, name?: any): string;
-    printShiftCall(node: any, identation: any, name?: any): string;
-    printReverseCall(node: any, identation: any, name?: any): string;
-    printPopCall(node: any, identation: any, name?: any): string;
-    printAssertCall(node: any, identation: any, parsedArgs: any): string;
-    printSliceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
-    printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
-    printPadEndCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
-    printPadStartCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
-    printDateNowCall(node: any, identation: any): string;
-    printLengthProperty(node: any, identation: any, name?: any): string;
-    printConditionalExpression(node: any, identation: any): string;
-    printDeleteExpression(node: any, identation: any): string;
-    printThrowStatement(node: any, identation: any): string;
-    printBinaryExpression(node: any, identation: any): string;
-    printTryStatement(node: any, identation: any): string;
-    printPrefixUnaryExpression(node: any, identation: any): string;
 }
 
 declare class Transpiler {
@@ -576,7 +488,6 @@ declare class Transpiler {
     pythonTranspiler: PythonTranspiler;
     phpTranspiler: PhpTranspiler;
     csharpTranspiler: CSharpTranspiler;
-    goTranspiler: GoTranspiler;
     constructor(config?: {});
     setVerboseMode(verbose: boolean): void;
     createProgramInMemoryAndSetGlobals(content: any): void;
@@ -592,8 +503,6 @@ declare class Transpiler {
     transpilePhpByPath(path: any): ITranspiledFile;
     transpileCSharp(content: any): ITranspiledFile;
     transpileCSharpByPath(path: any): ITranspiledFile;
-    transpileGoByPath(path: any): ITranspiledFile;
-    transpileGo(content: any): ITranspiledFile;
     getFileImports(content: string): IFileImport[];
     getFileExports(content: string): IFileExport[];
     setPHPPropResolution(props: string[]): void;
