@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: npm run build --if-present
       - name: Test
-        run: go build ./tests/integration/go # debug
+        run: go build ./tests/integration/go # debug just to download the go version, do this properly todo!
       - name: Test
         run: npm run test-ci
       - name: Integration test
