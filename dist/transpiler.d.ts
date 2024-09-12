@@ -460,6 +460,7 @@ declare class CSharpTranspiler extends BaseTranspiler {
     printFunctionBody(node: any, identation: any): string;
     printInstanceOfExpression(node: any, identation: any): string;
     printAsExpression(node: any, identation: any): string;
+    printParameter(node: any, defaultValue?: boolean): string;
     printArrayLiteralExpression(node: any): string;
     printMethodDefinition(node: any, identation: any): string;
     printArgsForCallExpression(node: any, identation: any): any;
