@@ -126,4 +126,10 @@ describe('go transpiling tests', () => {
         const output = transpiler.transpileGo(ts).content;
         expect(output).toBe(go);
     });
+    test('should convert concat', () => {
+        const ts = "y.concat(z)";
+        const result = "ArrayConcat(y, z)";
+        const output = transpiler.transpileGo(ts).content;
+        expect(output).toBe(result);
+    });
 });

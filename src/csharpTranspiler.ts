@@ -905,7 +905,7 @@ export class CSharpTranspiler extends BaseTranspiler {
     }
 
     printConcatCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `${name} = arrayConcat(${name}, ${parsedArg})`;
+        return `arrayConcat(${name}, ${parsedArg})`;
     }
 
     printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
