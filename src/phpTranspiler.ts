@@ -378,6 +378,14 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
+    printFunctionDeclaration(node, identation) {
+        let functionDef = this.printFunctionDefinition(node, identation);
+        const funcBody = this.printFunctionBody(node, identation);
+        functionDef += funcBody;
+
+        return this.printNodeCommentsIfAny(node, identation, functionDef);
+    }
+
     printFunctionBody(node, identation) {
 
         if (this.asyncTranspiling && this.isAsyncFunction(node)) {

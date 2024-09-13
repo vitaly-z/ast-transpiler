@@ -863,9 +863,11 @@ class BaseTranspiler {
     }
 
     printFunctionDeclaration(node, identation) {
-        // if (ts.isArrowFunction(node)) {
-        //     return ''; // to do support arrow functions
-        // }
+        if (ts.isArrowFunction(node)) {
+            const parameters = node.parameters.map(param => this.printParameter(param)).join(", ");
+            const body = this.printNode(node.body);
+            return `(${parameters}) => ${body}`;
+        }
         let functionDef = this.printFunctionDefinition(node, identation);
         const funcBody = this.printFunctionBody(node, identation);
         functionDef += funcBody;
