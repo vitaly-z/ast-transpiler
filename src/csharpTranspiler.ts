@@ -511,7 +511,7 @@ export class CSharpTranspiler extends BaseTranspiler {
         const declaration = node.declarations[0];
         // const name = declaration.name.escapedText;
 
-        if (this.removeVariableDeclarationForFunctionExpression && ts.isFunctionExpression(declaration.initializer)) {
+        if (this.removeVariableDeclarationForFunctionExpression && declaration?.initializer &&  ts.isFunctionExpression(declaration.initializer)) {
             return this.printNode(declaration.initializer, identation).trimEnd();
         }
         // handle array binding : input: const [a,b] = this.method()
@@ -539,13 +539,15 @@ export class CSharpTranspiler extends BaseTranspiler {
             return arrayBindingStatement;
         }
 
-        const isNew = declaration.initializer && (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
+        const isNew = declaration?.initializer && (declaration.initializer.kind === ts.SyntaxKind.NewExpression);
         const varToken = isNew ? 'var ' : this.VAR_TOKEN + ' ' ;
 
         // handle default undefined initialization
-        if (declaration.initializer === undefined) {
+        if (declaration?.initializer && declaration.initializer === undefined) {
             // handle the let id: Str; case
             return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + this.UNDEFINED_TOKEN;
+        } else if (!declaration.initializer) {
+            return this.getIden(identation) + 'object ' + this.printNode(declaration.name) + " = " + this.UNDEFINED_TOKEN;
         }
         const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
         if (parsedValue === this.UNDEFINED_TOKEN) {

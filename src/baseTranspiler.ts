@@ -951,7 +951,7 @@ class BaseTranspiler {
         const declaration = node.declarations[0];
         const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " ": "";
 
-        if (this.removeVariableDeclarationForFunctionExpression && (ts.isFunctionExpression(declaration.initializer) || ts.isArrowFunction(declaration.initializer))) {
+        if (this.removeVariableDeclarationForFunctionExpression && declaration?.initializer && (ts.isFunctionExpression(declaration.initializer) || ts.isArrowFunction(declaration.initializer))) {
             return this.printNode(declaration.initializer, identation).trimEnd();
         }
         // const name = declaration.name.escapedText;

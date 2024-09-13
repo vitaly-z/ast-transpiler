@@ -15,6 +15,10 @@ class Test {
         var s1 = "a";
         var s2 = "b";
         var s3 = s1 + s2;
+
+        let stringVar: string;
+        stringVar = "hello";
+        console.log(stringVar); // should print "hello"
         console.log(s3); // should print "ab"
         let x = false;
         if (x) {
