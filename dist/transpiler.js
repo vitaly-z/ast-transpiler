@@ -3071,7 +3071,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
     return `((string)${name}).Split(new [] {((string)${parsedArg})}, StringSplitOptions.None).ToList<object>()`;
   }
   printConcatCall(node, identation, name = void 0, parsedArg = void 0) {
-    return `arrayConcat(${name}, ${parsedArg})`;
+    return `concat(${name}, ${parsedArg})`;
   }
   printToFixedCall(node, identation, name = void 0, parsedArg = void 0) {
     return `toFixed(${name}, ${parsedArg})`;
@@ -3900,7 +3900,7 @@ ${this.getIden(identation)}}`;
     return `ToString(${name})`;
   }
   printConcatCall(node, identation, name = void 0, parsedArg = void 0) {
-    return `ArrayConcat(${name}, ${parsedArg})`;
+    return `Concat(${name}, ${parsedArg})`;
   }
   printToUpperCaseCall(node, identation, name = void 0) {
     return `ToUpper(${name})`;
