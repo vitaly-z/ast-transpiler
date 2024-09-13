@@ -38,7 +38,7 @@ class Test {
 
         let i = 0;
         for (let w = 0; w < 10; w++) {
-            i++;
+            i = i + 1;
         }
         console.log(i.toString()); // should print 10
 
