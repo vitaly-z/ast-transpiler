@@ -820,7 +820,7 @@ var BaseTranspiler = class {
   printVariableDeclarationList(node, identation) {
     const declaration = node.declarations[0];
     const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " " : "";
-    if (this.removeVariableDeclarationForFunctionExpression && (ts.isFunctionExpression(declaration.initializer) || ts.isArrowFunction(declaration.initializer))) {
+    if (this.removeVariableDeclarationForFunctionExpression && declaration?.initializer && (ts.isFunctionExpression(declaration.initializer) || ts.isArrowFunction(declaration.initializer))) {
       return this.printNode(declaration.initializer, identation).trimEnd();
     }
     const parsedValue = declaration.initializer ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
@@ -2779,7 +2779,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
   }
   printVariableDeclarationList(node, identation) {
     const declaration = node.declarations[0];
-    if (this.removeVariableDeclarationForFunctionExpression && ts4.isFunctionExpression(declaration.initializer)) {
+    if (this.removeVariableDeclarationForFunctionExpression && declaration?.initializer && ts4.isFunctionExpression(declaration.initializer)) {
       return this.printNode(declaration.initializer, identation).trimEnd();
     }
     if (declaration?.name.kind === ts4.SyntaxKind.ArrayBindingPattern) {
@@ -2799,10 +2799,12 @@ var CSharpTranspiler = class extends BaseTranspiler {
       });
       return arrayBindingStatement;
     }
-    const isNew = declaration.initializer && declaration.initializer.kind === ts4.SyntaxKind.NewExpression;
+    const isNew = declaration?.initializer && declaration.initializer.kind === ts4.SyntaxKind.NewExpression;
     const varToken = isNew ? "var " : this.VAR_TOKEN + " ";
-    if (declaration.initializer === void 0) {
+    if (declaration?.initializer && declaration.initializer === void 0) {
       return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + this.UNDEFINED_TOKEN;
+    } else if (!declaration.initializer) {
+      return this.getIden(identation) + "object " + this.printNode(declaration.name) + " = " + this.UNDEFINED_TOKEN;
     }
     const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
     if (parsedValue === this.UNDEFINED_TOKEN) {
