@@ -434,6 +434,7 @@ declare class PhpTranspiler extends BaseTranspiler {
     getExceptionalAccessTokenIfAny(node: any): string;
     handleTypeOfInsideBinaryExpression(node: any, identation: any): string;
     printCustomBinaryExpressionIfAny(node: any, identation: any): string;
+    printFunctionDeclaration(node: any, identation: any): string;
     printFunctionBody(node: any, identation: any): string;
     transformLeadingComment(comment: any): string;
     initConfig(): void;

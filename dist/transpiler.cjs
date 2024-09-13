@@ -748,6 +748,11 @@ var BaseTranspiler = class {
     return this.unCamelCaseIfNeeded(name);
   }
   printFunctionDeclaration(node, identation) {
+    if (_typescript2.default.isArrowFunction(node)) {
+      const parameters = node.parameters.map((param) => this.printParameter(param)).join(", ");
+      const body = this.printNode(node.body);
+      return `(${parameters}) => ${body}`;
+    }
     let functionDef = this.printFunctionDefinition(node, identation);
     const funcBody = this.printFunctionBody(node, identation);
     functionDef += funcBody;
@@ -2318,6 +2323,12 @@ var PhpTranspiler = class extends BaseTranspiler {
       }
     }
     return void 0;
+  }
+  printFunctionDeclaration(node, identation) {
+    let functionDef = this.printFunctionDefinition(node, identation);
+    const funcBody = this.printFunctionBody(node, identation);
+    functionDef += funcBody;
+    return this.printNodeCommentsIfAny(node, identation, functionDef);
   }
   printFunctionBody(node, identation) {
     if (this.asyncTranspiling && this.isAsyncFunction(node)) {
