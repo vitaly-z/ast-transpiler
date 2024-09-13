@@ -931,7 +931,7 @@ describe('csharp transpiling tests', () => {
     });
     test('should convert concat', () => {
         const ts = "y.concat(z)";
-        const result = "y.Concat(z).ToList();";
+        const result = "y = arrayConcat(y, z);";
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(result);
     });
