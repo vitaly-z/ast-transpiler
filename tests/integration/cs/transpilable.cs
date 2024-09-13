@@ -17,6 +17,9 @@ partial class Test
         object s1 = "a";
         object s2 = "b";
         object s3 = add(s1, s2);
+        object stringVar = null;
+        stringVar = "hello";
+        Console.WriteLine(stringVar); // should print "hello"
         Console.WriteLine(s3); // should print "ab"
         object x = false;
         if (isTrue(x))
@@ -39,11 +42,20 @@ partial class Test
         object i = 0;
         for (object w = 0; isLessThan(w, 10); postFixIncrement(ref w))
         {
-            postFixIncrement(ref i);
+            i = add(i, 1);
         }
         Console.WriteLine(((object)i).ToString()); // should print 10
-        object list = new List<object>() {1, 2, 3, 4, 5};
-        list = (list as IList<object>).Reverse().ToList();
-        Console.WriteLine(getValue(list, 0)); // should print 5
+        object list2 = new List<object>() {1, 2, 3, 4, 5};
+        list2 = (list2 as IList<object>).Reverse().ToList();
+        Console.WriteLine(getValue(list2, 0)); // should print 5
+        //should delete key from dict
+        object dict2 = new Dictionary<string, object>() {
+            { "a", 1 },
+            { "b", 2 },
+        };
+        ((IDictionary<string,object>)dict2).Remove((string)"a");
+        object dictKeys = new List<object>(((IDictionary<string,object>)dict2).Keys);
+        Console.WriteLine(getArrayLength(dictKeys)); // should print 1
+        Console.WriteLine(getValue(dictKeys, 0)); // should print "b"
     }
 }

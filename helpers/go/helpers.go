@@ -1232,7 +1232,7 @@ func Remove(dict interface{}, key interface{}) {
 	delete(castedDict, keyStr)
 }
 
-func ArrayConcat(first interface{}, second interface{}) interface{} {
+func Concat(first interface{}, second interface{}) interface{} {
 	// Ensure both arguments are slices
 	firstValue := reflect.ValueOf(first)
 	secondValue := reflect.ValueOf(second)

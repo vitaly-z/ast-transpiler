@@ -1244,7 +1244,7 @@ func Capitalize(s string) string {
 }
 
 // ArrayConcat concatenates two arrays in place.
-func ArrayConcat(first interface{}, second interface{}) interface{} {
+func Concat(first interface{}, second interface{}) interface{} {
 	// Ensure both arguments are slices
 	firstValue := reflect.ValueOf(first)
 	secondValue := reflect.ValueOf(second)

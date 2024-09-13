@@ -1033,7 +1033,7 @@ ${this.getIden(identation)}}`;
     }
 
     printConcatCall(node, identation, name = undefined, parsedArg = undefined) {
-        return `ArrayConcat(${name}, ${parsedArg})`;
+        return `Concat(${name}, ${parsedArg})`;
     }
 
     printToUpperCaseCall(node, identation, name = undefined) {

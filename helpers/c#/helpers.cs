@@ -913,7 +913,7 @@ public partial class Exchange
         }
     }
 
-    public static object arrayConcat(object a, object b)
+    public static object concat(object a, object b)
     {
         if (a == null && b == null)
         {
