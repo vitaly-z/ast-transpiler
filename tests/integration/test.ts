@@ -1,7 +1,7 @@
 import { Transpiler } from '../../src/transpiler.js';
 import * as fs from 'fs';
 import { exec } from "node:child_process";
-import { green, yellow, red } from "colorette";
+import { green, yellow, red, blue } from "colorette";
 const { readFileSync, writeFileSync } = fs;
 
 const TS_TRANSPILABLE_FILE = "./tests/integration/source/transpilable.ts";
@@ -97,18 +97,21 @@ function runCommand(command) {
 async function runTS() {
     const command = "node --no-warnings --loader ts-node/esm " + TS_FILE;
     const result = await runCommand(command);
+    console.log(blue("Executed TS"))
     return result;
 }
 
 async function runPHP() {
     const command = "php " + PHP_FILE;
     const result = await runCommand(command);
+    console.log(blue("Executed PHP"))
     return result;
 }
 
 async function runPy() {
     const command = "python3 " + PY_FILE;
     const result = await runCommand(command);
+    console.log(blue("Executed PY"))
     return result;
 }
 
@@ -117,6 +120,7 @@ async function runCS() {
     await runCommand(buildCommand);
     const command = "dotnet run --project " + CS_FILE + '/cs.csproj';
     const result = await runCommand(command);
+    console.log(blue("Executed CS"))
     return result;
 }
 
@@ -125,6 +129,7 @@ async function runGO() {
     await runCommand(buildCommand);
     const command = "go run " + GO_FILE;
     const result = await runCommand(command);
+    console.log(blue("Executed GO"))
     return result;
 }
 
