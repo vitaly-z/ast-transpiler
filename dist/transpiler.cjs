@@ -814,7 +814,7 @@ var BaseTranspiler = class {
   printVariableDeclarationList(node, identation) {
     const declaration = node.declarations[0];
     const varToken = this.VAR_TOKEN ? this.VAR_TOKEN + " " : "";
-    if (this.removeVariableDeclarationForFunctionExpression && (_typescript2.default.isFunctionExpression(declaration.initializer) || _typescript2.default.isArrowFunction(declaration.initializer))) {
+    if (this.removeVariableDeclarationForFunctionExpression && _optionalChain([declaration, 'optionalAccess', _15 => _15.initializer]) && (_typescript2.default.isFunctionExpression(declaration.initializer) || _typescript2.default.isArrowFunction(declaration.initializer))) {
       return this.printNode(declaration.initializer, identation).trimEnd();
     }
     const parsedValue = declaration.initializer ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
@@ -840,7 +840,7 @@ var BaseTranspiler = class {
   }
   isBuiltInFunctionCall(node) {
     const symbol = global.checker.getSymbolAtLocation(node);
-    const isInLibFiles = _nullishCoalesce(_optionalChain([symbol, 'optionalAccess', _15 => _15.getDeclarations, 'call', _16 => _16(), 'optionalAccess', _17 => _17.some, 'call', _18 => _18((s) => s.getSourceFile().fileName.includes("/node_modules/typescript/lib/"))]), () => ( false));
+    const isInLibFiles = _nullishCoalesce(_optionalChain([symbol, 'optionalAccess', _16 => _16.getDeclarations, 'call', _17 => _17(), 'optionalAccess', _18 => _18.some, 'call', _19 => _19((s) => s.getSourceFile().fileName.includes("/node_modules/typescript/lib/"))]), () => ( false));
     return isInLibFiles;
   }
   getTypesFromCallExpressionParameters(node) {
@@ -1003,8 +1003,8 @@ var BaseTranspiler = class {
             return this.printNumberIsIntegerCall(node, identation, parsedArg);
         }
       }
-      const rightSide = _optionalChain([node, 'access', _19 => _19.expression, 'access', _20 => _20.name, 'optionalAccess', _21 => _21.escapedText]);
-      const leftSide = _optionalChain([node, 'access', _22 => _22.expression, 'optionalAccess', _23 => _23.expression]);
+      const rightSide = _optionalChain([node, 'access', _20 => _20.expression, 'access', _21 => _21.name, 'optionalAccess', _22 => _22.escapedText]);
+      const leftSide = _optionalChain([node, 'access', _23 => _23.expression, 'optionalAccess', _24 => _24.expression]);
       if (args.length === 0 && rightSide !== void 0 && leftSide !== void 0) {
         const parsedLeftSide = this.printNode(leftSide, 0);
         switch (rightSide) {
@@ -1192,7 +1192,7 @@ var BaseTranspiler = class {
     if (exception) {
       return exception;
     }
-    const isLeftSideOfAssignment = _optionalChain([node, 'access', _24 => _24.parent, 'optionalAccess', _25 => _25.kind]) === _typescript2.default.SyntaxKind.BinaryExpression && (node.parent.operatorToken.kind === _typescript2.default.SyntaxKind.EqualsToken || node.parent.operatorToken.kind === _typescript2.default.SyntaxKind.PlusEqualsToken) && _optionalChain([node, 'access', _26 => _26.parent, 'optionalAccess', _27 => _27.left]) === node;
+    const isLeftSideOfAssignment = _optionalChain([node, 'access', _25 => _25.parent, 'optionalAccess', _26 => _26.kind]) === _typescript2.default.SyntaxKind.BinaryExpression && (node.parent.operatorToken.kind === _typescript2.default.SyntaxKind.EqualsToken || node.parent.operatorToken.kind === _typescript2.default.SyntaxKind.PlusEqualsToken) && _optionalChain([node, 'access', _27 => _27.parent, 'optionalAccess', _28 => _28.left]) === node;
     const expressionAsString = this.printNode(expression, 0);
     const argumentAsString = this.printNode(argumentExpression, 0);
     if (!isLeftSideOfAssignment && this.ELEMENT_ACCESS_WRAPPER_OPEN && this.ELEMENT_ACCESS_WRAPPER_CLOSE) {
@@ -1203,7 +1203,7 @@ var BaseTranspiler = class {
       const isString = this.isStringType(type.flags);
       let isUnionString = false;
       if (type.flags === _typescript2.default.TypeFlags.Union) {
-        isUnionString = this.isStringType(_optionalChain([type, 'optionalAccess', _28 => _28.types, 'access', _29 => _29[0], 'access', _30 => _30.flags]));
+        isUnionString = this.isStringType(_optionalChain([type, 'optionalAccess', _29 => _29.types, 'access', _30 => _30[0], 'access', _31 => _31.flags]));
       }
       if (isString || isUnionString || type.flags === _typescript2.default.TypeFlags.Any) {
         if (this.id === "C#") {
@@ -1245,11 +1245,11 @@ var BaseTranspiler = class {
       ifComplete = this.getIden(identation) + this.IF_TOKEN + " " + ifComplete;
     }
     const elseStatement = node.elseStatement;
-    if (_optionalChain([elseStatement, 'optionalAccess', _31 => _31.kind]) === _typescript2.default.SyntaxKind.Block) {
+    if (_optionalChain([elseStatement, 'optionalAccess', _32 => _32.kind]) === _typescript2.default.SyntaxKind.Block) {
       const elseBody = this.printBlock(elseStatement, identation);
       const elseBlock = this.ELSE_TOKEN + elseBody;
       ifComplete += elseBlock;
-    } else if (_optionalChain([elseStatement, 'optionalAccess', _32 => _32.kind]) === _typescript2.default.SyntaxKind.IfStatement) {
+    } else if (_optionalChain([elseStatement, 'optionalAccess', _33 => _33.kind]) === _typescript2.default.SyntaxKind.IfStatement) {
       const elseBody = this.printIfStatement(elseStatement, identation);
       ifComplete += elseBody;
     }
@@ -1275,7 +1275,7 @@ var BaseTranspiler = class {
     return this.getIden(identation) + this.TRY_TOKEN + tryBody + this.CATCH_TOKEN + catchCondOpen + catchDeclaration + this.CONDITION_CLOSE + catchBody;
   }
   printNewExpression(node, identation) {
-    let expression = _optionalChain([node, 'access', _33 => _33.expression, 'optionalAccess', _34 => _34.escapedText]);
+    let expression = _optionalChain([node, 'access', _34 => _34.expression, 'optionalAccess', _35 => _35.escapedText]);
     expression = expression ? expression : this.printNode(node.expression);
     const args = node.arguments.map((n) => this.printNode(n, identation)).join(", ");
     const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
@@ -1647,7 +1647,7 @@ var BaseTranspiler = class {
     const rawType = func2Signature.getReturnType();
     const res = global.checker.typeToString(rawType);
     if (res === void 0) {
-      const name = _optionalChain([node, 'access', _35 => _35.type, 'optionalAccess', _36 => _36.typeName, 'optionalAccess', _37 => _37.escapedText]);
+      const name = _optionalChain([node, 'access', _36 => _36.type, 'optionalAccess', _37 => _37.typeName, 'optionalAccess', _38 => _38.escapedText]);
       if (name) {
         return name;
       }
@@ -1672,7 +1672,7 @@ var BaseTranspiler = class {
         return result;
       }
     }
-    const name = _optionalChain([node, 'access', _38 => _38.type, 'optionalAccess', _39 => _39.typeName, 'optionalAccess', _40 => _40.escapedText]);
+    const name = _optionalChain([node, 'access', _39 => _39.type, 'optionalAccess', _40 => _40.typeName, 'optionalAccess', _41 => _41.escapedText]);
     if (name) {
       result.type = name;
       if (node.initializer !== void 0) {
@@ -2002,7 +2002,7 @@ var PythonTranspiler = class extends BaseTranspiler {
         return typeOfExpression;
       }
     }
-    const prop = _optionalChain([node, 'optionalAccess', _41 => _41.left, 'optionalAccess', _42 => _42.expression, 'optionalAccess', _43 => _43.name, 'optionalAccess', _44 => _44.text]);
+    const prop = _optionalChain([node, 'optionalAccess', _42 => _42.left, 'optionalAccess', _43 => _43.expression, 'optionalAccess', _44 => _44.name, 'optionalAccess', _45 => _45.text]);
     if (prop) {
       const args = left.arguments;
       const parsedArg = args && args.length > 0 ? this.printNode(args[0], 0) : void 0;
@@ -2206,7 +2206,7 @@ var PhpTranspiler = class extends BaseTranspiler {
     return `str_replace(${parsedArg}, ${parsedArg2}, ${name})`;
   }
   printIncludesCall(node, identation, name = void 0, parsedArg = void 0) {
-    const leftSide = _optionalChain([node, 'access', _45 => _45.expression, 'optionalAccess', _46 => _46.expression]);
+    const leftSide = _optionalChain([node, 'access', _46 => _46.expression, 'optionalAccess', _47 => _47.expression]);
     const leftSideText = this.printNode(leftSide, 0);
     const type = global.checker.getTypeAtLocation(leftSide);
     this.warnIfAnyType(node, type.flags, leftSideText, "includes");
@@ -2218,7 +2218,7 @@ var PhpTranspiler = class extends BaseTranspiler {
     }
   }
   printIndexOfCall(node, identation, name = void 0, parsedArg = void 0) {
-    const leftSide = _optionalChain([node, 'access', _47 => _47.expression, 'optionalAccess', _48 => _48.expression]);
+    const leftSide = _optionalChain([node, 'access', _48 => _48.expression, 'optionalAccess', _49 => _49.expression]);
     const leftSideText = this.printNode(leftSide, 0);
     const type = global.checker.getTypeAtLocation(leftSide);
     this.warnIfAnyType(node, type.flags, leftSideText, "indexOf");
@@ -2314,7 +2314,7 @@ var PhpTranspiler = class extends BaseTranspiler {
       const leftSide = this.printNode(node.left, 0);
       return `${this.getIden(identation)}is_array(${rightSide}) && array_key_exists(${leftSide}, ${rightSide})`;
     }
-    const prop = _optionalChain([node, 'optionalAccess', _49 => _49.left, 'optionalAccess', _50 => _50.expression, 'optionalAccess', _51 => _51.name, 'optionalAccess', _52 => _52.text]);
+    const prop = _optionalChain([node, 'optionalAccess', _50 => _50.left, 'optionalAccess', _51 => _51.expression, 'optionalAccess', _52 => _52.name, 'optionalAccess', _53 => _53.text]);
     if (prop) {
       const args = left.arguments;
       const parsedArg = args && args.length > 0 ? this.printNode(args[0], 0) : void 0;
@@ -2556,18 +2556,18 @@ var CSharpTranspiler = class extends BaseTranspiler {
       return this.UNDEFINED_TOKEN;
     }
     const type = global.checker.getTypeAtLocation(node);
-    const symbol = _optionalChain([type, 'optionalAccess', _53 => _53.symbol]);
+    const symbol = _optionalChain([type, 'optionalAccess', _54 => _54.symbol]);
     if (symbol !== void 0) {
-      const decl = _nullishCoalesce(_optionalChain([symbol, 'optionalAccess', _54 => _54.declarations]), () => ( []));
+      const decl = _nullishCoalesce(_optionalChain([symbol, 'optionalAccess', _55 => _55.declarations]), () => ( []));
       let isBuiltIn = void 0;
       if (decl.length > 0) {
         isBuiltIn = decl[0].getSourceFile().fileName.indexOf("typescript") > -1;
       }
       if (isBuiltIn !== void 0 && !isBuiltIn) {
-        const isInsideNewExpression = _optionalChain([node, 'optionalAccess', _55 => _55.parent, 'optionalAccess', _56 => _56.kind]) === _typescript2.default.SyntaxKind.NewExpression;
-        const isInsideCatch = _optionalChain([node, 'optionalAccess', _57 => _57.parent, 'optionalAccess', _58 => _58.kind]) === _typescript2.default.SyntaxKind.ThrowStatement;
-        const isLeftSide = _optionalChain([node, 'optionalAccess', _59 => _59.parent, 'optionalAccess', _60 => _60.name]) === node || _optionalChain([node, 'optionalAccess', _61 => _61.parent, 'optionalAccess', _62 => _62.left]) === node;
-        const isCallOrPropertyAccess = _optionalChain([node, 'optionalAccess', _63 => _63.parent, 'optionalAccess', _64 => _64.kind]) === _typescript2.default.SyntaxKind.PropertyAccessExpression || _optionalChain([node, 'optionalAccess', _65 => _65.parent, 'optionalAccess', _66 => _66.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression;
+        const isInsideNewExpression = _optionalChain([node, 'optionalAccess', _56 => _56.parent, 'optionalAccess', _57 => _57.kind]) === _typescript2.default.SyntaxKind.NewExpression;
+        const isInsideCatch = _optionalChain([node, 'optionalAccess', _58 => _58.parent, 'optionalAccess', _59 => _59.kind]) === _typescript2.default.SyntaxKind.ThrowStatement;
+        const isLeftSide = _optionalChain([node, 'optionalAccess', _60 => _60.parent, 'optionalAccess', _61 => _61.name]) === node || _optionalChain([node, 'optionalAccess', _62 => _62.parent, 'optionalAccess', _63 => _63.left]) === node;
+        const isCallOrPropertyAccess = _optionalChain([node, 'optionalAccess', _64 => _64.parent, 'optionalAccess', _65 => _65.kind]) === _typescript2.default.SyntaxKind.PropertyAccessExpression || _optionalChain([node, 'optionalAccess', _66 => _66.parent, 'optionalAccess', _67 => _67.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression;
         if (!isLeftSide && !isCallOrPropertyAccess && !isInsideCatch && !isInsideNewExpression) {
           const symbol2 = global.checker.getSymbolAtLocation(node);
           let isClassDeclaration = false;
@@ -2578,7 +2578,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
             }
             if (first.kind === _typescript2.default.SyntaxKind.ImportSpecifier) {
               const importedSymbol = global.checker.getAliasedSymbol(symbol2);
-              if (_optionalChain([importedSymbol, 'optionalAccess', _67 => _67.declarations, 'access', _68 => _68[0], 'optionalAccess', _69 => _69.kind]) === _typescript2.default.SyntaxKind.ClassDeclaration) {
+              if (_optionalChain([importedSymbol, 'optionalAccess', _68 => _68.declarations, 'access', _69 => _69[0], 'optionalAccess', _70 => _70.kind]) === _typescript2.default.SyntaxKind.ClassDeclaration) {
                 isClassDeclaration = true;
               }
             }
@@ -2598,7 +2598,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
     const constructorBody = this.printFunctionBody(node, identation);
     let superCallParams = "";
     let hasSuperCall = false;
-    _optionalChain([node, 'access', _70 => _70.body, 'optionalAccess', _71 => _71.statements, 'access', _72 => _72.forEach, 'call', _73 => _73((statement) => {
+    _optionalChain([node, 'access', _71 => _71.body, 'optionalAccess', _72 => _72.statements, 'access', _73 => _73.forEach, 'call', _74 => _74((statement) => {
       if (_typescript2.default.isExpressionStatement(statement)) {
         const expression = statement.expression;
         if (_typescript2.default.isCallExpression(expression)) {
@@ -2620,9 +2620,9 @@ var CSharpTranspiler = class extends BaseTranspiler {
   printThisElementAccesssIfNeeded(node, identation) {
     const isAsync = true;
     const elementAccess = node.expression;
-    if (_optionalChain([elementAccess, 'optionalAccess', _74 => _74.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
-      if (_optionalChain([elementAccess, 'optionalAccess', _75 => _75.expression, 'optionalAccess', _76 => _76.kind]) === _typescript2.default.SyntaxKind.ThisKeyword) {
-        let parsedArg = _optionalChain([node, 'access', _77 => _77.arguments, 'optionalAccess', _78 => _78.length]) > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
+    if (_optionalChain([elementAccess, 'optionalAccess', _75 => _75.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
+      if (_optionalChain([elementAccess, 'optionalAccess', _76 => _76.expression, 'optionalAccess', _77 => _77.kind]) === _typescript2.default.SyntaxKind.ThisKeyword) {
+        let parsedArg = _optionalChain([node, 'access', _78 => _78.arguments, 'optionalAccess', _79 => _79.length]) > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
         const propName = this.printNode(elementAccess.argumentExpression, 0);
         const wrapperOpen = isAsync ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
         const wrapperClose = isAsync ? this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE : this.UNKOWN_PROP_WRAPPER_CLOSE;
@@ -2635,8 +2635,8 @@ var CSharpTranspiler = class extends BaseTranspiler {
   printDynamicCall(node, identation) {
     const isAsync = true;
     const elementAccess = node.expression;
-    if (_optionalChain([elementAccess, 'optionalAccess', _79 => _79.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
-      const parsedArg = _optionalChain([node, 'access', _80 => _80.arguments, 'optionalAccess', _81 => _81.length]) > 0 ? node.arguments.map((n) => this.printNode(n, identation).trimStart()).join(", ") : "";
+    if (_optionalChain([elementAccess, 'optionalAccess', _80 => _80.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
+      const parsedArg = _optionalChain([node, 'access', _81 => _81.arguments, 'optionalAccess', _82 => _82.length]) > 0 ? node.arguments.map((n) => this.printNode(n, identation).trimStart()).join(", ") : "";
       const target = this.printNode(elementAccess.expression, 0);
       const propName = this.printNode(elementAccess.argumentExpression, 0);
       const argsArray = `new object[] { ${parsedArg} }`;
@@ -2651,11 +2651,11 @@ var CSharpTranspiler = class extends BaseTranspiler {
   }
   printWrappedUnknownThisProperty(node) {
     const type = global.checker.getResolvedSignature(node);
-    if (_optionalChain([type, 'optionalAccess', _82 => _82.declaration]) === void 0) {
-      let parsedArguments = _optionalChain([node, 'access', _83 => _83.arguments, 'optionalAccess', _84 => _84.map, 'call', _85 => _85((a) => this.printNode(a, 0)), 'access', _86 => _86.join, 'call', _87 => _87(", ")]);
+    if (_optionalChain([type, 'optionalAccess', _83 => _83.declaration]) === void 0) {
+      let parsedArguments = _optionalChain([node, 'access', _84 => _84.arguments, 'optionalAccess', _85 => _85.map, 'call', _86 => _86((a) => this.printNode(a, 0)), 'access', _87 => _87.join, 'call', _88 => _88(", ")]);
       parsedArguments = parsedArguments ? parsedArguments : "";
-      const propName = _optionalChain([node, 'access', _88 => _88.expression, 'optionalAccess', _89 => _89.name, 'access', _90 => _90.escapedText]);
-      const isAsyncDecl = _optionalChain([node, 'optionalAccess', _91 => _91.parent, 'optionalAccess', _92 => _92.kind]) === _typescript2.default.SyntaxKind.AwaitExpression;
+      const propName = _optionalChain([node, 'access', _89 => _89.expression, 'optionalAccess', _90 => _90.name, 'access', _91 => _91.escapedText]);
+      const isAsyncDecl = _optionalChain([node, 'optionalAccess', _92 => _92.parent, 'optionalAccess', _93 => _93.kind]) === _typescript2.default.SyntaxKind.AwaitExpression;
       const argsArray = `new object[] { ${parsedArguments} }`;
       const open = this.DYNAMIC_CALL_OPEN;
       let statement = `${open}this, "${propName}", ${argsArray})`;
@@ -2686,7 +2686,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
             return `Math.Pow(Convert.ToDouble(${parsedArg1}), Convert.ToDouble(${parsedArg2}))`;
         }
       }
-      const leftSide = _optionalChain([node, 'access', _93 => _93.expression, 'optionalAccess', _94 => _94.expression]);
+      const leftSide = _optionalChain([node, 'access', _94 => _94.expression, 'optionalAccess', _95 => _95.expression]);
       const leftSideText = leftSide ? this.printNode(leftSide, 0) : void 0;
       if (leftSideText === this.THIS_TOKEN || leftSide.getFullText().indexOf("(this as any)") > -1) {
         const res = this.printWrappedUnknownThisProperty(node);
@@ -2773,10 +2773,10 @@ var CSharpTranspiler = class extends BaseTranspiler {
   }
   printVariableDeclarationList(node, identation) {
     const declaration = node.declarations[0];
-    if (this.removeVariableDeclarationForFunctionExpression && _typescript2.default.isFunctionExpression(declaration.initializer)) {
+    if (this.removeVariableDeclarationForFunctionExpression && _optionalChain([declaration, 'optionalAccess', _96 => _96.initializer]) && _typescript2.default.isFunctionExpression(declaration.initializer)) {
       return this.printNode(declaration.initializer, identation).trimEnd();
     }
-    if (_optionalChain([declaration, 'optionalAccess', _95 => _95.name, 'access', _96 => _96.kind]) === _typescript2.default.SyntaxKind.ArrayBindingPattern) {
+    if (_optionalChain([declaration, 'optionalAccess', _97 => _97.name, 'access', _98 => _98.kind]) === _typescript2.default.SyntaxKind.ArrayBindingPattern) {
       const arrayBindingPattern = declaration.name;
       const arrayBindingPatternElements = arrayBindingPattern.elements;
       const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e.name, 0));
@@ -2793,10 +2793,12 @@ var CSharpTranspiler = class extends BaseTranspiler {
       });
       return arrayBindingStatement;
     }
-    const isNew = declaration.initializer && declaration.initializer.kind === _typescript2.default.SyntaxKind.NewExpression;
+    const isNew = _optionalChain([declaration, 'optionalAccess', _99 => _99.initializer]) && declaration.initializer.kind === _typescript2.default.SyntaxKind.NewExpression;
     const varToken = isNew ? "var " : this.VAR_TOKEN + " ";
-    if (declaration.initializer === void 0) {
+    if (_optionalChain([declaration, 'optionalAccess', _100 => _100.initializer]) && declaration.initializer === void 0) {
       return this.getIden(identation) + varToken + this.printNode(declaration.name) + " = " + this.UNDEFINED_TOKEN;
+    } else if (!declaration.initializer) {
+      return this.getIden(identation) + "object " + this.printNode(declaration.name) + " = " + this.UNDEFINED_TOKEN;
     }
     const parsedValue = this.printNode(declaration.initializer, identation).trimStart();
     if (parsedValue === this.UNDEFINED_TOKEN) {
@@ -2835,7 +2837,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
     if (_typescript2.default.isNumericLiteral(node)) {
       return this.UNDEFINED_TOKEN;
     }
-    if (_optionalChain([node, 'optionalAccess', _97 => _97.escapedText]) === "undefined" && _optionalChain([global, 'access', _98 => _98.checker, 'access', _99 => _99.getTypeAtLocation, 'call', _100 => _100(_optionalChain([node, 'optionalAccess', _101 => _101.parent])), 'optionalAccess', _102 => _102.flags]) === _typescript2.default.TypeFlags.Number) {
+    if (_optionalChain([node, 'optionalAccess', _101 => _101.escapedText]) === "undefined" && _optionalChain([global, 'access', _102 => _102.checker, 'access', _103 => _103.getTypeAtLocation, 'call', _104 => _104(_optionalChain([node, 'optionalAccess', _105 => _105.parent])), 'optionalAccess', _106 => _106.flags]) === _typescript2.default.TypeFlags.Number) {
       return this.UNDEFINED_TOKEN;
     }
     return void 0;
@@ -3157,14 +3159,14 @@ var CSharpTranspiler = class extends BaseTranspiler {
     }
     if (node.expression.kind === _typescript2.default.SyntaxKind.NewExpression) {
       const expression = node.expression;
-      const argumentsExp = _nullishCoalesce(_optionalChain([expression, 'optionalAccess', _103 => _103.arguments]), () => ( []));
+      const argumentsExp = _nullishCoalesce(_optionalChain([expression, 'optionalAccess', _107 => _107.arguments]), () => ( []));
       const parsedArg = _nullishCoalesce(argumentsExp.map((n) => this.printNode(n, 0)).join(","), () => ( ""));
       const newExpression = this.printNode(expression.expression, 0);
       if (expression.expression.kind === _typescript2.default.SyntaxKind.Identifier) {
         const id = expression.expression;
         const symbol = global.checker.getSymbolAtLocation(expression.expression);
         if (symbol) {
-          const declarations = _nullishCoalesce(_optionalChain([global, 'access', _104 => _104.checker, 'access', _105 => _105.getDeclaredTypeOfSymbol, 'call', _106 => _106(symbol), 'access', _107 => _107.symbol, 'optionalAccess', _108 => _108.declarations]), () => ( []));
+          const declarations = _nullishCoalesce(_optionalChain([global, 'access', _108 => _108.checker, 'access', _109 => _109.getDeclaredTypeOfSymbol, 'call', _110 => _110(symbol), 'access', _111 => _111.symbol, 'optionalAccess', _112 => _112.declarations]), () => ( []));
           const isClassDeclaration = declarations.find((l) => l.kind === _typescript2.default.SyntaxKind.InterfaceDeclaration || l.kind === _typescript2.default.SyntaxKind.ClassDeclaration);
           if (isClassDeclaration) {
             return this.getIden(identation) + `${this.THROW_TOKEN} ${this.NEW_TOKEN} ${id.escapedText} ((string)${parsedArg}) ${this.LINE_TERMINATOR}`;
@@ -3342,7 +3344,7 @@ var GoTranspiler = class extends BaseTranspiler {
   printStruct(node, indentation) {
     const className = node.name.escapedText;
     let heritageName = "";
-    if (_optionalChain([node, 'optionalAccess', _109 => _109.heritageClauses, 'optionalAccess', _110 => _110.length]) > 0) {
+    if (_optionalChain([node, 'optionalAccess', _113 => _113.heritageClauses, 'optionalAccess', _114 => _114.length]) > 0) {
       const heritage = node.heritageClauses[0];
       const heritageType = heritage.types[0];
       heritageName = this.getIden(indentation + 1) + heritageType.expression.escapedText + "\n";
@@ -3439,7 +3441,7 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
   }
   printVariableDeclarationList(node, identation) {
     const declaration = node.declarations[0];
-    if (_optionalChain([declaration, 'optionalAccess', _111 => _111.name, 'access', _112 => _112.kind]) === _typescript2.default.SyntaxKind.ArrayBindingPattern) {
+    if (_optionalChain([declaration, 'optionalAccess', _115 => _115.name, 'access', _116 => _116.kind]) === _typescript2.default.SyntaxKind.ArrayBindingPattern) {
       const arrayBindingPattern = declaration.name;
       const arrayBindingPatternElements = arrayBindingPattern.elements;
       const parsedArrayBindingElements = arrayBindingPatternElements.map((e) => this.printNode(e.name, 0));
@@ -3461,7 +3463,7 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
     if (parsedValue === this.UNDEFINED_TOKEN) {
       return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
     }
-    if (_optionalChain([node, 'optionalAccess', _113 => _113.parent, 'optionalAccess', _114 => _114.kind]) === _typescript2.default.SyntaxKind.FirstStatement) {
+    if (_optionalChain([node, 'optionalAccess', _117 => _117.parent, 'optionalAccess', _118 => _118.kind]) === _typescript2.default.SyntaxKind.FirstStatement) {
       if (isNew) {
         return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue;
       }
@@ -3476,7 +3478,7 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
     const constructorBody = this.printFunctionBody(node, identation);
     let superCallParams = "";
     let hasSuperCall = false;
-    _optionalChain([node, 'access', _115 => _115.body, 'optionalAccess', _116 => _116.statements, 'access', _117 => _117.forEach, 'call', _118 => _118((statement) => {
+    _optionalChain([node, 'access', _119 => _119.body, 'optionalAccess', _120 => _120.statements, 'access', _121 => _121.forEach, 'call', _122 => _122((statement) => {
       if (_typescript2.default.isExpressionStatement(statement)) {
         const expression = statement.expression;
         if (_typescript2.default.isCallExpression(expression)) {
@@ -3498,9 +3500,9 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
   printThisElementAccesssIfNeeded(node, identation) {
     const isAsync = true;
     const elementAccess = node.expression;
-    if (_optionalChain([elementAccess, 'optionalAccess', _119 => _119.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
-      if (_optionalChain([elementAccess, 'optionalAccess', _120 => _120.expression, 'optionalAccess', _121 => _121.kind]) === _typescript2.default.SyntaxKind.ThisKeyword) {
-        let parsedArg = _optionalChain([node, 'access', _122 => _122.arguments, 'optionalAccess', _123 => _123.length]) > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
+    if (_optionalChain([elementAccess, 'optionalAccess', _123 => _123.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
+      if (_optionalChain([elementAccess, 'optionalAccess', _124 => _124.expression, 'optionalAccess', _125 => _125.kind]) === _typescript2.default.SyntaxKind.ThisKeyword) {
+        let parsedArg = _optionalChain([node, 'access', _126 => _126.arguments, 'optionalAccess', _127 => _127.length]) > 0 ? this.printNode(node.arguments[0], identation).trimStart() : "";
         const propName = this.printNode(elementAccess.argumentExpression, 0);
         const wrapperOpen = isAsync ? this.UKNOWN_PROP_ASYNC_WRAPPER_OPEN : this.UKNOWN_PROP_WRAPPER_OPEN;
         const wrapperClose = isAsync ? this.UNKOWN_PROP_ASYNC_WRAPPER_CLOSE : this.UNKOWN_PROP_WRAPPER_CLOSE;
@@ -3512,8 +3514,8 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
   }
   printDynamicCall(node, identation) {
     const elementAccess = node.expression;
-    if (_optionalChain([elementAccess, 'optionalAccess', _124 => _124.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
-      const parsedArg = _optionalChain([node, 'access', _125 => _125.arguments, 'optionalAccess', _126 => _126.length]) > 0 ? node.arguments.map((n) => this.printNode(n, identation).trimStart()).join(", ") : "";
+    if (_optionalChain([elementAccess, 'optionalAccess', _128 => _128.kind]) === _typescript2.default.SyntaxKind.ElementAccessExpression) {
+      const parsedArg = _optionalChain([node, 'access', _129 => _129.arguments, 'optionalAccess', _130 => _130.length]) > 0 ? node.arguments.map((n) => this.printNode(n, identation).trimStart()).join(", ") : "";
       const propName = this.printNode(elementAccess.argumentExpression, 0);
       const argsArray = `${parsedArg}`;
       const open = this.DYNAMIC_CALL_OPEN;
@@ -3526,10 +3528,10 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
   }
   printWrappedUnknownThisProperty(node) {
     const type = global.checker.getResolvedSignature(node);
-    if (_optionalChain([type, 'optionalAccess', _127 => _127.declaration]) === void 0) {
-      let parsedArguments = _optionalChain([node, 'access', _128 => _128.arguments, 'optionalAccess', _129 => _129.map, 'call', _130 => _130((a) => this.printNode(a, 0)), 'access', _131 => _131.join, 'call', _132 => _132(", ")]);
+    if (_optionalChain([type, 'optionalAccess', _131 => _131.declaration]) === void 0) {
+      let parsedArguments = _optionalChain([node, 'access', _132 => _132.arguments, 'optionalAccess', _133 => _133.map, 'call', _134 => _134((a) => this.printNode(a, 0)), 'access', _135 => _135.join, 'call', _136 => _136(", ")]);
       parsedArguments = parsedArguments ? parsedArguments : "";
-      const propName = _optionalChain([node, 'access', _133 => _133.expression, 'optionalAccess', _134 => _134.name, 'access', _135 => _135.escapedText]);
+      const propName = _optionalChain([node, 'access', _137 => _137.expression, 'optionalAccess', _138 => _138.name, 'access', _139 => _139.escapedText]);
       const argsArray = `${parsedArguments}`;
       const open = this.DYNAMIC_CALL_OPEN;
       const statement = `${open}"${propName}", ${argsArray})`;
@@ -3580,7 +3582,7 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
             return `Math.Pow(Convert.ToDouble(${parsedArg1}), Convert.ToDouble(${parsedArg2}))`;
         }
       }
-      const leftSide = _optionalChain([node, 'access', _136 => _136.expression, 'optionalAccess', _137 => _137.expression]);
+      const leftSide = _optionalChain([node, 'access', _140 => _140.expression, 'optionalAccess', _141 => _141.expression]);
       const leftSideText = leftSide ? this.printNode(leftSide, 0) : void 0;
       if (leftSideText === this.THIS_TOKEN || leftSide.getFullText().indexOf("(this as any)") > -1) {
         const res = this.printWrappedUnknownThisProperty(node);
@@ -3733,7 +3735,7 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
       } else {
         functionBody = node.body.statements.map((statement) => {
           if (statement.kind === _typescript2.default.SyntaxKind.ReturnStatement) {
-            if (_optionalChain([statement, 'optionalAccess', _138 => _138.expression])) {
+            if (_optionalChain([statement, 'optionalAccess', _142 => _142.expression])) {
               return this.getIden(identation) + "ch <-" + this.printNode(statement.expression) + "\n" + this.getIden(identation) + "return " + this.printNode(statement.expression);
             }
           }
@@ -3951,14 +3953,14 @@ ${this.getIden(identation)}}`;
     }
     if (node.expression.kind === _typescript2.default.SyntaxKind.NewExpression) {
       const expression = node.expression;
-      const argumentsExp = _nullishCoalesce(_optionalChain([expression, 'optionalAccess', _139 => _139.arguments]), () => ( []));
+      const argumentsExp = _nullishCoalesce(_optionalChain([expression, 'optionalAccess', _143 => _143.arguments]), () => ( []));
       const parsedArg = _nullishCoalesce(argumentsExp.map((n) => this.printNode(n, 0)).join(","), () => ( ""));
       const newExpression = this.printNode(expression.expression, 0);
       if (expression.expression.kind === _typescript2.default.SyntaxKind.Identifier) {
         const id = expression.expression;
         const symbol = global.checker.getSymbolAtLocation(expression.expression);
         if (symbol) {
-          const declarations = _nullishCoalesce(_optionalChain([global, 'access', _140 => _140.checker, 'access', _141 => _141.getDeclaredTypeOfSymbol, 'call', _142 => _142(symbol), 'access', _143 => _143.symbol, 'optionalAccess', _144 => _144.declarations]), () => ( []));
+          const declarations = _nullishCoalesce(_optionalChain([global, 'access', _144 => _144.checker, 'access', _145 => _145.getDeclaredTypeOfSymbol, 'call', _146 => _146(symbol), 'access', _147 => _147.symbol, 'optionalAccess', _148 => _148.declarations]), () => ( []));
           const isClassDeclaration = declarations.find((l) => l.kind === _typescript2.default.SyntaxKind.InterfaceDeclaration || l.kind === _typescript2.default.SyntaxKind.ClassDeclaration);
           if (isClassDeclaration) {
           } else {
@@ -4076,7 +4078,7 @@ ${this.getIden(identation)}}`;
     return this.getIden(identation) + this.PrefixFixOperators[operator] + this.printNode(operand, 0);
   }
   printNewExpression(node, identation) {
-    let expression = _optionalChain([node, 'access', _145 => _145.expression, 'optionalAccess', _146 => _146.escapedText]);
+    let expression = _optionalChain([node, 'access', _149 => _149.expression, 'optionalAccess', _150 => _150.escapedText]);
     expression = expression ? expression : this.printNode(node.expression);
     if (node.arguments.length === 0) {
       return `new(${expression})`;
