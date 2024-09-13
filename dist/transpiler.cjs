@@ -922,6 +922,9 @@ var BaseTranspiler = class {
   printSplitCall(node, identation, name = void 0, parsedArg = void 0) {
     return void 0;
   }
+  printConcatCall(node, identation, name = void 0, parsedArg = void 0) {
+    return void 0;
+  }
   printToFixedCall(node, identation, name = void 0, parsedArg = void 0) {
     return void 0;
   }
@@ -1039,6 +1042,8 @@ var BaseTranspiler = class {
             return this.printSplitCall(node, identation, name, parsedArg);
           case "toFixed":
             return this.printToFixedCall(node, identation, name, parsedArg);
+          case "concat":
+            return this.printConcatCall(node, identation, name, parsedArg);
           case "search":
             return this.printSearchCall(node, identation, name, parsedArg);
           case "endsWith":
@@ -1831,6 +1836,9 @@ var PythonTranspiler = class extends BaseTranspiler {
   printSplitCall(node, identation, name, parsedArg) {
     return `${name}.split(${parsedArg})`;
   }
+  printConcatCall(node, identation, name, parsedArg) {
+    return `${name} + ${parsedArg}`;
+  }
   printPopCall(node, identation, name) {
     return `${name}.pop()`;
   }
@@ -2237,6 +2245,9 @@ var PhpTranspiler = class extends BaseTranspiler {
   }
   printSplitCall(node, identation, name = void 0, parsedArg = void 0) {
     return `explode(${parsedArg}, ${name})`;
+  }
+  printConcatCall(node, identation, name, parsedArg) {
+    return `array_merge(${name}, ${parsedArg})`;
   }
   printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
     return `str_pad(${name}, ${parsedArg}, ${parsedArg2}, STR_PAD_RIGHT)`;
@@ -3050,6 +3061,9 @@ var CSharpTranspiler = class extends BaseTranspiler {
   }
   printSplitCall(node, identation, name = void 0, parsedArg = void 0) {
     return `((string)${name}).Split(new [] {((string)${parsedArg})}, StringSplitOptions.None).ToList<object>()`;
+  }
+  printConcatCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `arrayConcat(${name}, ${parsedArg})`;
   }
   printToFixedCall(node, identation, name = void 0, parsedArg = void 0) {
     return `toFixed(${name}, ${parsedArg})`;
@@ -3876,6 +3890,9 @@ ${this.getIden(identation)}}`;
   }
   printToStringCall(node, identation, name = void 0) {
     return `ToString(${name})`;
+  }
+  printConcatCall(node, identation, name = void 0, parsedArg = void 0) {
+    return `ArrayConcat(${name}, ${parsedArg})`;
   }
   printToUpperCaseCall(node, identation, name = void 0) {
     return `ToUpper(${name})`;
