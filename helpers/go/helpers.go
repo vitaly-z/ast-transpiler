@@ -1231,3 +1231,27 @@ func Remove(dict interface{}, key interface{}) {
 	// Remove the key from the map
 	delete(castedDict, keyStr)
 }
+
+func ArrayConcat(first interface{}, second interface{}) interface{} {
+	// Ensure both arguments are slices
+	firstValue := reflect.ValueOf(first)
+	secondValue := reflect.ValueOf(second)
+
+	if firstValue.Kind() != reflect.Slice {
+		panic("first argument must be a slice")
+	}
+	if secondValue.Kind() != reflect.Slice {
+		panic("second argument must be a slice")
+	}
+
+	// Check if the slices have the same type
+	if firstValue.Type() != secondValue.Type() {
+		panic(fmt.Sprintf("slice types do not match: %s != %s", firstValue.Type(), secondValue.Type()))
+	}
+
+	// Concatenate the two slices using reflect.AppendSlice
+	result := reflect.AppendSlice(firstValue, secondValue)
+
+	// Return the concatenated slice as an interface{}
+	return result.Interface()
+}

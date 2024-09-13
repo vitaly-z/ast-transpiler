@@ -1097,6 +1097,10 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printConcatCall(node, identation, name = undefined, parsedArg = undefined) {
+        return undefined; // stub
+    }
+
     printToFixedCall(node, identation, name = undefined, parsedArg = undefined) {
         return undefined; // stub
     }
@@ -1238,6 +1242,8 @@ class BaseTranspiler {
                     return this.printSplitCall(node, identation, name, parsedArg);
                 case 'toFixed':
                     return this.printToFixedCall(node, identation, name, parsedArg);
+                case 'concat':
+                    return this.printConcatCall(node, identation, name, parsedArg);
                 case 'search':
                     return this.printSearchCall(node, identation, name, parsedArg);
                 case 'endsWith':

@@ -278,6 +278,7 @@ declare class BaseTranspiler {
     printTrimCall(node: any, identation: any, name?: any): any;
     printJoinCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): any;
+    printConcatCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printToFixedCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printSearchCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printSliceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): any;
@@ -355,6 +356,7 @@ declare class PythonTranspiler extends BaseTranspiler {
     printIncludesCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printJoinCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): string;
+    printConcatCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printPopCall(node: any, identation: any, name?: any): string;
     printShiftCall(node: any, identation: any, name?: any): string;
     printReverseCall(node: any, identation: any, name?: any): string;
@@ -426,6 +428,7 @@ declare class PhpTranspiler extends BaseTranspiler {
     printTrimCall(node: any, identation: any, name?: any): string;
     printJoinCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): string;
+    printConcatCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printPadEndCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
     printPadStartCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
     printDateNowCall(node: any, identation: any): string;
@@ -484,6 +487,7 @@ declare class CSharpTranspiler extends BaseTranspiler {
     printTrimCall(node: any, identation: any, name?: any): string;
     printJoinCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): string;
+    printConcatCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printToFixedCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printToStringCall(node: any, identation: any, name?: any): string;
     printToUpperCaseCall(node: any, identation: any, name?: any): string;
@@ -563,6 +567,7 @@ declare class GoTranspiler extends BaseTranspiler {
     printSplitCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printToFixedCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printToStringCall(node: any, identation: any, name?: any): string;
+    printConcatCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printToUpperCaseCall(node: any, identation: any, name?: any): string;
     printToLowerCaseCall(node: any, identation: any, name?: any): string;
     printShiftCall(node: any, identation: any, name?: any): string;
