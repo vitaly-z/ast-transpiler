@@ -1032,6 +1032,10 @@ ${this.getIden(identation)}}`;
         return `ToString(${name})`;
     }
 
+    printConcatCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `ArrayConcat(${name}, ${parsedArg})`;
+    }
+
     printToUpperCaseCall(node, identation, name = undefined) {
         return `ToUpper(${name})`;
     }

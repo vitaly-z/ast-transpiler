@@ -53,6 +53,11 @@ class Test {
         console.log(dictKeys.length); // should print 1
         console.log(dictKeys[0]); // should print "b"
 
+        const firstConcat = ["a", "b"];
+        const secondConcat = ["c", "d"];
+        const both = firstConcat.concat(secondConcat);
+        console.log(both.length); // should print 4
+        console.log(both[2]); // should print "c"
     }
 }
 

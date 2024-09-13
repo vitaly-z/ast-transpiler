@@ -786,6 +786,12 @@ describe('python tests', () => {
         const output = transpiler.transpilePython(ts).content;
         expect(output).toBe(python);
     });
+    test('should convert concat', () => {
+        const ts = "y.concat(z)";
+        const result = "y + z";
+        const output = transpiler.transpilePython(ts).content;
+        expect(output).toBe(result);
+    });
     test('should convert search', () => {
         const ts = '"abcdxtzyw".search("xt");';
         const python = "'abcdxtzyw'.find('xt')";
