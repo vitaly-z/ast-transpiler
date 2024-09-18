@@ -3237,7 +3237,7 @@ var parserConfig4 = {
   "INDEXOF_WRAPPER_CLOSE": ")",
   "MOD_WRAPPER_OPEN": "Mod(",
   "MOD_WRAPPER_CLOSE": ")",
-  "FUNCTION_TOKEN": "",
+  "FUNCTION_TOKEN": "func",
   "DEFAULT_RETURN_TYPE": "interface{}",
   "BLOCK_OPENING_TOKEN": "{",
   "DEFAULT_PARAMETER_TYPE": "interface{}",
@@ -3322,6 +3322,9 @@ var GoTranspiler = class extends BaseTranspiler {
     text = text.replaceAll('"', '\\"');
     text = text.replaceAll("\n", "\\n");
     return token + text + token;
+  }
+  transformFunctionNameIfNeeded(name) {
+    return this.capitalize(name);
   }
   printPropertyDeclaration(node, identation) {
     const name = this.printNode(node.name, 0);
