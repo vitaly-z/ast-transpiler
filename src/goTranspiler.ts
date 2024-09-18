@@ -51,7 +51,7 @@ const parserConfig = {
     'INDEXOF_WRAPPER_CLOSE': ')',
     'MOD_WRAPPER_OPEN': 'Mod(',
     'MOD_WRAPPER_CLOSE': ')',
-    'FUNCTION_TOKEN': '',
+    'FUNCTION_TOKEN': 'func',
     'DEFAULT_RETURN_TYPE': 'interface{}',
     'BLOCK_OPENING_TOKEN': '{',
     'DEFAULT_PARAMETER_TYPE': 'interface{}',
@@ -175,6 +175,9 @@ export class GoTranspiler extends BaseTranspiler {
         return token + text + token;
     }
 
+    transformFunctionNameIfNeeded(name): string {
+        return this.capitalize(name);
+    }
 
     printPropertyDeclaration(node, identation) {
         // let modifiers = this.printModifiers(node);
@@ -1326,7 +1329,6 @@ ${this.getIden(identation)}}`;
         const newToken = this.NEW_TOKEN ? this.NEW_TOKEN + " " : "";
         return newToken + expression + this.LEFT_PARENTHESIS + args + this.RIGHT_PARENTHESIS;
     }
-
 }
 
 
