@@ -1067,22 +1067,21 @@ export class CSharpTranspiler extends BaseTranspiler {
     printPropertyAccessModifiers(node) {
         let modifiers = this.printModifiers(node);
         if (modifiers === '') {
-            modifiers = this.defaultPropertyAccess + ' ';
-            if (!node.type) {
-                throw new Error('[C#] Class properties can not be transpiled if the property-type is not specified');
-            }
-            const type = node.type as ts.SyntaxKind;
-            const typeText = this.SupportedKindNames[type];
-            if (!typeText) {
-                throw new Error('[C#] Unsupported type: ' + type);
-            }
-            const modifierText = this.VariableTypeReplacements[typeText];
-            if (!modifierText) {
-                throw new Error('[C#] Unsupported modifier type: ' + typeText);
-            }
-            modifiers += modifierText + ' ';
+            modifiers = this.defaultPropertyAccess;
         }
-        return modifiers;
+        // add type
+        if (!node.type) {
+            throw new Error('[C#] Class properties can not be transpiled if the property-type is not specified');
+        }
+        let typeText = this.getType(node);
+        if (!typeText) {
+            if (node.type.kind === ts.SyntaxKind.AnyKeyword) {
+                typeText = this.OBJECT_KEYWORD + ' ';
+            } else {
+                throw new Error('[C#] Unsupported type kind: ' + node.kind);
+            }
+        }
+        return modifiers + ' ' + typeText + ' ';
     }
 
     // printLeadingComments(node, identation) {
