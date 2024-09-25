@@ -101,10 +101,11 @@ export class PhpTranspiler extends BaseTranspiler {
             }
         }
 
-        // If the identifier is a function parameter (callback), it should remain a variable with `$` prefix
-        if (node.parent && ts.isParameter(node.parent) || (node.parent && ts.isCallExpression(node.parent) && ts.isIdentifier(node))) {
-            return "$" + identifier;
-        }
+        // below is commented, due to :
+        // // If the identifier is a function parameter (callback), it should remain a variable with `$` prefix
+        // if (node.parent && ts.isParameter(node.parent) || (node.parent && ts.isCallExpression(node.parent) && ts.isIdentifier(node))) {
+        //     return "$" + identifier;
+        // }
 
         // Default case: prepend $ for variables (non-functions), unless it's a class or constant
         if (!this.startsWithUpperCase(identifier)) {
