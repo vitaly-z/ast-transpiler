@@ -75,6 +75,35 @@ describe('csharp transpiling tests', () => {
         const output = transpiler.transpileCSharp(ts).content;
         expect(output).toBe(csharp);
     });
+    test('basic class declaration with props', () => {
+        const ts = 
+        "class MyClass {\n" +
+        "    public x: number = 10;\n" +
+        "    public y: string = \"test\";\n" +
+        "    public z1: string[] = [ 'a', 'b' ];\n" +
+        "    public z2: any = whatever;\n" +
+        "    public z3: any = {};\n" +
+        "    mainFeature(message): void {\n" +
+        "        console.log(\"Hello! I'm inside main class:\" + message)\n" +
+        "    }\n" +
+        "}";
+        const cs =
+        "class MyClass\n" +
+        "{\n" +
+        "    public object x = 10;\n" +
+        "    public string y = \"test\";\n" +
+        "    public List<object> z1 = new List<object>() {\"a\", \"b\"};\n" +
+        "    public Dictionary<string, object>  z2 = whatever;\n" +
+        "    public Dictionary<string, object> z3 = new Dictionary<string, object>() {};\n" +
+        "\n" +
+        "    public virtual void mainFeature(object message)\n" +
+        "    {\n" +
+        "        Console.WriteLine(add(\"Hello! I'm inside main class:\", message));\n" +
+        "    }\n" +
+        "}";
+        const output = transpiler.transpileCSharp(ts).content;
+        expect(output).toBe(cs);
+    });
     // test('basic basic declaration with default parameters', () => {
     //     const ts = 
     //     "class T {\n" +
