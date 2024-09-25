@@ -128,6 +128,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             'Dict': 'Dictionary<string, object>',
             'Strings': 'List<string>',
             'List': 'List<object>',
+            'boolean': 'bool',
         };
 
         this.ArgTypeReplacements = {
@@ -139,6 +140,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             'Dict': 'Dictionary<string, object>',
             'Strings': 'List<string>',
             'List': 'List<object>',
+            'boolean': 'bool',
         };
 
         this.binaryExpressionsWrappers = {
@@ -1058,8 +1060,29 @@ export class CSharpTranspiler extends BaseTranspiler {
         // return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
     }
 
+    csModifiers = {
+
+    };
+
     printPropertyAccessModifiers(node) {
-        return super.printPropertyAccessModifiers(node);
+        let modifiers = this.printModifiers(node);
+        if (modifiers === '') {
+            modifiers = this.defaultPropertyAccess + ' ';
+            if (!node.type) {
+                throw new Error('[C#] Class properties can not be transpiled if the property-type is not specified');
+            }
+            const type = node.type as ts.SyntaxKind;
+            const typeText = this.SupportedKindNames[type];
+            if (!typeText) {
+                throw new Error('[C#] Unsupported type: ' + type);
+            }
+            const modifierText = this.VariableTypeReplacements[typeText];
+            if (!modifierText) {
+                throw new Error('[C#] Unsupported modifier type: ' + typeText);
+            }
+            modifiers += modifierText + ' ';
+        }
+        return modifiers;
     }
 
     // printLeadingComments(node, identation) {
