@@ -1058,6 +1058,10 @@ export class CSharpTranspiler extends BaseTranspiler {
         // return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
     }
 
+    printPropertyAccessModifiers(node) {
+        return super.printPropertyAccessModifiers(node);
+    }
+
     // printLeadingComments(node, identation) {
     //     const fullText = global.src.getFullText();
     //     const commentsRangeList = ts.getLeadingCommentRanges(fullText, node.pos);
