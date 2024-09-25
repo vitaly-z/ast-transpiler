@@ -428,7 +428,7 @@ export class PhpTranspiler extends BaseTranspiler {
 
     printPropertyAccessModifiers(node) {
         const modifiers = super.printPropertyAccessModifiers(node);
-        return modifiers ?? "public "; // default to public
+        return modifiers ? modifiers : "public "; // default to public
     }
 
     transformLeadingComment(comment) {

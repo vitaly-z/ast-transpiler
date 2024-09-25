@@ -181,6 +181,7 @@ class BaseTranspiler {
     ArgTypeReplacements = {};
 
     FuncModifiers = {};
+    defaultPropertyAccess = 'public';
 
     uncamelcaseIdentifiers;
     asyncTranspiling;
