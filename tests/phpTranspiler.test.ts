@@ -836,6 +836,15 @@ describe('php transpiling tests', () => {
         const output = transpiler.transpilePhp(ts).content;
         expect(output).toBe(php);
     });
+    test.only('transpile constants & imports', () => {
+        const ts = "import { decimalToPrecision, ROUND, TRUNCATE, DECIMAL_PLACES, } from '../../somewhere.js';\n" +
+        "const exc = new xyz ();\n" +
+        "assert (exc.decimalToPrecision ('12.3456000', TRUNCATE, 100, DECIMAL_PLACES) === '12.3456');";
+        const php = "$exc = new xyz();\n" +
+        "assert($exc->decimalToPrecision('12.3456000', TRUNCATE, 100, DECIMAL_PLACES) === '12.3456');";
+        const output = transpiler.transpilePhp(ts).content;
+        expect(output).toBe(php);
+    });
     test('should transpile Number.isInteger', () => {
         const ts = "Number.isInteger(1)";
         const php = "is_int(1);";
