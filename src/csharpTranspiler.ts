@@ -1070,15 +1070,13 @@ export class CSharpTranspiler extends BaseTranspiler {
             modifiers = this.defaultPropertyAccess;
         }
         // add type
-        if (!node.type) {
-            throw new Error('[C#] Class properties can not be transpiled if the property-type is not specified');
-        }
-        let typeText = this.getType(node);
-        if (!typeText) {
-            if (node.type.kind === ts.SyntaxKind.AnyKeyword) {
-                typeText = this.OBJECT_KEYWORD + ' ';
-            } else {
-                throw new Error('[C#] Unsupported type kind: ' + node.kind);
+        let typeText = 'object';
+        if (node.type) {
+            typeText = this.getType(node);
+            if (!typeText) {
+                if (node.type.kind === ts.SyntaxKind.AnyKeyword) {
+                    typeText = this.OBJECT_KEYWORD + ' ';
+                }
             }
         }
         return modifiers + ' ' + typeText + ' ';
