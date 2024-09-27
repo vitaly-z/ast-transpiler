@@ -2118,9 +2118,6 @@ var PhpTranspiler = class extends BaseTranspiler {
         }
       }
     }
-    if (node.parent && _typescript2.default.isParameter(node.parent) || node.parent && _typescript2.default.isCallExpression(node.parent) && _typescript2.default.isIdentifier(node)) {
-      return "$" + identifier;
-    }
     if (!this.startsWithUpperCase(identifier)) {
       return "$" + identifier;
     }
