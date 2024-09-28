@@ -244,6 +244,7 @@ var BaseTranspiler = class {
     this.VariableTypeReplacements = {};
     this.ArgTypeReplacements = {};
     this.FuncModifiers = {};
+    this.defaultPropertyAccess = "public";
     Object.assign(this, config["parser"] || {});
     this.id = "base";
     this.uncamelcaseIdentifiers = false;
@@ -1341,14 +1342,18 @@ var BaseTranspiler = class {
     return this.printNodeCommentsIfAny(node, identation, expStatement);
   }
   printPropertyDeclaration(node, identation) {
-    let modifiers = this.printModifiers(node);
-    modifiers = modifiers ? modifiers + " " : modifiers;
+    const modifiers = this.printPropertyAccessModifiers(node);
     const name = this.printNode(node.name, 0);
     if (node.initializer) {
       const initializer = this.printNode(node.initializer, 0);
       return this.getIden(identation) + modifiers + name + " = " + initializer + this.LINE_TERMINATOR;
     }
     return this.getIden(identation) + modifiers + name + this.LINE_TERMINATOR;
+  }
+  printPropertyAccessModifiers(node) {
+    let modifiers = this.printModifiers(node);
+    modifiers = modifiers ? modifiers + " " : modifiers;
+    return modifiers;
   }
   printSpreadElement(node, identation) {
     const expression = this.printNode(node.expression, 0);
@@ -1908,6 +1913,9 @@ var PythonTranspiler = class extends BaseTranspiler {
     const forStm = this.getIden(identation) + this.FOR_TOKEN + " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map((st) => this.printNode(st, identation + 1)).join("\n");
     return this.printNodeCommentsIfAny(node, identation, forStm);
   }
+  printPropertyAccessModifiers(node) {
+    return "";
+  }
   transformLeadingComment(comment) {
     const commentRegex = [
       [/(^|\s)\/\//g, "$1#"],
@@ -2364,6 +2372,10 @@ var PhpTranspiler = class extends BaseTranspiler {
     }
     return super.printFunctionBody(node, identation);
   }
+  printPropertyAccessModifiers(node) {
+    const modifiers = super.printPropertyAccessModifiers(node);
+    return modifiers ? modifiers : "public ";
+  }
   transformLeadingComment(comment) {
     const commentRegex = [
       [/\{([\]\[\|a-zA-Z0-9_-]+?)\}/g, "~$1~"],
@@ -2463,6 +2475,7 @@ var CSharpTranspiler = class extends BaseTranspiler {
   constructor(config = {}) {
     config["parser"] = Object.assign({}, parserConfig3, _nullishCoalesce(config["parser"], () => ( {})));
     super(config);
+    this.csModifiers = {};
     this.requiresParameterType = true;
     this.requiresReturnType = true;
     this.asyncTranspiling = true;
@@ -2510,7 +2523,8 @@ var CSharpTranspiler = class extends BaseTranspiler {
       "Num": "double",
       "Dict": "Dictionary<string, object>",
       "Strings": "List<string>",
-      "List": "List<object>"
+      "List": "List<object>",
+      "boolean": "bool"
     };
     this.ArgTypeReplacements = {
       "string": "string",
@@ -2520,7 +2534,8 @@ var CSharpTranspiler = class extends BaseTranspiler {
       "Num": "double",
       "Dict": "Dictionary<string, object>",
       "Strings": "List<string>",
-      "List": "List<object>"
+      "List": "List<object>",
+      "boolean": "bool"
     };
     this.binaryExpressionsWrappers = {
       [_typescript2.default.SyntaxKind.EqualsEqualsToken]: [this.EQUALS_EQUALS_WRAPPER_OPEN, this.EQUALS_EQUALS_WRAPPER_CLOSE],
@@ -3178,6 +3193,22 @@ var CSharpTranspiler = class extends BaseTranspiler {
       return super.printThrowStatement(node, identation);
     }
   }
+  printPropertyAccessModifiers(node) {
+    let modifiers = this.printModifiers(node);
+    if (modifiers === "") {
+      modifiers = this.defaultPropertyAccess;
+    }
+    let typeText = "object";
+    if (node.type) {
+      typeText = this.getType(node);
+      if (!typeText) {
+        if (node.type.kind === _typescript2.default.SyntaxKind.AnyKeyword) {
+          typeText = this.OBJECT_KEYWORD + " ";
+        }
+      }
+    }
+    return modifiers + " " + typeText + " ";
+  }
 };
 
 // src/transpiler.ts
@@ -3360,6 +3391,9 @@ ${heritageName}${propDeclarations.map((member) => this.printNode(member, indenta
     const methods = node.members.filter((member) => member.kind === SyntaxKind3.MethodDeclaration);
     const classMethods = methods.map((method) => this.printMethodDeclaration(method, identation)).join("\n");
     return struct + "\n" + classMethods;
+  }
+  printPropertyAccessModifiers(node) {
+    return "";
   }
   printMethodDeclaration(node, identation) {
     const className = node.parent.name.escapedText;
