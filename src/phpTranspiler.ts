@@ -428,6 +428,11 @@ export class PhpTranspiler extends BaseTranspiler {
         return super.printFunctionBody(node, identation);
     }
 
+    printPropertyAccessModifiers(node) {
+        const modifiers = super.printPropertyAccessModifiers(node);
+        return modifiers ? modifiers : "public "; // default to public
+    }
+
     transformLeadingComment(comment) {
         const commentRegex = [
             [ /\{([\]\[\|a-zA-Z0-9_-]+?)\}/g, '~$1~' ], // eslint-disable-line -- resolve the "arrays vs url params" conflict (both are in {}-brackets)

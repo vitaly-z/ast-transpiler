@@ -239,6 +239,10 @@ export class PythonTranspiler extends BaseTranspiler {
         return this.printNodeCommentsIfAny(node, identation, forStm);
     }
 
+    printPropertyAccessModifiers(node) {
+        return ""; // no access modifier in python
+    }
+
     transformLeadingComment(comment) {
         const commentRegex = [
             [ /(^|\s)\/\//g, '$1#' ], // regular comments

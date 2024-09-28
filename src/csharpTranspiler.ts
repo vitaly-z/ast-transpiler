@@ -128,6 +128,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             'Dict': 'Dictionary<string, object>',
             'Strings': 'List<string>',
             'List': 'List<object>',
+            'boolean': 'bool',
         };
 
         this.ArgTypeReplacements = {
@@ -139,6 +140,7 @@ export class CSharpTranspiler extends BaseTranspiler {
             'Dict': 'Dictionary<string, object>',
             'Strings': 'List<string>',
             'List': 'List<object>',
+            'boolean': 'bool',
         };
 
         this.binaryExpressionsWrappers = {
@@ -1056,6 +1058,28 @@ export class CSharpTranspiler extends BaseTranspiler {
         // // const args = node.expression?.arguments.map(n => this.printNode(n, 0)).join(",");
         // // const throwExpression = ` ${newToken}${newExpression}${this.LEFT_PARENTHESIS}((string)${args})${this.RIGHT_PARENTHESIS}`;
         // return this.getIden(identation) + this.THROW_TOKEN + throwExpression + this.LINE_TERMINATOR;
+    }
+
+    csModifiers = {
+
+    };
+
+    printPropertyAccessModifiers(node) {
+        let modifiers = this.printModifiers(node);
+        if (modifiers === '') {
+            modifiers = this.defaultPropertyAccess;
+        }
+        // add type
+        let typeText = 'object';
+        if (node.type) {
+            typeText = this.getType(node);
+            if (!typeText) {
+                if (node.type.kind === ts.SyntaxKind.AnyKeyword) {
+                    typeText = this.OBJECT_KEYWORD + ' ';
+                }
+            }
+        }
+        return modifiers + ' ' + typeText + ' ';
     }
 
     // printLeadingComments(node, identation) {

@@ -1,5 +1,6 @@
 
 class Second {
+
     public stringifyNumber(arg: number) {
         return arg.toString();
     }

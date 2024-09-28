@@ -181,6 +181,7 @@ class BaseTranspiler {
     ArgTypeReplacements = {};
 
     FuncModifiers = {};
+    defaultPropertyAccess = 'public';
 
     uncamelcaseIdentifiers;
     asyncTranspiling;
@@ -1694,14 +1695,19 @@ class BaseTranspiler {
     }
 
     printPropertyDeclaration(node, identation) {
-        let modifiers = this.printModifiers(node);
-        modifiers = modifiers ? modifiers + " " : modifiers;
+        const modifiers = this.printPropertyAccessModifiers(node);
         const name = this.printNode(node.name, 0);
         if (node.initializer) {
             const initializer = this.printNode(node.initializer, 0);
             return this.getIden(identation) + modifiers + name + " = " + initializer + this.LINE_TERMINATOR;
         }
         return this.getIden(identation) + modifiers + name + this.LINE_TERMINATOR;
+    }
+
+    printPropertyAccessModifiers (node) {
+        let modifiers = this.printModifiers(node);
+        modifiers = modifiers ? modifiers + " " : modifiers;
+        return modifiers;
     }
 
     printSpreadElement(node, identation) {

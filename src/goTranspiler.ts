@@ -236,6 +236,10 @@ export class GoTranspiler extends BaseTranspiler {
         return struct + "\n" + classMethods;
     }
 
+    printPropertyAccessModifiers (node) {
+        return "";
+    }
+
     printMethodDeclaration(node, identation) {
 
         const className = node.parent.name.escapedText;
