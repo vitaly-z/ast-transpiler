@@ -2,6 +2,7 @@
 class Second {
 
     myClassProperty: string = "classProp";
+    myBoolProp: boolean = false;
     public stringifyNumber(arg: number) {
         return arg.toString();
     }
@@ -33,6 +34,10 @@ class Test {
         console.log(instance.stringifyNumber(4)); // should print 4
 
         console.log(instance.myClassProperty); // should print "classProp"
+
+        if (instance.myBoolProp == false) {
+            console.log("myBoolProp is false"); // should print "myBoolProp is false"
+        }
 
         const arr = [1,2,3,4];
 
