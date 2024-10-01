@@ -1,6 +1,7 @@
 
 class Second {
 
+    myClassProperty: string = "classProp";
     public stringifyNumber(arg: number) {
         return arg.toString();
     }
@@ -30,6 +31,8 @@ class Test {
 
         var instance = new Second();
         console.log(instance.stringifyNumber(4)); // should print 4
+
+        console.log(instance.myClassProperty); // should print "classProp"
 
         const arr = [1,2,3,4];
 
