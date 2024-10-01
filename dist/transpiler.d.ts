@@ -186,6 +186,7 @@ declare class BaseTranspiler {
     VariableTypeReplacements: {};
     ArgTypeReplacements: {};
     FuncModifiers: {};
+    defaultPropertyAccess: string;
     uncamelcaseIdentifiers: any;
     asyncTranspiling: any;
     requiresReturnType: any;
@@ -323,6 +324,7 @@ declare class BaseTranspiler {
     printBlock(node: any, identation: any, chainBlock?: boolean): string;
     printExpressionStatement(node: any, identation: any): string;
     printPropertyDeclaration(node: any, identation: any): string;
+    printPropertyAccessModifiers(node: any): any;
     printSpreadElement(node: any, identation: any): string;
     printNullKeyword(node: any, identation: any): string;
     printContinueStatement(node: any, identation: any): string;
@@ -378,6 +380,7 @@ declare class PythonTranspiler extends BaseTranspiler {
     printAssertCall(node: any, identation: any, parsedArgs: any): string;
     printDateNowCall(node: any, identation: any): string;
     printForStatement(node: any, identation: any): string;
+    printPropertyAccessModifiers(node: any): string;
     transformLeadingComment(comment: any): string;
     transformTrailingComment(comment: any): string;
     transformPropertyAcessExpressionIfNeeded(node: any): any;
@@ -439,6 +442,7 @@ declare class PhpTranspiler extends BaseTranspiler {
     printCustomBinaryExpressionIfAny(node: any, identation: any): string;
     printFunctionDeclaration(node: any, identation: any): string;
     printFunctionBody(node: any, identation: any): string;
+    printPropertyAccessModifiers(node: any): any;
     transformLeadingComment(comment: any): string;
     initConfig(): void;
 }
@@ -507,6 +511,8 @@ declare class CSharpTranspiler extends BaseTranspiler {
     printConditionalExpression(node: any, identation: any): string;
     printDeleteExpression(node: any, identation: any): string;
     printThrowStatement(node: any, identation: any): string;
+    csModifiers: {};
+    printPropertyAccessModifiers(node: any): string;
 }
 
 declare class GoTranspiler extends BaseTranspiler {
@@ -522,6 +528,7 @@ declare class GoTranspiler extends BaseTranspiler {
     printPropertyDeclaration(node: any, identation: any): string;
     printStruct(node: any, indentation: any): string;
     printClass(node: any, identation: any): string;
+    printPropertyAccessModifiers(node: any): string;
     printMethodDeclaration(node: any, identation: any): string;
     printMethodDefinition(node: any, identation: any): string;
     printMethodParameters(node: any): any;
