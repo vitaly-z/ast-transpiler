@@ -822,11 +822,11 @@ func New${this.capitalize(className)}() ${(className)} {
                 functionBody = super.printFunctionBody(node, identation);
             } else {
                 functionBody = node.body.statements.map(statement => {
-                    if (statement.kind === ts.SyntaxKind.ReturnStatement) {
-                        if (statement?.expression) {
-                            return this.getIden(identation) + "ch <-" + this.printNode(statement.expression) + '\n' + this.getIden(identation) + "return " + this.printNode(statement.expression);
-                        }
-                    }
+                    // if (statement.kind === ts.SyntaxKind.ReturnStatement) {
+                    //     if (statement?.expression) {
+                    //         return this.getIden(identation) + "ch <-" + this.printNode(statement.expression) + '\n' + this.getIden(identation) + "return " + this.printNode(statement.expression);
+                    //     }
+                    // }
                     return this.printNode(statement, identation);
                 }).join("\n");
 
@@ -841,7 +841,7 @@ func New${this.capitalize(className)}() ${(className)} {
                 const trimmedLine = line.trim();
 
                 if(trimmedLine.startsWith("return") && trimmedLine !== "return") {
-                    const returnIndentation = line.indexOf("return");
+                    const returnIndentation = line.indexOf("return")/4 + this.getIden(1);
                     let channelReturn = this.getIden(returnIndentation) + "ch <-" + line.replace("return", "").trimStart();
                     if (trimmedLine === "return nil") {
                         channelReturn = this.getIden(returnIndentation) + "ch <- nil\n" + this.getIden(returnIndentation) + "return nil";
@@ -1295,6 +1295,8 @@ ${this.getIden(identation)}}`;
         const catchBody = node.catchClause.block.statements.map((s) => this.printNode(s, identation + 1)).join("\n");
         const catchDeclaration = this.printNode(node.catchClause.variableDeclaration.name, 0);
 
+        const catchBodyHashReturn = catchBody.indexOf("return") > -1;
+        const returNil = "return nil";
         const className = this.className;
         const catchBlock = `
 {		ret__ := func(this *${className}) (ret_ interface{}) {
@@ -1306,7 +1308,7 @@ ${this.getIden(identation)}}`;
 				ret_ = func(this *${className}) interface{} {
 					// catch block:
                     ${catchBody}
-					return nil
+                    ${returNil}
 				}(this)
 			}
 		}()
