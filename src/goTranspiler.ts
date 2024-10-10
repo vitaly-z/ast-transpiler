@@ -879,13 +879,7 @@ ${this.getIden(identation)}PanicOnError(${parsedName})`;
         ${this.getIden(identation + 1)}ch := make(chan ${this.DEFAULT_RETURN_TYPE})
         ${this.getIden(identation + 1)}go func() interface{} {
         ${this.getIden(identation + 2)}defer close(ch)
-        ${this.getIden(identation + 2)}defer func() {
-		${this.getIden(identation + 3)}if r := recover(); r != nil {
-        ${this.getIden(identation + 4)}if r != "break" {
-		${this.getIden(identation + 5)}ch <- "panic:" + ToString(r)
-        ${this.getIden(identation + 4)}}
-		${this.getIden(identation + 3)}}
-	    ${this.getIden(identation + 2)}}()
+        ${this.getIden(identation + 2)}defer ReturnPanicError(ch)
         ${bodyWithIndentationExtraAndNoReturn}
         ${lastReturn}
         ${this.getIden(identation + 1)}}()
