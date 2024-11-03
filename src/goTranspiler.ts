@@ -994,6 +994,10 @@ ${this.getIden(identation)}PanicOnError(${returnRandName})`;
         let rightPart = exp ? (' ' + this.printNode(exp, identation)) : '';
         rightPart = rightPart.trim();
 
+        if (node?.expression?.kind === ts.SyntaxKind.AsExpression) {
+            node = node.expression;
+        }
+
         if (node?.expression?.kind === ts.SyntaxKind.AwaitExpression) {
             const returnRandName = "retRes" + this.getRandomNameSuffix();
             rightPart = rightPart ? ' ' + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
