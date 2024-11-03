@@ -935,6 +935,9 @@ ${this.getIden(identation)}PanicOnError(${parsedName})`;
 
     printExpressionStatement(node, identation) {
 
+        if (node?.expression?.kind === ts.SyntaxKind.AsExpression) {
+            node = node.expression;
+        }
         if (node.expression.kind !== ts.SyntaxKind.AwaitExpression) {
             return super.printExpressionStatement(node, identation);
         }
