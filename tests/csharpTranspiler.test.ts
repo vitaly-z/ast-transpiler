@@ -94,9 +94,9 @@ describe('csharp transpiling tests', () => {
         "    public object x = 10;\n" +
         "    public string y = \"test\";\n" +
         "    public List<object> z1 = new List<object>() {\"a\", \"b\"};\n" +
-        "    public Dictionary<string, object> z2 = whatever;\n" +
+        "    public Dictionary<string, object>  z2 = whatever;\n" +
         "    public Dictionary<string, object> z3 = new Dictionary<string, object>() {};\n" +
-        "    public Dictionary<string, object> z4 = Whatever;\n" +
+        "    public Dictionary<string, object>  z4 = Whatever;\n" +
         "\n" +
         "    public virtual void mainFeature(object message)\n" +
         "    {\n" +
