@@ -250,8 +250,9 @@ describe('python tests', () => {
         "    public static x: number = 10;\n" +
         "    public static y: string = \"test\";\n" +
         "    public static a1: string[] = [ 'a', 'b' ];\n" +
-        "    public static a2: any = whatever;\n" +
-        "    public static a3: any = {};\n" +
+        "    public static a2: any = Whatever;\n" +
+        "    public static a3: any = whatever;\n" +
+        "    public static a4: any = {};\n" +
         "    mainFeature(message) {\n" +
         "        console.log(\"Hello! I'm inside main class:\" + message)\n" +
         "    }\n" +
@@ -261,8 +262,9 @@ describe('python tests', () => {
         "    x = 10\n" +
         "    y = 'test'\n" +
         "    a1 = ['a', 'b']\n" +
-        "    a2 = whatever\n" +
-        "    a3 = {}\n" +
+        "    a2 = Whatever\n" +
+        "    a3 = whatever\n" +
+        "    a4 = {}\n" +
         "\n" +
         "    def mainFeature(self, message):\n" +
         "        print('Hello! I\\'m inside main class:' + message)"
