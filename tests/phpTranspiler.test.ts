@@ -313,9 +313,9 @@ describe('php transpiling tests', () => {
         "    public static $x = 10;\n" +
         "    public static $y = 'test';\n" +
         "    public static $a1 = ['a', 'b'];\n" +
-        "    public static $a1 = $whatever;\n" +
-        "    public static $a2 = array();\n" +
-        "    public static $a3 = Whatever;\n" +
+        "    public static $a2 = $whatever;\n" +
+        "    public static $a3 = array();\n" +
+        "    public static $a4 = Whatever;\n" +
         "\n" +
         "    public function mainFeature($message) {\n" +
         "        var_dump('Hello! I\\'m inside main class:' . $message);\n" +
