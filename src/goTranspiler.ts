@@ -272,6 +272,20 @@ func New${this.capitalize(className)}() ${(className)} {
         return methodDef;
     }
 
+    printFunctionDeclaration(node, identation) {
+        if (ts.isArrowFunction(node)) {
+            const parameters = node.parameters.map(param => this.printParameter(param)).join(", ");
+            const body = this.printNode(node.body);
+            return `(${parameters}) => ${body}`;
+        }
+        const isAsync = this.isAsyncFunction(node);
+        let functionDef = this.printFunctionDefinition(node, identation);
+        const funcBody = this.printFunctionBody(node, identation, isAsync);
+        functionDef += funcBody;
+
+        return this.printNodeCommentsIfAny(node, identation, functionDef);
+    }
+
     printMethodDefinition(node, identation) {
         const className = node.parent.name.escapedText;
         let name = node.name.escapedText;
@@ -288,6 +302,25 @@ func New${this.capitalize(className)}() ${(className)} {
         //     + "(" + parsedArgs + ")";
         const structReceiver = `(${this.THIS_TOKEN} *${className})`;
         const methodDef = this.getIden(identation) + methodToken + " " + structReceiver + " " + name + "(" + parsedArgs + ") " + returnType;
+
+        return this.printNodeCommentsIfAny(node, identation, methodDef);
+    }
+
+
+    printFunctionDefinition(node, identation) {
+        let name = node.name.escapedText;
+        name = this.transformMethodNameIfNeeded(name);
+
+        let returnType = this.printFunctionType(node);
+
+        const parsedArgs = this.printMethodParameters(node);
+
+        returnType = returnType ? returnType + " " : returnType;
+
+        const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
+        // const methodDef = this.getIden(identation) + returnType + methodToken + name
+        //     + "(" + parsedArgs + ")";
+        const methodDef = this.getIden(identation) + methodToken + name + "(" + parsedArgs + ") " + returnType;
 
         return this.printNodeCommentsIfAny(node, identation, methodDef);
     }
@@ -370,6 +403,9 @@ func New${this.capitalize(className)}() ${(className)} {
             }
             this.warn(node, node.name.getText(), "Function return type not found, will default to: " + res);
             return res;
+        }
+        if (typeText === this.PROMISE_TYPE_KEYWORD) {
+            return `<- chan`;
         }
         return typeText;
     }
