@@ -52,6 +52,8 @@ export class PythonTranspiler extends BaseTranspiler {
         this.initConfig();
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? true;
+        this.removeVariableDeclarationForFunctionExpression = config['removeVariableDeclarationForFunctionExpression'] ?? true;
+        this.includeFunctionNameInFunctionExpressionDeclaration = config['includeFunctionNameInFunctionExpressionDeclaration'] ?? true;
 
         // user overrides
         this.applyUserOverrides(config);
@@ -141,12 +143,20 @@ export class PythonTranspiler extends BaseTranspiler {
         return `${name}.split(${parsedArg})`;
     }
 
+    printConcatCall(node: any, identation: any, name?: any, parsedArg?: any) {
+        return `${name} + ${parsedArg}`;
+    }
+
     printPopCall(node: any, identation: any, name?: any) {
         return `${name}.pop()`;
     }
 
     printShiftCall(node: any, identation: any, name?: any) {
         return `${name}.pop(0)`;
+    }
+
+    printReverseCall(node, identation, name = undefined) {
+        return `${name}.reverse()`;
     }
 
     printArrayPushCall(node, identation, name, parsedArg) {
@@ -158,6 +168,10 @@ export class PythonTranspiler extends BaseTranspiler {
     }
 
     printIndexOfCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `${name}.find(${parsedArg})`;
+    }
+
+    printSearchCall(node, identation, name = undefined, parsedArg = undefined) {
         return `${name}.find(${parsedArg})`;
     }
 
@@ -223,6 +237,10 @@ export class PythonTranspiler extends BaseTranspiler {
 
         const forStm =  this.getIden(identation) + this.FOR_TOKEN +  " " + varName + " in range(" + initValue + ", " + roofValue + "):\n" + node.statement.statements.map(st => this.printNode(st, identation+1)).join("\n");
         return this.printNodeCommentsIfAny(node, identation, forStm);
+    }
+
+    printPropertyAccessModifiers(node) {
+        return ""; // no access modifier in python
     }
 
     transformLeadingComment(comment) {
@@ -365,6 +383,11 @@ export class PythonTranspiler extends BaseTranspiler {
         const whenFalse = this.printNode(node.whenFalse, 0);
 
         return this.getIden(identation) + whenTrue + " if " + condition + " else " + whenFalse;
+    }
+
+    printDeleteExpression(node, identation) {
+        const expression = this.printNode (node.expression);
+        return `del ${expression}`;
     }
 
     getCustomOperatorIfAny(left, right, operator) {

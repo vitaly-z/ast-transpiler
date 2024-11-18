@@ -53,6 +53,8 @@ export class PhpTranspiler extends BaseTranspiler {
         this.id = "php";
         this.asyncTranspiling = config['async'] ?? true;
         this.uncamelcaseIdentifiers = config['uncamelcaseIdentifiers'] ?? false;
+        this.removeVariableDeclarationForFunctionExpression = config['removeFunctionAssignToVariable'] ?? false;
+        this.includeFunctionNameInFunctionExpressionDeclaration = config['includeFunctionNameInFunctionExpressionDeclaration'] ?? false;
 
         this.propRequiresScopeResolutionOperator = ['super'] + (config['ScopeResolutionProps'] ?? []);
 
@@ -78,16 +80,42 @@ export class PhpTranspiler extends BaseTranspiler {
         return this.AWAIT_WRAPPER_OPEN + expression + this.AWAIT_WRAPPER_CLOSE;
     }
 
-    transformIdentifier(identifier) {
-
+    transformIdentifier(node, identifier) {
         if (this.uncamelcaseIdentifiers) {
             identifier = this.unCamelCaseIfNeeded(identifier);
         }
-        if (!this.startsWithUpperCase(identifier)) {
-            return "$" + identifier; // avoid adding $ to constants, and classes
+
+        // Get the symbol for the identifier
+        const symbol = global.checker.getSymbolAtLocation(node);
+
+        // Check if the symbol references a function declaration or expression
+        if (symbol && symbol.valueDeclaration) {
+            const valueDecl = symbol.valueDeclaration;
+
+            // Check if it's a function (FunctionDeclaration, FunctionExpression, ArrowFunction)
+            if (ts.isFunctionDeclaration(valueDecl) || ts.isFunctionExpression(valueDecl) || ts.isArrowFunction(valueDecl)) {
+                // Check if the identifier is passed as an argument in a function call
+                if (node.parent && ts.isCallExpression(node.parent) && node.parent.arguments.includes(node)) {
+                    return `'${identifier}'`;  // Transpile function reference as string
+                }
+            }
         }
+
+        // below is commented, due to : https://github.com/ccxt/ast-transpiler/pull/15
+        //
+        // If the identifier is a function parameter (callback), it should remain a variable with `$` prefix
+        // if (node.parent && (ts.isParameter(node.parent) || (ts.isCallExpression(node.parent) && ts.isIdentifier(node)))) {
+        //     return "$" + identifier;
+        // }
+
+        // Default case: prepend $ for variables (non-functions), unless it's a class or constant
+        if (!this.startsWithUpperCase(identifier)) {
+            return "$" + identifier;  // Prepend $ for variable names
+        }
+
         return identifier;
     }
+
 
     getCustomOperatorIfAny(left, right, operator) {
         const STRING_CONCAT = '.';
@@ -124,6 +152,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return `array_pop(${name})`;
     }
 
+    printReverseCall(node, identation, name = undefined) {
+        return `${name} = array_reverse(${name})`;
+    }
+
     printShiftCall(node, identation, name = undefined) {
         return `array_shift(${name})`;
     }
@@ -141,7 +173,7 @@ export class PhpTranspiler extends BaseTranspiler {
     }
 
     printArrayIsArrayCall(node, identation, parsedArg = undefined) {
-        return `gettype(${parsedArg}) === 'array' && array_keys(${parsedArg}) === array_keys(array_keys(${parsedArg}))`;
+        return `gettype(${parsedArg}) === 'array' && array_is_list(${parsedArg})`;
     }
 
     printObjectKeysCall(node, identation, parsedArg = undefined) {
@@ -214,6 +246,10 @@ export class PhpTranspiler extends BaseTranspiler {
         }
     }
 
+    printSearchCall(node, identation, name = undefined, parsedArg = undefined) {
+        return `mb_strpos(${name}, ${parsedArg})`;
+    }
+
     printStartsWithCall(node, identation, name = undefined, parsedArg = undefined) {
         return `str_starts_with(${name}, ${parsedArg})`;
     }
@@ -232,6 +268,10 @@ export class PhpTranspiler extends BaseTranspiler {
 
     printSplitCall(node, identation, name = undefined, parsedArg = undefined) {
         return `explode(${parsedArg}, ${name})`;
+    }
+
+    printConcatCall(node: any, identation: any, name?: any, parsedArg?: any) {
+        return `array_merge(${name}, ${parsedArg})`;
     }
 
     printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
@@ -254,6 +294,10 @@ export class PhpTranspiler extends BaseTranspiler {
         return this.getIden(identation) + "$"+left+" instanceof "+right+"";
     }
 
+    printDeleteExpression(node, identation) {
+        const expression = this.printNode (node.expression, 0);
+        return `unset(${expression})`;
+    }
 
     getExceptionalAccessTokenIfAny(node) {
         const leftSide = node.expression.escapedText ?? node.expression.getFullText().trim();
@@ -340,6 +384,14 @@ export class PhpTranspiler extends BaseTranspiler {
         return undefined;
     }
 
+    printFunctionDeclaration(node, identation) {
+        let functionDef = this.printFunctionDefinition(node, identation);
+        const funcBody = this.printFunctionBody(node, identation);
+        functionDef += funcBody;
+
+        return this.printNodeCommentsIfAny(node, identation, functionDef);
+    }
+
     printFunctionBody(node, identation) {
 
         if (this.asyncTranspiling && this.isAsyncFunction(node)) {
@@ -374,6 +426,11 @@ export class PhpTranspiler extends BaseTranspiler {
             return blockOpen + result + blockClose;
         }
         return super.printFunctionBody(node, identation);
+    }
+
+    printPropertyAccessModifiers(node) {
+        const modifiers = super.printPropertyAccessModifiers(node);
+        return modifiers ? modifiers : "public "; // default to public
     }
 
     transformLeadingComment(comment) {
@@ -429,6 +486,7 @@ export class PhpTranspiler extends BaseTranspiler {
             // 'toUpperCase',
             // 'toLowerCase',
             // 'pop',
+            // 'reverse',
             // 'shift',
         ];
     }
