@@ -388,7 +388,7 @@ var BaseTranspiler = class {
     return method;
   }
   getIden(num) {
-    return this.DEFAULT_IDENTATION.repeat(num);
+    return this.DEFAULT_IDENTATION.repeat(parseInt(num));
   }
   getBlockOpen(identation) {
     return this.SPACE_BEFORE_BLOCK_OPENING + this.BLOCK_OPENING_TOKEN + "\n";
@@ -3423,6 +3423,18 @@ func New${this.capitalize(className)}() ${className} {
     methodDef += funcBody;
     return methodDef;
   }
+  printFunctionDeclaration(node, identation) {
+    if (ts5.isArrowFunction(node)) {
+      const parameters = node.parameters.map((param) => this.printParameter(param)).join(", ");
+      const body = this.printNode(node.body);
+      return `(${parameters}) => ${body}`;
+    }
+    const isAsync = this.isAsyncFunction(node);
+    let functionDef = this.printFunctionDefinition(node, identation);
+    const funcBody = this.printFunctionBody(node, identation, isAsync);
+    functionDef += funcBody;
+    return this.printNodeCommentsIfAny(node, identation, functionDef);
+  }
   printMethodDefinition(node, identation) {
     const className = node.parent.name.escapedText;
     let name = node.name.escapedText;
@@ -3433,6 +3445,16 @@ func New${this.capitalize(className)}() ${className} {
     const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
     const structReceiver = `(${this.THIS_TOKEN} *${className})`;
     const methodDef = this.getIden(identation) + methodToken + " " + structReceiver + " " + name + "(" + parsedArgs + ") " + returnType;
+    return this.printNodeCommentsIfAny(node, identation, methodDef);
+  }
+  printFunctionDefinition(node, identation) {
+    let name = node.name.escapedText;
+    name = this.transformMethodNameIfNeeded(name);
+    let returnType = this.printFunctionType(node);
+    const parsedArgs = this.printMethodParameters(node);
+    returnType = returnType ? returnType + " " : returnType;
+    const methodToken = this.METHOD_TOKEN ? this.METHOD_TOKEN + " " : "";
+    const methodDef = this.getIden(identation) + methodToken + name + "(" + parsedArgs + ") " + returnType;
     return this.printNodeCommentsIfAny(node, identation, methodDef);
   }
   printMethodParameters(node) {
@@ -3491,6 +3513,9 @@ func New${this.capitalize(className)}() ${className} {
       this.warn(node, node.name.getText(), "Function return type not found, will default to: " + res);
       return res;
     }
+    if (typeText === this.PROMISE_TYPE_KEYWORD) {
+      return `<- chan`;
+    }
     return typeText;
   }
   printVariableDeclarationList(node, identation) {
@@ -3511,6 +3536,13 @@ func New${this.capitalize(className)}() ${className} {
         }
       });
       return arrayBindingStatement;
+    }
+    if (declaration?.initializer?.kind === ts5.SyntaxKind.AwaitExpression) {
+      const parsedName = this.printNode(declaration.name, 0);
+      const parsedInitializer = this.printNode(declaration.initializer, 0);
+      return `
+${this.getIden(identation)}${parsedName}:= ${parsedInitializer}
+${this.getIden(identation)}PanicOnError(${parsedName})`;
     }
     const isNew = declaration.initializer && declaration.initializer.kind === ts5.SyntaxKind.NewExpression;
     const parsedValue = declaration.initializer ? this.printNode(declaration.initializer, identation) : this.NULL_TOKEN;
@@ -3788,11 +3820,6 @@ func New${this.capitalize(className)}() ${className} {
         functionBody = super.printFunctionBody(node, identation);
       } else {
         functionBody = node.body.statements.map((statement) => {
-          if (statement.kind === ts5.SyntaxKind.ReturnStatement) {
-            if (statement?.expression) {
-              return this.getIden(identation) + "ch <-" + this.printNode(statement.expression) + "\n" + this.getIden(identation) + "return " + this.printNode(statement.expression);
-            }
-          }
           return this.printNode(statement, identation);
         }).join("\n");
       }
@@ -3801,32 +3828,26 @@ func New${this.capitalize(className)}() ${className} {
       const functionBodySplit = functionBody.split("\n");
       const bodyWithIndentationExtraAndNoReturn = functionBodySplit.map((line) => {
         const trimmedLine = line.trim();
-        if (trimmedLine.startsWith("return") && trimmedLine !== "return") {
-          const returnIndentation = line.indexOf("return");
-          let channelReturn = this.getIden(returnIndentation) + "ch <-" + line.replace("return", "").trimStart();
-          if (trimmedLine === "return nil") {
-            channelReturn = this.getIden(returnIndentation) + "ch <- nil\n" + this.getIden(returnIndentation) + "return nil";
-          }
-          return channelReturn;
-        }
         return this.getIden(identation + 2) + line;
       }).join("\n");
       let shouldAddLastReturn = true;
-      const bodySplit = bodyWithIndentationExtraAndNoReturn.split("\n");
+      const bodySplit = functionBodySplit;
       const lastLine = bodySplit[bodySplit.length - 1];
       if (lastLine.trim().startsWith("return") || lastLine.trim().startsWith("panic")) {
         shouldAddLastReturn = false;
       }
       const lastReturn = shouldAddLastReturn ? this.getIden(identation + 2) + "return nil" : "";
       functionBody = `{
-${this.getIden(identation + 1)}ch := make(chan ${this.DEFAULT_RETURN_TYPE})
-${this.getIden(identation + 1)}go func() interface{} {
-${this.getIden(identation + 2)}defer close(ch)
-${bodyWithIndentationExtraAndNoReturn}
-${lastReturn}
-${this.getIden(identation + 1)}}()
-${this.getIden(identation + 1)}return ch
-${this.getIden(identation)}}`;
+        ${this.getIden(identation + 1)}ch := make(chan ${this.DEFAULT_RETURN_TYPE})
+        ${this.getIden(identation + 1)}go func() interface{} {
+        ${this.getIden(identation + 2)}defer close(ch)
+        ${this.getIden(identation + 2)}defer ReturnPanicError(ch)
+        ${bodyWithIndentationExtraAndNoReturn}
+        ${lastReturn}
+        ${this.getIden(identation + 1)}}()
+        ${this.getIden(identation + 1)}return ch
+        ${this.getIden(identation)}}`;
+      functionBody = functionBody.replaceAll(/(^\s*)ch\s<-\snil\s+return\snil(\s*\})/gm, "$1return nil$2");
     }
     return functionBody;
   }
@@ -3838,6 +3859,60 @@ ${this.getIden(identation)}}`;
     const left = node.left.escapedText;
     const right = node.right.escapedText;
     return this.getIden(identation) + `IsInstance(${left}, ${right})`;
+  }
+  getRandomNameSuffix() {
+    return Math.floor(Math.random() * 1e6).toString();
+  }
+  printExpressionStatement(node, identation) {
+    if (node?.expression?.kind === ts5.SyntaxKind.AsExpression) {
+      node = node.expression;
+    }
+    if (node.expression.kind !== ts5.SyntaxKind.AwaitExpression) {
+      return super.printExpressionStatement(node, identation);
+    }
+    const exprStm = this.printNode(node.expression, identation);
+    const returnRandName = "retRes" + this.getRandomNameSuffix();
+    const expStatement = `
+${this.getIden(identation)}${returnRandName} := ${exprStm}
+${this.getIden(identation)}PanicOnError(${returnRandName})`;
+    return this.printNodeCommentsIfAny(node, identation, expStatement);
+  }
+  isInsideAsyncFunction(returnStatementNode) {
+    let currentNode = returnStatementNode;
+    while (currentNode) {
+      if (ts5.isFunctionDeclaration(currentNode) || ts5.isFunctionExpression(currentNode) || ts5.isArrowFunction(currentNode) || ts5.isMethodDeclaration(currentNode)) {
+        return currentNode.modifiers && currentNode.modifiers.some((modifier) => modifier.kind === ts5.SyntaxKind.AsyncKeyword);
+      }
+      currentNode = currentNode.parent;
+    }
+    return false;
+  }
+  printReturnStatement(node, identation) {
+    const isAsyncFunction = this.isInsideAsyncFunction(node);
+    if (!isAsyncFunction) {
+      return super.printReturnStatement(node, identation);
+    }
+    const leadingComment = this.printLeadingComments(node, identation);
+    let trailingComment = this.printTraillingComment(node, identation);
+    trailingComment = trailingComment ? " " + trailingComment : trailingComment;
+    const exp = node.expression;
+    let rightPart = exp ? " " + this.printNode(exp, identation) : "";
+    rightPart = rightPart.trim();
+    if (node?.expression?.kind === ts5.SyntaxKind.AsExpression) {
+      node = node.expression;
+    }
+    if (node?.expression?.kind === ts5.SyntaxKind.AwaitExpression) {
+      const returnRandName = "retRes" + this.getRandomNameSuffix();
+      rightPart = rightPart ? " " + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
+      return `
+    ${this.getIden(identation)}${returnRandName} := ${rightPart}
+    ${this.getIden(identation)}PanicOnError(${returnRandName})
+    ${this.getIden(identation)}${leadingComment}ch <- ${returnRandName}${trailingComment}
+    ${this.getIden(identation)}return ${returnRandName}`;
+    }
+    return `
+${this.getIden(identation)}${leadingComment}ch <- ${rightPart}${trailingComment}
+${this.getIden(identation)}return ${rightPart}`;
   }
   printAsExpression(node, identation) {
     const type = node.type;
@@ -4038,12 +4113,18 @@ ${this.getIden(identation)}}`;
       return this.printInstanceOfExpression(node, identation);
     }
     if (operatorToken.kind === ts5.SyntaxKind.EqualsToken) {
+      const elementAccess = left;
+      const rightSide = this.printNode(right, 0);
       if (left.kind === ts5.SyntaxKind.ElementAccessExpression) {
-        const elementAccess = left;
         const leftSide = this.printNode(elementAccess.expression, 0);
-        const rightSide = this.printNode(right, 0);
         const propName = this.printNode(elementAccess.argumentExpression, 0);
         return `AddElementToObject(${leftSide}, ${propName}, ${rightSide})`;
+      }
+      if (right?.kind === ts5.SyntaxKind.AwaitExpression) {
+        const leftParsed = this.printNode(left, 0);
+        return `
+${leftParsed} = ${rightSide}
+${this.getIden(identation)}PanicOnError(${leftParsed})`;
       }
     }
     const op = operatorToken.kind;
@@ -4095,18 +4176,20 @@ ${this.getIden(identation)}}`;
     tryBody = tryBody.replaceAll(/(\s*)break\s*$/gm, '$1panic("break")');
     const catchBody = node.catchClause.block.statements.map((s) => this.printNode(s, identation + 1)).join("\n");
     const catchDeclaration = this.printNode(node.catchClause.variableDeclaration.name, 0);
+    const catchBodyHashReturn = catchBody.indexOf("return") > -1;
+    const returNil = "return nil";
     const className = this.className;
     const catchBlock = `
 {		ret__ := func(this *${className}) (ret_ interface{}) {
 		defer func() {
-			if e := recover().(interface{}); e != nil {
+			if e := recover(); e != nil {
                 if e == "break" {
 				    return
 			    }
 				ret_ = func(this *${className}) interface{} {
 					// catch block:
                     ${catchBody}
-					return nil
+                    ${returNil}
 				}(this)
 			}
 		}()
