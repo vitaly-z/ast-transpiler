@@ -84,9 +84,9 @@ const transpiler = new Transpiler({
 });
 
 const ts = "const myVar = 1;"
-const transpiledCode = transpiler.transpilePython(ts);
+const transpiled = transpiler.transpilePython(ts);
 
-console.log(transpileCode.content) // prints my_var = 1
+console.log(transpiled.content) // prints my_var = 1
 ```
 
 ### Transpiling Typescript to PHP from file
@@ -96,11 +96,11 @@ console.log(transpileCode.content) // prints my_var = 1
 const Transpiler = require(`ast-transpiler`);
 
 const transpiler = new Transpiler();
-const transpiledCode = transpiler.transpilePhpByPath("./my/path/file.ts");
+const transpiled = transpiler.transpilePhpByPath("./my/path/file.ts");
 
-console.log(transpiler.content) // prints transpiled php
-console.log(transpiler.imports) // prints unified imports statements if any
-console.log(transpiler.exports) // prints unified export statements if any
+console.log(transpiled.content) // prints transpiled php
+console.log(transpiled.imports) // prints unified imports statements if any
+console.log(transpiled.exports) // prints unified export statements if any
 ```
 
 ## ⚡ C# Notes
