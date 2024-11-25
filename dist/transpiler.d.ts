@@ -284,6 +284,7 @@ declare class BaseTranspiler {
     printSearchCall(node: any, identation: any, name?: any, parsedArg?: any): any;
     printSliceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): any;
     printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): any;
+    printReplaceAllCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): any;
     printToStringCall(node: any, identation: any, name?: any): any;
     printToUpperCaseCall(node: any, identation: any, name?: any): any;
     printToLowerCaseCall(node: any, identation: any, name?: any): any;
@@ -376,6 +377,7 @@ declare class PythonTranspiler extends BaseTranspiler {
     printJsonParseCall(node: any, identation: any, parsedArg?: any): string;
     printJsonStringifyCall(node: any, identation: any, parsedArg?: any): string;
     printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
+    printReplaceAllCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
     printElementAccessExpressionExceptionIfAny(node: any): string;
     printAssertCall(node: any, identation: any, parsedArgs: any): string;
     printDateNowCall(node: any, identation: any): string;
@@ -423,6 +425,7 @@ declare class PhpTranspiler extends BaseTranspiler {
     printMathRoundCall(node: any, identation: any, parsedArg?: any): string;
     printMathFloorCall(node: any, identation: any, parsedArg?: any): string;
     printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
+    printReplaceAllCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
     printIncludesCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printIndexOfCall(node: any, identation: any, name?: any, parsedArg?: any): string;
     printSearchCall(node: any, identation: any, name?: any, parsedArg?: any): string;
@@ -502,6 +505,7 @@ declare class CSharpTranspiler extends BaseTranspiler {
     printAssertCall(node: any, identation: any, parsedArgs: any): string;
     printSliceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
     printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
+    printReplaceAllCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
     printPadEndCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
     printPadStartCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
     printDateNowCall(node: any, identation: any): string;
@@ -591,6 +595,7 @@ declare class GoTranspiler extends BaseTranspiler {
     printAssertCall(node: any, identation: any, parsedArgs: any): string;
     printSliceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
     printReplaceCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
+    printReplaceAllCall(node: any, identation: any, name?: any, parsedArg?: any, parsedArg2?: any): string;
     printPadEndCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
     printPadStartCall(node: any, identation: any, name: any, parsedArg: any, parsedArg2: any): string;
     printDateNowCall(node: any, identation: any): string;

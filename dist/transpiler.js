@@ -944,6 +944,9 @@ var BaseTranspiler = class {
   printReplaceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
     return void 0;
   }
+  printReplaceAllCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    return void 0;
+  }
   printToStringCall(node, identation, name = void 0) {
     return void 0;
   }
@@ -1069,6 +1072,8 @@ var BaseTranspiler = class {
               return this.printSliceCall(node, identation, name, parsedArg, parsedArg2);
             case "replace":
               return this.printReplaceCall(node, identation, name, parsedArg, parsedArg2);
+            case "replaceAll":
+              return this.printReplaceAllCall(node, identation, name, parsedArg, parsedArg2);
           }
         }
       }
@@ -1901,6 +1906,9 @@ var PythonTranspiler = class extends BaseTranspiler {
   printReplaceCall(node, identation, name, parsedArg, parsedArg2) {
     return `${name}.replace(${parsedArg}, ${parsedArg2})`;
   }
+  printReplaceAllCall(node, identation, name, parsedArg, parsedArg2) {
+    return `${name}.replace(${parsedArg}, ${parsedArg2})`;
+  }
   printElementAccessExpressionExceptionIfAny(node) {
     if (node.expression.kind === SyntaxKind.ThisKeyword) {
       return "getattr(self, " + this.printNode(node.argumentExpression, 0) + ")";
@@ -2214,6 +2222,9 @@ var PhpTranspiler = class extends BaseTranspiler {
     return `((int) floor(${parsedArg}))`;
   }
   printReplaceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    return `str_replace(${parsedArg}, ${parsedArg2}, ${name})`;
+  }
+  printReplaceAllCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
     return `str_replace(${parsedArg}, ${parsedArg2}, ${name})`;
   }
   printIncludesCall(node, identation, name = void 0, parsedArg = void 0) {
@@ -3116,6 +3127,9 @@ var CSharpTranspiler = class extends BaseTranspiler {
     return `slice(${name}, ${parsedArg}, ${parsedArg2})`;
   }
   printReplaceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    return `((string)${name}).Replace((string)${parsedArg}, (string)${parsedArg2})`;
+  }
+  printReplaceAllCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
     return `((string)${name}).Replace((string)${parsedArg}, (string)${parsedArg2})`;
   }
   printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
@@ -4050,6 +4064,9 @@ ${this.getIden(identation)}return ${rightPart}`;
     return `Slice(${name}, ${parsedArg}, ${parsedArg2})`;
   }
   printReplaceCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
+    return `Replace(${name}, ${parsedArg}, ${parsedArg2})`;
+  }
+  printReplaceAllCall(node, identation, name = void 0, parsedArg = void 0, parsedArg2 = void 0) {
     return `Replace(${name}, ${parsedArg}, ${parsedArg2})`;
   }
   printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
