@@ -71,6 +71,10 @@ class Test {
         const both = firstConcat.concat(secondConcat);
         console.log(both.length); // should print 4
         console.log(both[2]); // should print "c"
+
+        const baseString = "aabba";
+        const replacedAllString = baseString.replaceAll("a", "");
+        console.log(replacedAllString); // should print "bb"
     }
 }
 

@@ -1118,6 +1118,10 @@ class BaseTranspiler {
         return undefined; // stub
     }
 
+    printReplaceAllCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
+        return undefined; // stub
+    }
+
     printToStringCall(node, identation, name = undefined) {
         return undefined; // stub
     }
@@ -1264,6 +1268,8 @@ class BaseTranspiler {
                         return this.printSliceCall(node, identation, name, parsedArg, parsedArg2);
                     case 'replace':
                         return this.printReplaceCall(node, identation, name, parsedArg, parsedArg2);
+                    case 'replaceAll':
+                        return this.printReplaceAllCall(node, identation, name, parsedArg, parsedArg2);
                     }
                 }
             }

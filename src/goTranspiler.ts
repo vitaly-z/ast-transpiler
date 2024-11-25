@@ -1260,6 +1260,10 @@ ${this.getIden(identation)}return ${rightPart}`;
         return `Replace(${name}, ${parsedArg}, ${parsedArg2})`;
     }
 
+    printReplaceAllCall(node, identation, name = undefined, parsedArg = undefined, parsedArg2 = undefined) {
+        return `Replace(${name}, ${parsedArg}, ${parsedArg2})`;
+    }
+
     printPadEndCall(node, identation, name, parsedArg, parsedArg2) {
         return `PadEnd(${name}, ${parsedArg}, ${parsedArg2})`;
     }
