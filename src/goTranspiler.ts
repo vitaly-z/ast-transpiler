@@ -967,6 +967,9 @@ ${this.getIden(identation)}PanicOnError(${varName})`;
 
     printAwaitExpression(node, identation) {
         const expression = this.printNode(node.expression, identation);
+        if (expression.startsWith("<-")) {
+            return expression;
+        }
         return `(<-${expression})`;
     }
 
