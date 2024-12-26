@@ -459,7 +459,14 @@ ${this.getIden(identation)}PanicOnError(${parsedName})`;
             if (isNew) {
                 return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue;
             }
-            return this.getIden(identation) + "var " + this.printNode(declaration.name) + " interface{} = " + parsedValue;
+            const varName = this.printNode(declaration.name);
+            const stm = this.getIden(identation) + "var " + varName + " interface{} = " + parsedValue;
+            if (parsedValue.startsWith("<-this.callInternal(")) {
+                return `
+${stm}
+${this.getIden(identation)}PanicOnError(${varName})`;
+            }
+            return stm;
         }
 
         return this.getIden(identation) + this.printNode(declaration.name) + " := " + parsedValue.trim();
@@ -610,9 +617,9 @@ ${this.getIden(identation)}PanicOnError(${parsedName})`;
                     let argsParsed = "";
                     if (args.length > 0) {
                         argsParsed = args.map((a) => this.printNode(a, 0)).join(", ");
-                        return `this.callInternal("${methodName}", ${argsParsed})`;
+                        return `<-this.callInternal("${methodName}", ${argsParsed})`;
                     }
-                    return `this.callInternal("${methodName}")`;
+                    return `<-this.callInternal("${methodName}")`;
                 }
             }
 
@@ -1390,7 +1397,7 @@ ${this.getIden(identation)}return ${rightPart}`;
                 return `AddElementToObject(${leftSide}, ${propName}, ${rightSide})`;
             }
 
-            if (right?.kind === ts.SyntaxKind.AwaitExpression) {
+            if (right?.kind === ts.SyntaxKind.AwaitExpression || rightSide.startsWith('<-this.callInternal')) {
                 const leftParsed = this.printNode(left, 0);
                 return `
 ${leftParsed} = ${rightSide}
