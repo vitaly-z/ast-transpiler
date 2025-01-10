@@ -3932,7 +3932,7 @@ ${this.getIden(identation)}PanicOnError(${returnRandName})`;
     ${this.getIden(identation)}${returnRandName} := ${rightPart}
     ${this.getIden(identation)}PanicOnError(${returnRandName})
     ${this.getIden(identation)}${leadingComment}ch <- ${returnRandName}${trailingComment}
-    ${this.getIden(identation)}return ${returnRandName}`;
+    ${this.getIden(identation)}return nil`;
     }
     return `
 ${this.getIden(identation)}${leadingComment}ch <- ${rightPart}${trailingComment}
