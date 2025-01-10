@@ -1052,12 +1052,14 @@ ${this.getIden(identation)}PanicOnError(${returnRandName})`;
     ${this.getIden(identation)}${returnRandName} := ${rightPart}
     ${this.getIden(identation)}PanicOnError(${returnRandName})
     ${this.getIden(identation)}${leadingComment}ch <- ${returnRandName}${trailingComment}
-    ${this.getIden(identation)}return ${returnRandName}`;
+    ${this.getIden(identation)}return nil`;
+            // ${this.getIden(identation)}return ${returnRandName}`;
         }
 
         return `
 ${this.getIden(identation)}${leadingComment}ch <- ${rightPart}${trailingComment}
 ${this.getIden(identation)}return ${rightPart}`;
+        // ${this.getIden(identation)}return ${rightPart}`;
     }
 
 
