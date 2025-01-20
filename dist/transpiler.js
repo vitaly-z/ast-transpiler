@@ -3936,7 +3936,7 @@ ${this.getIden(identation)}PanicOnError(${returnRandName})`;
     }
     return `
 ${this.getIden(identation)}${leadingComment}ch <- ${rightPart}${trailingComment}
-${this.getIden(identation)}return ${rightPart}`;
+${this.getIden(identation)}return nil`;
   }
   printAsExpression(node, identation) {
     const type = node.type;
