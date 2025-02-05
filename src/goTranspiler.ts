@@ -983,6 +983,11 @@ ${this.getIden(identation)}PanicOnError(${varName})`;
         return Math.floor(Math.random() * 1000000).toString();
     }
 
+    getLineBasedSuffix(node): string {
+        const { line, character } = global.src.getLineAndCharacterOfPosition(node.getStart());
+        return `${line}${character}`;
+    }
+
     printExpressionStatement(node, identation) {
 
         if (node?.expression?.kind === ts.SyntaxKind.AsExpression) {
@@ -994,7 +999,9 @@ ${this.getIden(identation)}PanicOnError(${varName})`;
 
         const exprStm = this.printNode(node.expression, identation);
 
-        const returnRandName = "retRes" + this.getRandomNameSuffix();
+        // const { line, character } = global.src.getLineAndCharacterOfPosition(node.getStart());
+        // console.log(`line: ${line}, character: ${character}`);
+        const returnRandName = "retRes" + this.getLineBasedSuffix(node);
 
         // const expStatement =this.getIden(identation) + exprStm + this.LINE_TERMINATOR;
 
@@ -1045,7 +1052,8 @@ ${this.getIden(identation)}PanicOnError(${returnRandName})`;
         }
 
         if (node?.expression?.kind === ts.SyntaxKind.AwaitExpression) {
-            const returnRandName = "retRes" + this.getRandomNameSuffix();
+            // const returnRandName = "retRes" + this.getRandomNameSuffix();
+            const returnRandName = "retRes" + this.getLineBasedSuffix(node.expression);
             rightPart = rightPart ? ' ' + rightPart + this.LINE_TERMINATOR : this.LINE_TERMINATOR;
             // return leadingComment + this.getIden(identation) + this.RETURN_TOKEN + rightPart + trailingComment;
             return `
