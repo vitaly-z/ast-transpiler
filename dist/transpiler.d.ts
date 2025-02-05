@@ -560,6 +560,7 @@ declare class GoTranspiler extends BaseTranspiler {
     printAwaitExpression(node: any, identation: any): string;
     printInstanceOfExpression(node: any, identation: any): string;
     getRandomNameSuffix(): string;
+    getLineBasedSuffix(node: any): string;
     printExpressionStatement(node: any, identation: any): string;
     isInsideAsyncFunction(returnStatementNode: any): boolean;
     printReturnStatement(node: any, identation: any): string;
