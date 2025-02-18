@@ -256,6 +256,11 @@ func New${this.capitalize(className)}() ${(className)} {
         return "";
     }
 
+    printSpreadElement(node, identation) {
+        const expression = this.printNode(node.expression, 0);
+        return this.getIden(identation) + expression + this.SPREAD_TOKEN;
+    }
+
     printMethodDeclaration(node, identation) {
 
         const className = node.parent.name.escapedText;
