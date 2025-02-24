@@ -534,6 +534,7 @@ declare class GoTranspiler extends BaseTranspiler {
     printNewStructMethod(node: any): string;
     printClass(node: any, identation: any): string;
     printPropertyAccessModifiers(node: any): string;
+    printSpreadElement(node: any, identation: any): string;
     printMethodDeclaration(node: any, identation: any): string;
     printFunctionDeclaration(node: any, identation: any): string;
     printMethodDefinition(node: any, identation: any): string;
